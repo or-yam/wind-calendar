@@ -6,7 +6,7 @@ Migrate server-side code from the MVP (`calendar-test`) into a fresh Vite + Reac
 Single scrollable landing page with calendar preview, config form, and subscribe-to-calendar buttons.
 Deployed on Vercel with `api/` serverless functions.
 
-calendar-test is on ../calendar-test 
+calendar-test is on ../calendar-test
 use it as a reference
 Do not modify calendar-test!
 
@@ -87,33 +87,33 @@ Vite SPA (static)              Vercel serverless function
 
 ## Decisions
 
-| Decision | Choice | Reason |
-|---|---|---|
-| Repo | New repo (`wind-calendar`) | Clean slate, MVP was a prototype |
-| Framework | Vite 7 + React 19 | Minimal overhead, `api/` works on Vercel as-is |
-| CSS | Plain CSS + custom properties | No framework needed; custom props prep for future dark mode |
-| State | React hooks + URL params | No global state needed, form state drives everything |
-| ICS parsing | Client-side | API returns standard ICS, parse in browser |
-| Routing | None | Single scrollable page, anchor sections |
-| Server layout | `server/` directory | Clean client/server separation |
-| Test runner | Vitest | Replaces `node:test`, better DX with Vite stack |
-| Module resolution | `bundler` (no `.js` extensions) | Cleaner imports, works with both Vite and Vercel |
-| Location selector | Dropdown with single option | Future-proof for adding more spots |
-| Dark mode | Deferred | Ship light-only first, CSS custom props make retrofit easy |
+| Decision          | Choice                          | Reason                                                      |
+| ----------------- | ------------------------------- | ----------------------------------------------------------- |
+| Repo              | New repo (`wind-calendar`)      | Clean slate, MVP was a prototype                            |
+| Framework         | Vite 7 + React 19               | Minimal overhead, `api/` works on Vercel as-is              |
+| CSS               | Plain CSS + custom properties   | No framework needed; custom props prep for future dark mode |
+| State             | React hooks + URL params        | No global state needed, form state drives everything        |
+| ICS parsing       | Client-side                     | API returns standard ICS, parse in browser                  |
+| Routing           | None                            | Single scrollable page, anchor sections                     |
+| Server layout     | `server/` directory             | Clean client/server separation                              |
+| Test runner       | Vitest                          | Replaces `node:test`, better DX with Vite stack             |
+| Module resolution | `bundler` (no `.js` extensions) | Cleaner imports, works with both Vite and Vercel            |
+| Location selector | Dropdown with single option     | Future-proof for adding more spots                          |
+| Dark mode         | Deferred                        | Ship light-only first, CSS custom props make retrofit easy  |
 
 ---
 
 ## Migration Reference
 
-| MVP path (`calendar-test`) | New path (`wind-calendar`) | Changes |
-|---|---|---|
-| `scraper/*` | `server/scraper/*` | Strip `.js` from imports |
-| `utils/*` | `server/utils/*` | Strip `.js` from imports |
-| `types/*` | `server/types/*` | Strip `.js` from imports |
-| `config.ts` | `server/config.ts` | Strip `.js` from imports |
-| `api/calendar.ts` | `api/calendar.ts` | Rewrite paths: `../x/` → `../server/x/`, strip `.js` |
-| `tests/*` | `tests/*` | Rewrite paths to match new `server/` layout, strip `.js` |
-| `public/index.html` | NOT copied | UI reference only — rewritten as React components |
+| MVP path (`calendar-test`) | New path (`wind-calendar`) | Changes                                                  |
+| -------------------------- | -------------------------- | -------------------------------------------------------- |
+| `scraper/*`                | `server/scraper/*`         | Strip `.js` from imports                                 |
+| `utils/*`                  | `server/utils/*`           | Strip `.js` from imports                                 |
+| `types/*`                  | `server/types/*`           | Strip `.js` from imports                                 |
+| `config.ts`                | `server/config.ts`         | Strip `.js` from imports                                 |
+| `api/calendar.ts`          | `api/calendar.ts`          | Rewrite paths: `../x/` → `../server/x/`, strip `.js`     |
+| `tests/*`                  | `tests/*`                  | Rewrite paths to match new `server/` layout, strip `.js` |
+| `public/index.html`        | NOT copied                 | UI reference only — rewritten as React components        |
 
 ---
 
@@ -133,24 +133,24 @@ Vite SPA (static)              Vercel serverless function
 - [x] 0.12 — Add/update `package.json` scripts: `test`, `fmt`, `lint`, `check`, `start`
 - [x] 0.13 — Verify: `pnpm build` passes ✅ (tests need vitest migration work)
 
-## Phase 1: Port Calendar Viewer to React
+## Phase 1: Port Calendar Viewer to React ✅
 
 Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into typed React components.
 
-- [ ] 1.1 — `src/lib/ics-parser.ts`: typed ICS parser (`IcsEvent`, `IcsDateTime` types; `unfoldLines`, `parseIcsDateTime`, `unescapeIcsText`, `parseIcs`)
-- [ ] 1.2 — `src/lib/date-utils.ts`: `getWeekStart`, `addDays`, `sameDay`, `isToday`, `formatWeekRange`, `formatTime`; `weekStartsOnSunday` as parameter not global
-- [ ] 1.3 — `src/styles/calendar.css`: port inline CSS (~430 lines), clean up, CSS custom properties for colors/sizes
-- [ ] 1.4 — `CalendarPreview.tsx`: weekly grid — time gutter (06:00–20:00), 7 day columns, absolutely-positioned event blocks (48px/hour)
-- [ ] 1.5 — `WeekNav.tsx`: today/prev/next buttons, week range title, Mon/Sun toggle
-- [ ] 1.6 — `EventTooltip.tsx`: fixed-position tooltip, mouse tracking, title/time/description
-- [ ] 1.7 — `useCalendarFeed(url)`: fetch ICS, parse with ics-parser, return `{ events, loading, error }`
-- [ ] 1.8 — `useWeekNavigation(events)`: week state, today/prev/next/goToFirstEvent, keyboard shortcuts (arrows, T), localStorage for week start pref
-- [ ] 1.9 — Wire up in `App.tsx` with hardcoded `/api/calendar` URL
-- [ ] 1.10 — Visual parity check against MVP viewer
+- [x] 1.1 — `src/lib/ics-parser.ts`: typed ICS parser (`IcsEvent`, `IcsDateTime` types; `unfoldLines`, `parseIcsDateTime`, `unescapeIcsText`, `parseIcs`)
+- [x] 1.2 — `src/lib/date-utils.ts`: `getWeekStart`, `addDays`, `sameDay`, `isToday`, `formatWeekRange`, `formatTime`; `weekStartsOnSunday` as parameter not global
+- [x] 1.3 — `src/styles/calendar.css`: port inline CSS (~430 lines), clean up, CSS custom properties for colors/sizes
+- [x] 1.4 — `CalendarPreview.tsx`: weekly grid — time gutter (06:00–20:00), 7 day columns, absolutely-positioned event blocks (48px/hour)
+- [x] 1.5 — `WeekNav.tsx`: today/prev/next buttons, week range title, Mon/Sun toggle
+- [x] 1.6 — `EventTooltip.tsx`: fixed-position tooltip, mouse tracking, title/time/description
+- [x] 1.7 — `useCalendarFeed(url)`: fetch ICS, parse with ics-parser, return `{ events, loading, error }`
+- [x] 1.8 — `useWeekNavigation(events)`: week state, today/prev/next/goToFirstEvent, keyboard shortcuts (arrows, T), localStorage for week start pref
+- [x] 1.9 — Wire up in `App.tsx` with hardcoded `/api/calendar` URL
+- [x] 1.10 — Visual parity check against MVP viewer
 
 ## Phase 2: Config Form + Live Preview
 
-- [ ] 2.1 — `ConfigForm.tsx`: location dropdown (single option: Beit Yanai), windMin/windMax number inputs, minSessionHours
+- [x] 2.1 — `ConfigForm.tsx`: location dropdown (single option: Beit Yanai), windMin/windMax number inputs, minSessionHours
 - [ ] 2.2 — `src/lib/subscribe-urls.ts`: URL builder from config params
 - [ ] 2.3 — Debounced calendar re-fetch on param change (~300ms)
 - [ ] 2.4 — URL search params sync (shareable config URLs, two-way binding)
@@ -166,6 +166,13 @@ Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into t
 - [ ] 4.2 — `Caveats.tsx`: sync frequency, forecast accuracy, session definition, daylight hours, timezone
 - [ ] 4.3 — Responsive layout: sections stack on mobile, scrollable single page
 - [ ] 4.4 — Mobile calendar: day view or simplified week (decide during implementation)
+
+## Phase 5: Align Tooling with MVP ✅
+
+- [x] 5.1 — Replace `@biomejs/biome` with `oxlint` and `oxfmt` to match MVP
+- [x] 5.2 — Update package.json scripts: `lint`, `lint:fix`, `fmt`, `fmt:check`
+- [x] 5.3 — Copy `.oxlintrc.json` config from MVP
+- [x] 5.4 — Remove Biome config files, verify lint and format still work
 
 ---
 
