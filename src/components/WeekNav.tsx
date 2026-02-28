@@ -36,7 +36,10 @@ export function WeekNav({
         >
           Mon
         </button>
-        <button className={`btn-nav ${weekStartsOnSunday ? "active" : ""}`} onClick={() => onToggleWeekStart(true)}>
+        <button
+          className={`btn-nav ${weekStartsOnSunday ? "active" : ""}`}
+          onClick={() => onToggleWeekStart(true)}
+        >
           Sun
         </button>
       </div>

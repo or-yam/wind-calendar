@@ -106,7 +106,7 @@ export function CalendarPreview({
 
                 const timeStr = `${formatTime(ev.dtstart.hour, ev.dtstart.minute)}–${formatTime(
                   ev.dtend?.hour ?? ev.dtstart.hour,
-                  ev.dtend?.minute ?? ev.dtstart.minute
+                  ev.dtend?.minute ?? ev.dtstart.minute,
                 )}`;
 
                 return (
