@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { assert, expect } from "vitest";
+import { assert } from "vitest";
 import { filterEvents, FilterConfig } from "../../../server/utils/filterEvents";
 import { WindConditionRaw } from "../../../server/types/wind-conditions";
 

@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { assert, expect } from "vitest";
+import { assert } from "vitest";
 import { generateIcsEvents } from "../../../server/utils/generateIcsEvents";
 import type { Session } from "../../../server/utils/groupSessions";
 

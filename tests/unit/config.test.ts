@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import { assert, expect } from "vitest";
+import { assert } from "vitest";
 import { parseQueryParams, resolveLocation, DEFAULTS } from "../server/config";
 
 describe("parseQueryParams", () => {

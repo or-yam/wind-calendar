@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { assert, expect } from "vitest";
+import { assert } from "vitest";
 import { groupSessions, degreesToCardinal } from "../../../server/utils/groupSessions";
 import type { WindConditionRaw } from "../../../server/types/wind-conditions";
 

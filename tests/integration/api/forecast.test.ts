@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { assert, expect } from "vitest";
+import { assert } from "vitest";
 import { getForecast } from "../../../server/scraper/forecast";
 import type { SpotInfo, ModelForecast } from "../../../server/types/forecast";
 

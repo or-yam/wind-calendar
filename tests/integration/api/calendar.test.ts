@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { assert, expect } from "vitest";
+import { assert } from "vitest";
 import handler from "../../../api/calendar";
 import type { SpotInfo } from "../../../server/types/forecast";
 import type { APIRoot } from "../../../server/types/api-response";
