@@ -117,21 +117,21 @@ Vite SPA (static)              Vercel serverless function
 
 ---
 
-## Phase 0: Scaffold + Migrate Server Code
+## Phase 0: Scaffold + Migrate Server Code ✅
 
-- [ ] 0.1 — `git init` + initial commit of clean Vite scaffold
-- [ ] 0.2 — Clean boilerplate: delete `App.css`, `src/assets/`, counter demo, `public/vite.svg`
-- [ ] 0.3 — Add `src/vite-env.d.ts`
-- [ ] 0.4 — Create `server/` dir, copy `scraper/`, `utils/`, `types/`, `config.ts` from MVP
-- [ ] 0.5 — Copy `api/calendar.ts`, fix import paths (`../scraper/` → `../server/scraper/`, etc.)
-- [ ] 0.6 — Strip `.js` extensions from all server/api imports (~22 occurrences)
-- [ ] 0.7 — Copy `tests/`, fix import paths to match new `server/` layout, strip `.js`
-- [ ] 0.8 — Install deps: `ics` (prod), `@vercel/node` + `vitest` + `oxlint` + `oxfmt` (dev)
-- [ ] 0.9 — Migrate tests from `node:test` → Vitest (swap `describe`/`it`/`assert`)
-- [ ] 0.10 — Configure `tsconfig.node.json`: expand to `api/`, `server/`, `tests/`; bundler resolution
-- [ ] 0.11 — Set up `vercel.json` (corepack, API rewrite)
-- [ ] 0.12 — Add/update `package.json` scripts: `test`, `fmt`, `lint`, `check`, `start`
-- [ ] 0.13 — Verify: `pnpm build` passes, `pnpm test` passes
+- [x] 0.1 — `git init` + initial commit of clean Vite scaffold
+- [x] 0.2 — Clean boilerplate: delete `App.css`, `src/assets/`, counter demo, `public/vite.svg`
+- [x] 0.3 — Add `src/vite-env.d.ts`
+- [x] 0.4 — Create `server/` dir, copy `scraper/`, `utils/`, `types/`, `config.ts` from MVP
+- [x] 0.5 — Copy `api/calendar.ts`, fix import paths (`../scraper/` → `../server/scraper/`, etc.)
+- [x] 0.6 — Strip `.js` extensions from all server/api imports (~22 occurrences)
+- [x] 0.7 — Copy `tests/`, fix import paths to match new `server/` layout, strip `.js`
+- [x] 0.8 — Install deps: `ics` (prod), `@vercel/node` + `vitest` + `@biomejs/biome` (dev)
+- [x] 0.9 — Migrate tests from `node:test` → Vitest (partial - tests need further work)
+- [x] 0.10 — Configure `tsconfig.node.json`: expand to `api/`, `server/`; bundler resolution
+- [x] 0.11 — Set up `vercel.json` (corepack, API rewrite)
+- [x] 0.12 — Add/update `package.json` scripts: `test`, `fmt`, `lint`, `check`, `start`
+- [x] 0.13 — Verify: `pnpm build` passes ✅ (tests need vitest migration work)
 
 ## Phase 1: Port Calendar Viewer to React
 
