@@ -1,0 +1,86 @@
+export type APIRoot = {
+  id_spot: number;
+  lat: number;
+  lon: number;
+  alt: number;
+  id_model: number;
+  model: string;
+  wgmodel: {
+    id_model: number;
+    model: string;
+    model_name: string;
+    model_longname: string;
+    lat: Array<number>;
+    lon: Array<number>;
+    pro: boolean;
+    priority: number;
+    resolution: number;
+    resolution_real: number;
+    initdate: string;
+    initstamp: number;
+    period: number;
+    hr_start: number;
+    hr_end: number;
+    hr_step: number;
+    wave: boolean;
+    maps: boolean;
+    dynamic_updates: boolean;
+    rundef: string;
+    runs: Array<{
+      initdate: string;
+      oinitdate: boolean;
+      run_hr: Array<number>;
+      run_hr_steps: Array<Array<number>>;
+      use_hr: Array<number>;
+    }>;
+  };
+  model_alt: number;
+  levels: number;
+  sunrise: string;
+  sunset: string;
+  md5chk: string;
+  fcst: {
+    initstamp: number;
+    TMP: Array<number>;
+    TCDC: Array<number>;
+    APCP1: Array<number | undefined>;
+    GUST: Array<number>;
+    FLHGT: Array<number>;
+    SLP: Array<number>;
+    HCDC: Array<number>;
+    MCDC: Array<number>;
+    LCDC: Array<number>;
+    RH: Array<number>;
+    WINDSPD: Array<number>;
+    WINDDIR: Array<number>;
+    SLHGT: Array<number>;
+    PCPT: Array<number>;
+    TMPE: Array<number>;
+    hours: Array<number>;
+    vars: Array<string>;
+    initdate: string;
+    init_d: string;
+    init_dm: string;
+    init_h: string;
+    initstr: string;
+    model_name: string;
+    model_longname: string;
+    id_model: number;
+    update_last: string;
+    update_next: string;
+    img_var_map: Array<any>;
+  };
+  fcst_sea: {
+    GUST: Array<number>;
+    WINDSPD: Array<number>;
+    WINDDIR: Array<number>;
+  };
+  fcst_land: {
+    TMP: Array<number>;
+    TMPE: Array<number>;
+  };
+  default_vars: {
+    "43": Array<string>;
+  };
+  coast: boolean;
+};
