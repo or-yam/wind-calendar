@@ -155,12 +155,12 @@ Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into t
 - [x] 2.3 — Debounced calendar re-fetch on param change (~300ms)
 - [x] 2.4 — URL search params sync (shareable config URLs, two-way binding)
 
-## Phase 2.5: Local Development Setup
+## Phase 2.5: Local Development Setup ✅
 
-- [ ] 2.5.1 — Install `vercel` CLI as devDependency
-- [ ] 2.5.2 — Add `dev:api` script to run `vercel dev` (runs both Vite + API locally)
-- [ ] 2.5.3 — Update README with local dev instructions (run `pnpm dev:api` instead of `pnpm dev`)
-- [ ] 2.5.4 — Verify API works locally at `http://localhost:3000/api/calendar`
+- [x] 2.5.1 — Install `vercel` CLI as devDependency
+- [x] 2.5.2 — Add `dev:api` script to run `vercel dev --yes` (runs both Vite + API locally)
+- [x] 2.5.3 — Verify API works locally at `http://localhost:3000/api/calendar`
+- [x] 2.5.4 — Test with agent-browser: form changes trigger API re-fetch and calendar updates
 
 ## Phase 3: Subscribe Buttons
 
