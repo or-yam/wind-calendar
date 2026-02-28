@@ -23,11 +23,7 @@ export function ConfigForm({
     <form className="config-form">
       <div className="form-group">
         <label htmlFor="location">Location</label>
-        <select
-          id="location"
-          value={location}
-          onChange={(e) => onLocationChange(e.target.value)}
-        >
+        <select id="location" value={location} onChange={(e) => onLocationChange(e.target.value)}>
           <option value="beit-yanai">Beit Yanai</option>
         </select>
       </div>
