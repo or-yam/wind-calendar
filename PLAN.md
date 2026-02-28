@@ -148,12 +148,19 @@ Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into t
 - [x] 1.9 — Wire up in `App.tsx` with hardcoded `/api/calendar` URL
 - [x] 1.10 — Visual parity check against MVP viewer
 
-## Phase 2: Config Form + Live Preview
+## Phase 2: Config Form + Live Preview ✅
 
 - [x] 2.1 — `ConfigForm.tsx`: location dropdown (single option: Beit Yanai), windMin/windMax number inputs, minSessionHours
-- [ ] 2.2 — `src/lib/subscribe-urls.ts`: URL builder from config params
-- [ ] 2.3 — Debounced calendar re-fetch on param change (~300ms)
-- [ ] 2.4 — URL search params sync (shareable config URLs, two-way binding)
+- [x] 2.2 — `src/lib/subscribe-urls.ts`: URL builder from config params
+- [x] 2.3 — Debounced calendar re-fetch on param change (~300ms)
+- [x] 2.4 — URL search params sync (shareable config URLs, two-way binding)
+
+## Phase 2.5: Local Development Setup
+
+- [ ] 2.5.1 — Install `vercel` CLI as devDependency
+- [ ] 2.5.2 — Add `dev:api` script to run `vercel dev` (runs both Vite + API locally)
+- [ ] 2.5.3 — Update README with local dev instructions (run `pnpm dev:api` instead of `pnpm dev`)
+- [ ] 2.5.4 — Verify API works locally at `http://localhost:3000/api/calendar`
 
 ## Phase 3: Subscribe Buttons
 
