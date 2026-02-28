@@ -1,5 +1,4 @@
-import { test } from "vitest";
-import { assert } from "vitest";
+import { describe, it, expect } from "vitest";
 import { getForecast } from "../../../server/scraper/forecast";
 import type { SpotInfo, ModelForecast } from "../../../server/types/forecast";
 
@@ -93,8 +92,8 @@ const createMockForecast = (id: number): ModelForecast => ({
   },
 });
 
-test("getForecast", async (t) => {
-  await t.test("should return single model forecast when modelId is provided", async () => {
+describe("getForecast", () => {
+  it("should return single model forecast when modelId is provided", async () => {
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
@@ -115,14 +114,14 @@ test("getForecast", async (t) => {
       };
 
       const result = await getForecast("771", 1);
-      assert.equal(result.id_model, 1);
-      assert.equal("source_models" in result, false);
+      expect(result.id_model).toBe(1);
+      expect("source_models" in result).toBe(false);
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  await t.test("should throw if requested model is not available", async () => {
+  it("should throw if requested model is not available", async () => {
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
@@ -137,13 +136,13 @@ test("getForecast", async (t) => {
         throw new Error(`Unexpected URL: ${url}`);
       };
 
-      await assert.rejects(() => getForecast("771", 999), /Model 999 not available/);
+      await expect(() => getForecast("771", 999)).rejects.toThrow(/Model 999 not available/);
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  /* await t.test("should handle failed model fetches gracefully", async () => {
+  /* it("should handle failed model fetches gracefully", async () => {
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = async (
@@ -167,13 +166,13 @@ test("getForecast", async (t) => {
       };
 
       const result = await getForecast("771");
-      assert.equal("source_models" in result, true);
+      expect("source_models" in result).toBe(true);
     } finally {
       globalThis.fetch = originalFetch;
     }
   }); */
 
-  await t.test("should throw if model fetch fails", async () => {
+  it("should throw if model fetch fails", async () => {
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
@@ -188,7 +187,9 @@ test("getForecast", async (t) => {
         return new Response("Error", { status: 500 });
       };
 
-      await assert.rejects(() => getForecast("771", 1), /Failed to fetch any valid forecasts/);
+      await expect(() => getForecast("771", 1)).rejects.toThrow(
+        /Failed to fetch any valid forecasts/,
+      );
     } finally {
       globalThis.fetch = originalFetch;
     }

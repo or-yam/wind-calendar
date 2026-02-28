@@ -1,5 +1,4 @@
-import { test } from "vitest";
-import { assert } from "vitest";
+import { describe, it, expect } from "vitest";
 import handler from "../../../api/calendar";
 import type { SpotInfo } from "../../../server/types/forecast";
 import type { APIRoot } from "../../../server/types/api-response";
@@ -258,8 +257,8 @@ function mockRes() {
 
 // --- Tests ---
 
-test("calendar API handler", async (t) => {
-  await t.test("full pipeline: returns ICS with events", async () => {
+describe("calendar API handler", () => {
+  it("full pipeline: returns ICS with events", async () => {
     installFetchMock();
     try {
       const req = mockReq("/api/calendar");
@@ -267,19 +266,18 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 200);
-      assert.equal(result.headers["content-type"], "text/calendar; charset=utf-8");
-      assert.equal(
-        result.headers["cache-control"],
+      expect(result.statusCode).toBe(200);
+      expect(result.headers["content-type"]).toBe("text/calendar; charset=utf-8");
+      expect(result.headers["cache-control"]).toBe(
         "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
       );
-      assert.ok(result.body.includes("BEGIN:VCALENDAR"), "Body should contain BEGIN:VCALENDAR");
+      expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("unknown location returns 400", async () => {
+  it("unknown location returns 400", async () => {
     installFetchMock();
     try {
       const req = mockReq("/api/calendar?location=unknown");
@@ -287,18 +285,15 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 400);
+      expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      assert.ok(
-        body.error.includes("Unknown location"),
-        `Expected error about unknown location, got: ${body.error}`,
-      );
+      expect(body.error).toContain("Unknown location");
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("Windguru failure returns 502 with structured error", async () => {
+  it("Windguru failure returns 502 with structured error", async () => {
     installFetchMock(() => {
       // All fetches fail
       return new Response("Internal Server Error", { status: 500 });
@@ -309,19 +304,19 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 502);
+      expect(result.statusCode).toBe(502);
       const body = JSON.parse(result.body);
-      assert.equal(body.code, "WINDGURU_DOWN");
-      assert.equal(body.error, "Windguru is temporarily unavailable");
-      assert.ok(body.suggestion, "Should include a suggestion");
-      assert.ok(body.debug?.spotId, "Should include spotId in debug");
-      assert.equal(body.debug.upstreamStatus, 500);
+      expect(body.code).toBe("WINDGURU_DOWN");
+      expect(body.error).toBe("Windguru is temporarily unavailable");
+      expect(body.suggestion).toBeTruthy();
+      expect(body.debug?.spotId).toBeTruthy();
+      expect(body.debug.upstreamStatus).toBe(500);
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("query param overrides work", async () => {
+  it("query param overrides work", async () => {
     // Use windMin=20 — our mock wind is 15kn, so nothing passes the filter.
     // Result: valid ICS but no VEVENT blocks.
     installFetchMock();
@@ -331,18 +326,15 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 200);
-      assert.ok(result.body.includes("BEGIN:VCALENDAR"), "Should still return valid ICS");
-      assert.ok(
-        !result.body.includes("BEGIN:VEVENT"),
-        "Should have no events with windMin=20 (mock wind is 15kn)",
-      );
+      expect(result.statusCode).toBe(200);
+      expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
+      expect(result.body.includes("BEGIN:VEVENT")).toBe(false);
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("ICS contains calendar events for valid wind data", async () => {
+  it("ICS contains calendar events for valid wind data", async () => {
     installFetchMock();
     try {
       const req = mockReq("/api/calendar");
@@ -350,10 +342,10 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 200);
-      assert.ok(result.body.includes("BEGIN:VEVENT"), "Should contain at least one VEVENT");
-      assert.ok(result.body.includes("END:VEVENT"), "Should contain END:VEVENT");
-      assert.ok(result.body.includes("END:VCALENDAR"), "Should contain END:VCALENDAR");
+      expect(result.statusCode).toBe(200);
+      expect(result.body.includes("BEGIN:VEVENT")).toBe(true);
+      expect(result.body.includes("END:VEVENT")).toBe(true);
+      expect(result.body.includes("END:VCALENDAR")).toBe(true);
     } finally {
       restoreFetch();
     }
@@ -361,7 +353,7 @@ test("calendar API handler", async (t) => {
 
   // --- Error path tests ---
 
-  await t.test("Windguru 429 returns 429 with rate limit info", async () => {
+  it("Windguru 429 returns 429 with rate limit info", async () => {
     installFetchMock(() => new Response("Rate limited", { status: 429 }));
     try {
       const req = mockReq("/api/calendar");
@@ -369,16 +361,16 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 429);
+      expect(result.statusCode).toBe(429);
       const body = JSON.parse(result.body);
-      assert.equal(body.code, "WINDGURU_RATE_LIMIT");
-      assert.ok(body.suggestion?.includes("5 minutes"));
+      expect(body.code).toBe("WINDGURU_RATE_LIMIT");
+      expect(body.suggestion).toContain("5 minutes");
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("Windguru 403 returns 502 with forbidden info", async () => {
+  it("Windguru 403 returns 502 with forbidden info", async () => {
     installFetchMock(() => new Response("Forbidden", { status: 403 }));
     try {
       const req = mockReq("/api/calendar");
@@ -386,15 +378,15 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 502);
+      expect(result.statusCode).toBe(502);
       const body = JSON.parse(result.body);
-      assert.equal(body.code, "WINDGURU_FORBIDDEN");
+      expect(body.code).toBe("WINDGURU_FORBIDDEN");
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("Windguru 404 returns 502 with not found info", async () => {
+  it("Windguru 404 returns 502 with not found info", async () => {
     installFetchMock(() => new Response("Not Found", { status: 404 }));
     try {
       const req = mockReq("/api/calendar");
@@ -402,16 +394,16 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 502);
+      expect(result.statusCode).toBe(502);
       const body = JSON.parse(result.body);
-      assert.equal(body.code, "WINDGURU_NOT_FOUND");
-      assert.ok(body.suggestion?.includes("spot ID"));
+      expect(body.code).toBe("WINDGURU_NOT_FOUND");
+      expect(body.suggestion).toContain("spot ID");
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("network failure returns 504 with unreachable info", async () => {
+  it("network failure returns 504 with unreachable info", async () => {
     installFetchMock(() => {
       throw new TypeError("fetch failed");
     });
@@ -421,16 +413,16 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 504);
+      expect(result.statusCode).toBe(504);
       const body = JSON.parse(result.body);
-      assert.equal(body.code, "WINDGURU_UNREACHABLE");
-      assert.ok(body.debug?.spotId, "Should include spotId");
+      expect(body.code).toBe("WINDGURU_UNREACHABLE");
+      expect(body.debug?.spotId).toBeTruthy();
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("malformed JSON response returns 502 with bad response info", async () => {
+  it("malformed JSON response returns 502 with bad response info", async () => {
     installFetchMock(() => new Response("not json {{{", { status: 200 }));
     try {
       const req = mockReq("/api/calendar");
@@ -438,16 +430,16 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 502);
+      expect(result.statusCode).toBe(502);
       const body = JSON.parse(result.body);
-      assert.equal(body.code, "WINDGURU_BAD_RESPONSE");
-      assert.ok(body.debug?.upstreamStatus === 200);
+      expect(body.code).toBe("WINDGURU_BAD_RESPONSE");
+      expect(body.debug?.upstreamStatus).toBe(200);
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("wave model failure is non-fatal — still returns ICS", async () => {
+  it("wave model failure is non-fatal — still returns ICS", async () => {
     installFetchMock((url) => {
       const params = Object.fromEntries(url.searchParams);
       // Wave model (84) fails, wind model (3) succeeds
@@ -462,14 +454,14 @@ test("calendar API handler", async (t) => {
 
       await handler(req, res);
 
-      assert.equal(result.statusCode, 200);
-      assert.ok(result.body.includes("BEGIN:VCALENDAR"), "Should still return valid ICS");
+      expect(result.statusCode).toBe(200);
+      expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
     } finally {
       restoreFetch();
     }
   });
 
-  await t.test("all error responses include debug.spotId", async () => {
+  it("all error responses include debug.spotId", async () => {
     const errorResponders: Array<{ name: string; responder: () => Response }> = [
       { name: "500", responder: () => new Response("error", { status: 500 }) },
       { name: "429", responder: () => new Response("error", { status: 429 }) },
@@ -477,7 +469,7 @@ test("calendar API handler", async (t) => {
       { name: "404", responder: () => new Response("error", { status: 404 }) },
     ];
 
-    for (const { name, responder } of errorResponders) {
+    for (const { responder } of errorResponders) {
       installFetchMock(() => responder());
       try {
         const req = mockReq("/api/calendar");
@@ -486,8 +478,8 @@ test("calendar API handler", async (t) => {
         await handler(req, res);
 
         const body = JSON.parse(result.body);
-        assert.ok(body.debug?.spotId, `${name} response should include debug.spotId`);
-        assert.ok(body.code, `${name} response should include error code`);
+        expect(body.debug?.spotId).toBeTruthy();
+        expect(body.code).toBeTruthy();
       } finally {
         restoreFetch();
       }

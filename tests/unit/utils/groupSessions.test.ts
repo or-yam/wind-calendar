@@ -1,5 +1,4 @@
-import { test } from "vitest";
-import { assert } from "vitest";
+import { describe, it, expect } from "vitest";
 import { groupSessions, degreesToCardinal } from "../../../server/utils/groupSessions";
 import type { WindConditionRaw } from "../../../server/types/wind-conditions";
 
@@ -21,24 +20,23 @@ function makeCondition(
   };
 }
 
-test("groupSessions", async (t) => {
-  await t.test("3 consecutive hours → 1 session", () => {
+describe("groupSessions", () => {
+  it("3 consecutive hours → 1 session", () => {
     const conditions = [
       makeCondition(0, 15, 20, 180),
       makeCondition(1, 15, 20, 180),
       makeCondition(2, 15, 20, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions.length, 1);
-    assert.equal(sessions[0].start.toISOString(), BASE.toISOString());
-    assert.equal(
-      sessions[0].end.toISOString(),
+    expect(sessions.length).toBe(1);
+    expect(sessions[0].start.toISOString()).toBe(BASE.toISOString());
+    expect(sessions[0].end.toISOString()).toBe(
       new Date(BASE.getTime() + 3 * 3_600_000).toISOString(),
     );
-    assert.equal(sessions[0].conditions.length, 3);
+    expect(sessions[0].conditions.length).toBe(3);
   });
 
-  await t.test("gap > 3h in middle → 2 sessions", () => {
+  it("gap > 3h in middle → 2 sessions", () => {
     const conditions = [
       makeCondition(0, 15, 20, 180),
       makeCondition(1, 15, 20, 180),
@@ -46,75 +44,74 @@ test("groupSessions", async (t) => {
       makeCondition(6, 15, 20, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions.length, 2);
-    assert.equal(sessions[0].conditions.length, 2);
-    assert.equal(sessions[1].conditions.length, 2);
+    expect(sessions.length).toBe(2);
+    expect(sessions[0].conditions.length).toBe(2);
+    expect(sessions[1].conditions.length).toBe(2);
   });
 
-  await t.test("single hour discarded with minSessionHours=2", () => {
+  it("single hour discarded with minSessionHours=2", () => {
     const conditions = [makeCondition(0, 15, 20, 180)];
     const sessions = groupSessions(conditions, 2);
-    assert.equal(sessions.length, 0);
+    expect(sessions.length).toBe(0);
   });
 
-  await t.test("2 consecutive hours kept with minSessionHours=2", () => {
+  it("2 consecutive hours kept with minSessionHours=2", () => {
     const conditions = [makeCondition(0, 15, 20, 180), makeCondition(1, 15, 20, 180)];
     const sessions = groupSessions(conditions, 2);
-    assert.equal(sessions.length, 1);
+    expect(sessions.length).toBe(1);
   });
 
-  await t.test("wind range computed correctly", () => {
+  it("wind range computed correctly", () => {
     const conditions = [
       makeCondition(0, 12, 20, 180),
       makeCondition(1, 17, 20, 180),
       makeCondition(2, 14, 20, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions[0].windMin, 12);
-    assert.equal(sessions[0].windMax, 17);
+    expect(sessions[0].windMin).toBe(12);
+    expect(sessions[0].windMax).toBe(17);
   });
 
-  await t.test("gustMax computed correctly", () => {
+  it("gustMax computed correctly", () => {
     const conditions = [
       makeCondition(0, 15, 15, 180),
       makeCondition(1, 15, 20, 180),
       makeCondition(2, 15, 18, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions[0].gustMax, 20);
+    expect(sessions[0].gustMax).toBe(20);
   });
 
-  await t.test("dominant direction picks most frequent", () => {
+  it("dominant direction picks most frequent", () => {
     const conditions = [
       makeCondition(0, 15, 20, 0),
       makeCondition(1, 15, 20, 0),
       makeCondition(2, 15, 20, 90),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions[0].dominantDirection, "N");
+    expect(sessions[0].dominantDirection).toBe("N");
   });
 
-  await t.test("empty input → empty output", () => {
+  it("empty input → empty output", () => {
     const sessions = groupSessions([], 1);
-    assert.equal(sessions.length, 0);
+    expect(sessions.length).toBe(0);
   });
 
-  await t.test("unsorted input gets sorted", () => {
+  it("unsorted input gets sorted", () => {
     const conditions = [
       makeCondition(2, 15, 20, 180),
       makeCondition(0, 15, 20, 180),
       makeCondition(1, 15, 20, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions.length, 1);
-    assert.equal(sessions[0].start.toISOString(), BASE.toISOString());
-    assert.equal(
-      sessions[0].end.toISOString(),
+    expect(sessions.length).toBe(1);
+    expect(sessions[0].start.toISOString()).toBe(BASE.toISOString());
+    expect(sessions[0].end.toISOString()).toBe(
       new Date(BASE.getTime() + 3 * 3_600_000).toISOString(),
     );
   });
 
-  await t.test("3-hourly data grouped into single session", () => {
+  it("3-hourly data grouped into single session", () => {
     // Simulate 3-hourly forecast points: offsets 24, 27, 30
     const conditions = [
       makeCondition(24, 15, 20, 180),
@@ -122,22 +119,21 @@ test("groupSessions", async (t) => {
       makeCondition(30, 15, 20, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions.length, 1);
+    expect(sessions.length).toBe(1);
     // End = last point (30h) + 3h step = 33h
-    assert.equal(
-      sessions[0].end.toISOString(),
+    expect(sessions[0].end.toISOString()).toBe(
       new Date(BASE.getTime() + 33 * 3_600_000).toISOString(),
     );
   });
 
-  await t.test("3-hourly session meets minSessionHours by time span", () => {
+  it("3-hourly session meets minSessionHours by time span", () => {
     // 2 points at 3h apart = 6h span, should pass minSessionHours=2
     const conditions = [makeCondition(24, 15, 20, 180), makeCondition(27, 15, 20, 180)];
     const sessions = groupSessions(conditions, 2);
-    assert.equal(sessions.length, 1);
+    expect(sessions.length).toBe(1);
   });
 
-  await t.test("mixed hourly then 3-hourly stays one session", () => {
+  it("mixed hourly then 3-hourly stays one session", () => {
     // Hourly: 21,22,23 then 3-hourly: 24,27
     const conditions = [
       makeCondition(21, 15, 20, 180),
@@ -147,53 +143,52 @@ test("groupSessions", async (t) => {
       makeCondition(27, 15, 20, 180),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions.length, 1);
+    expect(sessions.length).toBe(1);
     // End = 27h + 3h (last step) = 30h
-    assert.equal(
-      sessions[0].end.toISOString(),
+    expect(sessions[0].end.toISOString()).toBe(
       new Date(BASE.getTime() + 30 * 3_600_000).toISOString(),
     );
   });
 
-  await t.test("gap > 3h splits into separate sessions", () => {
+  it("gap > 3h splits into separate sessions", () => {
     // 4h gap between points should split
     const conditions = [makeCondition(0, 15, 20, 180), makeCondition(4, 15, 20, 180)];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions.length, 2);
+    expect(sessions.length).toBe(2);
   });
 
-  await t.test("waveAvg calculated correctly from conditions", () => {
+  it("waveAvg calculated correctly from conditions", () => {
     const conditions = [
       makeCondition(0, 15, 20, 180, 1.0),
       makeCondition(1, 15, 20, 180, 1.5),
       makeCondition(2, 15, 20, 180, 2.0),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions[0].waveAvg, 1.5);
+    expect(sessions[0].waveAvg).toBe(1.5);
   });
 
-  await t.test("waveAvg handles null wave heights", () => {
+  it("waveAvg handles null wave heights", () => {
     const conditions = [
       makeCondition(0, 15, 20, 180, 1.0),
       makeCondition(1, 15, 20, 180, null),
       makeCondition(2, 15, 20, 180, 2.0),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions[0].waveAvg, 1.5); // (1.0 + 2.0) / 2
+    expect(sessions[0].waveAvg).toBe(1.5); // (1.0 + 2.0) / 2
   });
 
-  await t.test("waveAvg is 0 when all wave heights are null", () => {
+  it("waveAvg is 0 when all wave heights are null", () => {
     const conditions = [
       makeCondition(0, 15, 20, 180, null),
       makeCondition(1, 15, 20, 180, null),
       makeCondition(2, 15, 20, 180, null),
     ];
     const sessions = groupSessions(conditions, 1);
-    assert.equal(sessions[0].waveAvg, 0);
+    expect(sessions[0].waveAvg).toBe(0);
   });
 });
 
-test("degreesToCardinal", async (t) => {
+describe("degreesToCardinal", () => {
   const cases: [number, string][] = [
     [0, "N"],
     [45, "NE"],
@@ -206,8 +201,8 @@ test("degreesToCardinal", async (t) => {
     [360, "N"],
   ];
   for (const [deg, expected] of cases) {
-    await t.test(`${deg}° → ${expected}`, () => {
-      assert.equal(degreesToCardinal(deg), expected);
+    it(`${deg}° → ${expected}`, () => {
+      expect(degreesToCardinal(deg)).toBe(expected);
     });
   }
 });

@@ -1,5 +1,4 @@
-import { test } from "vitest";
-import { assert } from "vitest";
+import { describe, it, expect } from "vitest";
 import { generateIcsEvents } from "../../../server/utils/generateIcsEvents";
 import type { Session } from "../../../server/utils/groupSessions";
 
@@ -36,64 +35,64 @@ function makeSession(
   };
 }
 
-test("generateIcsEvents", async (t) => {
+describe("generateIcsEvents", () => {
   const WAVE_MIN = 0.4;
 
-  await t.test("single session -> 1 event in ICS output", () => {
+  it("single session -> 1 event in ICS output", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW")], TZ, WAVE_MIN);
     const count = (ics.match(/BEGIN:VEVENT/g) || []).length;
-    assert.equal(count, 1);
+    expect(count).toBe(1);
   });
 
-  await t.test("title format: Wind prefix with range", () => {
+  it("title format: Wind prefix with range", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW")], TZ, WAVE_MIN);
-    assert.ok(ics.includes("Wind 12-17kn NW"), "should contain 'Wind 12-17kn NW'");
+    expect(ics).toContain("Wind 12-17kn NW");
   });
 
-  await t.test("title format: Wind prefix with single value", () => {
+  it("title format: Wind prefix with single value", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 15, 15, 20, "NW")], TZ, WAVE_MIN);
-    assert.ok(ics.includes("Wind 15kn NW"), "should contain 'Wind 15kn NW'");
-    assert.ok(!ics.includes("15-15kn"), "should not contain '15-15kn'");
+    expect(ics).toContain("Wind 15kn NW");
+    expect(ics).not.toContain("15-15kn");
   });
 
-  await t.test("title format: rounds wind speeds", () => {
+  it("title format: rounds wind speeds", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12.4, 17.8, 22, "NW")], TZ, WAVE_MIN);
-    assert.ok(ics.includes("Wind 12-18kn NW"), "should round 12.4 to 12 and 17.8 to 18");
+    expect(ics).toContain("Wind 12-18kn NW");
   });
 
-  await t.test("title includes wave height when > threshold", () => {
+  it("title includes wave height when > threshold", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW", 1.2)], TZ, WAVE_MIN);
-    assert.ok(ics.includes("Wind 12-17kn NW | 1.2m waves"), "should include wave height");
+    expect(ics).toContain("Wind 12-17kn NW | 1.2m waves");
   });
 
-  await t.test("title excludes wave height when <= threshold", () => {
+  it("title excludes wave height when <= threshold", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW", 0.3)], TZ, WAVE_MIN);
-    assert.ok(ics.includes("Wind 12-17kn NW"), "should contain basic title");
-    assert.ok(!ics.includes("waves"), "should not include wave height");
+    expect(ics).toContain("Wind 12-17kn NW");
+    expect(ics).not.toContain("waves");
   });
 
-  await t.test("title excludes wave height when exactly at threshold", () => {
+  it("title excludes wave height when exactly at threshold", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW", 0.4)], TZ, WAVE_MIN);
-    assert.ok(ics.includes("Wind 12-17kn NW"), "should contain basic title");
-    assert.ok(!ics.includes("waves"), "should not include wave height at threshold");
+    expect(ics).toContain("Wind 12-17kn NW");
+    expect(ics).not.toContain("waves");
   });
 
-  await t.test("description contains hourly breakdown", () => {
+  it("description contains hourly breakdown", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW")], TZ, WAVE_MIN);
-    assert.ok(ics.includes("kn"), "should contain 'kn'");
-    assert.ok(ics.includes("gusts"), "should contain 'gusts'");
+    expect(ics).toContain("kn");
+    expect(ics).toContain("gusts");
   });
 
-  await t.test("multiple sessions -> multiple events", () => {
+  it("multiple sessions -> multiple events", () => {
     const sessions = [makeSession(0, 3, 12, 17, 22, "NW"), makeSession(6, 2, 10, 14, 18, "N")];
     const ics = generateIcsEvents(sessions, TZ, WAVE_MIN);
     const count = (ics.match(/BEGIN:VEVENT/g) || []).length;
-    assert.equal(count, 2);
+    expect(count).toBe(2);
   });
 
-  await t.test("ICS output is valid", () => {
+  it("ICS output is valid", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW")], TZ, WAVE_MIN);
-    assert.ok(ics.startsWith("BEGIN:VCALENDAR"), "should start with BEGIN:VCALENDAR");
-    assert.ok(ics.trimEnd().endsWith("END:VCALENDAR"), "should end with END:VCALENDAR");
+    expect(ics.startsWith("BEGIN:VCALENDAR")).toBe(true);
+    expect(ics.trimEnd().endsWith("END:VCALENDAR")).toBe(true);
   });
 });

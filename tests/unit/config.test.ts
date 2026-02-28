@@ -1,36 +1,29 @@
-import { describe, it } from "vitest";
-import { assert } from "vitest";
-import { parseQueryParams, resolveLocation, DEFAULTS } from "../server/config";
+import { describe, it, expect } from "vitest";
+import { parseQueryParams, resolveLocation, DEFAULTS } from "../../server/config";
 
 describe("parseQueryParams", () => {
   it("returns defaults when no params given", () => {
     const params = new URLSearchParams();
     const config = parseQueryParams(params);
 
-    assert.equal(config.windMin, DEFAULTS.windMin);
-    assert.equal(config.windMax, DEFAULTS.windMax);
-    assert.equal(config.minSessionHours, DEFAULTS.minSessionHours);
-    assert.equal(config.model, DEFAULTS.model);
-    assert.equal(config.location, "beit-yanai");
+    expect(config.windMin).toBe(DEFAULTS.windMin);
+    expect(config.windMax).toBe(DEFAULTS.windMax);
+    expect(config.minSessionHours).toBe(DEFAULTS.minSessionHours);
+    expect(config.model).toBe(DEFAULTS.model);
+    expect(config.location).toBe("beit-yanai");
   });
 
   it("overrides windMin from URL param", () => {
     const params = new URLSearchParams("windMin=15");
     const config = parseQueryParams(params);
 
-    assert.equal(config.windMin, 15);
+    expect(config.windMin).toBe(15);
   });
 
   it("rejects unknown location", () => {
     const params = new URLSearchParams("location=atlantis");
 
-    assert.throws(
-      () => parseQueryParams(params),
-      (err: Error) => {
-        assert.match(err.message, /Unknown location.*"atlantis"/);
-        return true;
-      },
-    );
+    expect(() => parseQueryParams(params)).toThrow(/Unknown location.*"atlantis"/);
   });
 });
 
@@ -38,17 +31,11 @@ describe("resolveLocation", () => {
   it("returns correct spotId and tz for 'beit-yanai'", () => {
     const loc = resolveLocation("beit-yanai");
 
-    assert.equal(loc.spotId, "771");
-    assert.equal(loc.tz, "Asia/Jerusalem");
+    expect(loc.spotId).toBe("771");
+    expect(loc.tz).toBe("Asia/Jerusalem");
   });
 
   it("throws for unknown location name", () => {
-    assert.throws(
-      () => resolveLocation("narnia"),
-      (err: Error) => {
-        assert.match(err.message, /Unknown location.*"narnia"/);
-        return true;
-      },
-    );
+    expect(() => resolveLocation("narnia")).toThrow(/Unknown location.*"narnia"/);
   });
 });
