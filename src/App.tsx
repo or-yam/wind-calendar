@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
+import { Hero } from "./components/Hero";
 import { CalendarPreview } from "./components/CalendarPreview";
 import { WeekNav } from "./components/WeekNav";
 import { EventTooltip } from "./components/EventTooltip";
 import { ConfigForm } from "./components/ConfigForm";
+import { SubscribeButtons } from "./components/SubscribeButtons";
+import { Caveats } from "./components/Caveats";
 import { useCalendarFeed } from "./hooks/useCalendarFeed";
 import { useWeekNavigation } from "./hooks/useWeekNavigation";
 import { buildApiUrl, type CalendarConfig } from "./lib/subscribe-urls";
@@ -83,7 +86,9 @@ function App() {
   }
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div className="app-container">
+      <Hero />
+
       <ConfigForm
         location={config.location}
         windMin={config.windMin}
@@ -137,6 +142,11 @@ function App() {
 
       {/* Tooltip */}
       <EventTooltip event={tooltipEvent} x={tooltipPos.x} y={tooltipPos.y} />
+
+      {/* Subscribe section below calendar */}
+      <SubscribeButtons config={debouncedConfig} />
+
+      <Caveats />
     </div>
   );
 }

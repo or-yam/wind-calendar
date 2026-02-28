@@ -162,17 +162,17 @@ Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into t
 - [x] 2.5.3 — Verify API works locally at `http://localhost:3000/api/calendar`
 - [x] 2.5.4 — Test with agent-browser: form changes trigger API re-fetch and calendar updates
 
-## Phase 3: Subscribe Buttons
+## Phase 3: Subscribe Buttons ✅
 
-- [ ] 3.1 — `SubscribeButtons.tsx`: Apple Calendar (webcal://), Google Calendar, Copy URL, Download .ics
-- [ ] 3.2 — Per-provider sync frequency notes (Google ~12-24h, Apple ~15min, Outlook ~12h)
+- [x] 3.1 — `SubscribeButtons.tsx`: Apple Calendar (webcal://), Google Calendar, Copy URL, Download .ics
+- [x] 3.2 — Per-provider sync frequency notes (Google ~12-24h, Apple ~15min, Outlook ~12h)
 
-## Phase 4: Landing Page Content
+## Phase 4: Landing Page Content ✅
 
-- [ ] 4.1 — `Hero.tsx`: tagline, one-liner value prop
-- [ ] 4.2 — `Caveats.tsx`: sync frequency, forecast accuracy, session definition, daylight hours, timezone
-- [ ] 4.3 — Responsive layout: sections stack on mobile, scrollable single page
-- [ ] 4.4 — Mobile calendar: day view or simplified week (decide during implementation)
+- [x] 4.1 — `Hero.tsx`: tagline, one-liner value prop
+- [x] 4.2 — `Caveats.tsx`: sync frequency, forecast accuracy, session definition, daylight hours, timezone
+- [x] 4.3 — Responsive layout: sections stack on mobile, scrollable single page
+- [x] 4.4 — Mobile calendar: horizontal scroll on small screens for week view
 
 ## Phase 5: Align Tooling with MVP ✅
 
@@ -183,6 +183,25 @@ Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into t
 
 ---
 
-## Open Questions
+## Phase 6: Deploy to Vercel
 
-- Mobile calendar layout: day view vs simplified week?
+- [ ] 6.1 — Connect repo to Vercel
+- [ ] 6.2 — Configure environment variables (if needed)
+- [ ] 6.3 — Deploy to production
+- [ ] 6.4 — Test production deployment
+- [ ] 6.5 — Configure custom domain (optional)
+
+---
+
+## Completed
+
+All core features implemented:
+
+- ✅ Server-side code migrated from MVP
+- ✅ Calendar viewer ported to React with TypeScript
+- ✅ Live config form with URL sync
+- ✅ Subscribe buttons for all platforms
+- ✅ Hero section with value prop
+- ✅ Caveats section with detailed info
+- ✅ Responsive mobile layout
+- ✅ All checks pass (build, lint, format, test)
