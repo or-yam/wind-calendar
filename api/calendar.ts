@@ -1,13 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import type { CalendarConfig } from "../server/config";
-import { parseQueryParams, resolveLocation } from "../server/config";
-import { ApiError } from "../server/scraper/fetch";
-import { fetchWindData } from "../server/scraper/api-scraper";
-import { tryCatch } from "../server/utils/try-catch";
-import { filterEvents } from "../server/utils/filterEvents";
-import { groupSessions } from "../server/utils/groupSessions";
-import { generateIcsEvents } from "../server/utils/generateIcsEvents";
+import type { CalendarConfig } from "../server/config.js";
+import { parseQueryParams, resolveLocation } from "../server/config.js";
+import { ApiError } from "../server/scraper/fetch.js";
+import { fetchWindData } from "../server/scraper/api-scraper.js";
+import { tryCatch } from "../server/utils/try-catch.js";
+import { filterEvents } from "../server/utils/filterEvents.js";
+import { groupSessions } from "../server/utils/groupSessions.js";
+import { generateIcsEvents } from "../server/utils/generateIcsEvents.js";
 
 interface ErrorResponse {
   error: string;

@@ -1,5 +1,5 @@
-import type { APIRoot } from "../types/api-response";
-import type { SpotInfo } from "../types/forecast";
+import type { APIRoot } from "../types/api-response.js";
+import type { SpotInfo } from "../types/forecast.js";
 
 const BASE_URL = "https://www.windguru.cz/int/iapi.php";
 const REQUEST_TIMEOUT_MS = 10_000;

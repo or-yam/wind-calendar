@@ -1,7 +1,7 @@
 import { createEvents, type DateArray, type EventAttributes } from "ics";
-import type { Session } from "./groupSessions";
-import { degreesToCardinal } from "./groupSessions";
-import { toLocalTimeString } from "./timezone";
+import type { Session } from "./groupSessions.js";
+import { degreesToCardinal } from "./groupSessions.js";
+import { toLocalTimeString } from "./timezone.js";
 
 export function dateToTuple(date: Date, tz: string): [number, number, number, number, number] {
   const formatter = new Intl.DateTimeFormat("en-US", {

@@ -1,7 +1,7 @@
-import type { APIRoot } from "../types/api-response";
-import type { WindConditionRaw } from "../types/wind-conditions";
-import { tryCatch } from "../utils/try-catch";
-import { getForecast } from "./forecast";
+import type { APIRoot } from "../types/api-response.js";
+import type { WindConditionRaw } from "../types/wind-conditions.js";
+import { tryCatch } from "../utils/try-catch.js";
+import { getForecast } from "./forecast.js";
 
 type Forecast = Awaited<ReturnType<typeof getForecast>>;
 

@@ -1,5 +1,4 @@
 {
-  "corepack": true,
   "rewrites": [
     {
       "source": "/api/:path*",

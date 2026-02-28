@@ -1,5 +1,5 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
-import { getLocalHour } from "./timezone";
+import type { WindConditionRaw } from "../types/wind-conditions.js";
+import { getLocalHour } from "./timezone.js";
 
 export interface FilterConfig {
   windMin: number;

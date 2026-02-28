@@ -1,4 +1,4 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
+import type { WindConditionRaw } from "../types/wind-conditions.js";
 
 export type Session = {
   start: Date;

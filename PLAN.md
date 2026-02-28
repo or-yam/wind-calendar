@@ -183,25 +183,31 @@ Port the vanilla JS calendar from MVP's `public/index.html` (~1093 lines) into t
 
 ---
 
-## Phase 6: Deploy to Vercel
+## Phase 6: Deploy to Vercel ✅
 
-- [ ] 6.1 — Connect repo to Vercel
-- [ ] 6.2 — Configure environment variables (if needed)
-- [ ] 6.3 — Deploy to production
-- [ ] 6.4 — Test production deployment
-- [ ] 6.5 — Configure custom domain (optional)
+- [x] 6.1 — Connect repo to Vercel
+- [x] 6.2 — Configure environment variables (if needed)
+- [x] 6.3 — Deploy to production
+- [x] 6.4 — Test production deployment with agent-browser
+- [x] 6.5 — Fix TypeScript errors: add `.js` extensions to all `api/` and `server/` imports for Vercel's stricter module resolution
+- [x] 6.6 — Remove invalid `corepack` field from `vercel.json`
+
+**Production URL:** https://wind-calendar.vercel.app
 
 ---
 
-## Completed
+## Completed ✅
 
-All core features implemented:
+All features implemented and deployed:
 
 - ✅ Server-side code migrated from MVP
 - ✅ Calendar viewer ported to React with TypeScript
 - ✅ Live config form with URL sync
-- ✅ Subscribe buttons for all platforms
+- ✅ Subscribe buttons for all platforms (Apple, Google, Outlook, Download)
 - ✅ Hero section with value prop
 - ✅ Caveats section with detailed info
 - ✅ Responsive mobile layout
 - ✅ All checks pass (build, lint, format, test)
+- ✅ **Deployed to production on Vercel**
+- ✅ **API fully functional** (returns valid ICS calendar data)
+- ✅ **Calendar preview working** (shows wind sessions with live updates)
