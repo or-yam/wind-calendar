@@ -18,14 +18,14 @@ const MONTH_NAMES = [
 /**
  * Get the start of the week for a given date
  * @param date - The reference date
- * @param weekStartsOnSunday - If true, week starts on Sunday; otherwise Monday
+ * @param startOnSunday - If true, week starts on Sunday; otherwise Monday
  */
-export function getWeekStart(date: Date, weekStartsOnSunday = false): Date {
+export function getWeekStart(date: Date, startOnSunday = false): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   const dow = d.getDay(); // 0=Sun, 1=Mon ... 6=Sat
 
-  if (weekStartsOnSunday) {
+  if (startOnSunday) {
     // Start on Sunday: Sunday = 0, no change needed
     const diff = -dow;
     d.setDate(d.getDate() + diff);

@@ -1,37 +1,59 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { getWeekStart, addDays } from "../lib/date-utils";
 import type { IcsEvent } from "../lib/ics-parser";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
-  weekStartsOnMonday: boolean;
+  startOnSunday: boolean;
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
   goToFirstEvent: () => void;
-  toggleWeekStart: (startOnMonday: boolean) => void;
+  toggleWeekStart: (startOnSunday: boolean) => void;
 }
 
-const WEEK_START_KEY = "weekStartsOnMonday";
+const WEEK_START_KEY = "weekStartsOnSunday";
+
+/**
+ * Detect default week start based on user locale
+ * Returns true if week should start on Sunday
+ */
+function getDefaultWeekStart(): boolean {
+  try {
+    const locale = new Intl.Locale(navigator.language);
+    if ("weekInfo" in locale && locale.weekInfo) {
+      return (locale.weekInfo as { firstDay: number }).firstDay === 7; // 7 = Sunday, 1 = Monday
+    }
+  } catch {
+    // Fallback if weekInfo not supported
+  }
+
+  // Fallback: Sunday for US/Israel locales, Monday for others
+  const lang = navigator.language.toLowerCase();
+  return lang.startsWith("en-us") || lang.startsWith("he");
+}
 
 export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
-  // Load week start preference from localStorage
-  const [weekStartsOnMonday, setWeekStartsOnMonday] = useState(() => {
+  const [startOnSunday, setStartOnSunday] = useState(() => {
     try {
       const saved = localStorage.getItem(WEEK_START_KEY);
-      return saved === "1";
+      if (saved !== null) {
+        return saved === "1";
+      }
+      return getDefaultWeekStart();
     } catch {
-      return false;
+      // Default to Sunday if localStorage fails
+      return true;
     }
   });
 
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), weekStartsOnMonday));
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), startOnSunday));
 
   const goToWeek = useCallback(
     (date: Date) => {
-      setWeekStart(getWeekStart(date, weekStartsOnMonday));
+      setWeekStart(getWeekStart(date, startOnSunday));
     },
-    [weekStartsOnMonday],
+    [startOnSunday],
   );
 
   const goToToday = useCallback(() => {
@@ -61,51 +83,26 @@ export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
   }, [events, goToToday, goToWeek]);
 
   const toggleWeekStart = useCallback(
-    (startOnMonday: boolean) => {
-      setWeekStartsOnMonday(startOnMonday);
+    (startOnSunday: boolean) => {
+      setStartOnSunday(startOnSunday);
 
       // Save preference
       try {
-        localStorage.setItem(WEEK_START_KEY, startOnMonday ? "1" : "0");
+        localStorage.setItem(WEEK_START_KEY, startOnSunday ? "1" : "0");
       } catch {
         // localStorage may not be available
       }
 
       // Re-calculate week start for current date
       const midWeek = addDays(weekStart, 3);
-      setWeekStart(getWeekStart(midWeek, startOnMonday));
+      setWeekStart(getWeekStart(midWeek, startOnSunday));
     },
     [weekStart],
   );
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Ignore if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        goToPrev();
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        goToNext();
-      } else if (e.key === "t" || e.key === "T") {
-        goToToday();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [goToPrev, goToNext, goToToday]);
-
   return {
     weekStart,
-    weekStartsOnMonday,
+    startOnSunday,
     goToToday,
     goToPrev,
     goToNext,
