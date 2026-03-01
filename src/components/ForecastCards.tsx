@@ -1,6 +1,6 @@
 import type { IcsEvent } from "@/lib/ics-parser";
 import { windColor } from "@/lib/wind-colors";
-import { addDays, formatWeekRange } from "@/lib/date-utils";
+import { addDays } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 
 interface ForecastCardsProps {
@@ -26,14 +26,7 @@ function formatDayLabel(date: Date): string {
   return `${dow} ${mon} ${day}`;
 }
 
-function formatDuration(start: Date, end: Date): string {
-  const diffMs = end.getTime() - start.getTime();
-  const diffH = diffMs / (1000 * 60 * 60);
-  const floored = Math.floor(diffH);
-  const half = diffH - floored >= 0.4 && diffH - floored < 0.9;
-  if (half) return `(${floored}.5h)`;
-  return `(${Math.round(diffH)}h)`;
-}
+
 
 interface DayGroup {
   key: string;
@@ -65,6 +58,11 @@ function windTextColor(knots: number): string {
   return knots <= 20 ? "#0B1220" : "#E5E7EB";
 }
 
+function parseWaveHeight(summary: string): string | null {
+  const match = summary.match(/\|\s*([\d.]+)m\s*waves/i);
+  return match ? `${match[1]}m` : null;
+}
+
 export function ForecastCards({
   events,
   loading,
@@ -83,9 +81,8 @@ export function ForecastCards({
     <section className="py-12 px-5 bg-[#0B1220]">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-2xl font-semibold text-slate-200 mb-6">Upcoming Sessions</h2>
-        <p className="text-sm text-slate-500 mb-4">{formatWeekRange(weekStart)}</p>
 
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 justify-center">
           <Button variant="ghost" onClick={onPrev}>
             ← Prev
           </Button>
@@ -108,7 +105,7 @@ export function ForecastCards({
         {!loading && error && <p className="text-red-400 text-sm text-center py-8">{error}</p>}
 
         {!loading && !error && (
-          <div className="flex flex-row gap-3 overflow-x-auto pb-3 scrollbar-thin">
+          <div className="flex flex-row gap-2">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
@@ -117,16 +114,13 @@ export function ForecastCards({
                 return (
                   <div
                     key={dayKey}
-                    className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-4 min-w-[200px] flex-shrink-0 opacity-60 border-l-4"
+                    className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 opacity-60 border-l-4 aspect-[3/2] flex flex-col items-center justify-center"
                     style={{ borderLeftColor: "#FFFFFF" }}
                   >
-                    <p className="text-xs font-semibold text-slate-400 uppercase mb-1">
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
                       {formatDayLabel(day)}
                     </p>
-                    <p className="text-sm font-medium text-slate-300">Flat day.</p>
-                    <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">
-                      no sessions in window
-                    </p>
+                    <p className="text-2xl text-slate-500">―</p>
                   </div>
                 );
               }
@@ -138,31 +132,39 @@ export function ForecastCards({
                 const start = event.dtstart.date;
                 const end = event.dtend?.date ?? null;
                 const timeRange = end
-                  ? `${formatTime(start)} – ${formatTime(end)} ${formatDuration(start, end)}`
+                  ? `${formatTime(start)} – ${formatTime(end)}`
                   : formatTime(start);
                 const windLabel = wind ? `${wind.lo}–${wind.hi} kn` : null;
+                const waveLabel = parseWaveHeight(event.summary);
 
                 return (
                   <div
                     key={`${dayKey}-${idx}`}
-                    className="bg-[#111827] border border-[#1F2937] rounded-lg p-4 min-w-[200px] flex-shrink-0 border-l-4"
+                    className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 border-l-4 aspect-[3/2]"
                     style={{ borderLeftColor: borderColor }}
                   >
-                    <p className="text-xs font-semibold text-slate-400 uppercase mb-1">
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">
                       {formatDayLabel(start)}
                     </p>
-                    <p className="text-sm font-medium text-slate-200">{timeRange}</p>
-                    {windLabel && (
-                      <span
-                        className="inline-block mt-2 px-2 py-0.5 rounded text-xs font-bold"
-                        style={{
-                          backgroundColor: windColor(midKnots),
-                          color: windTextColor(midKnots),
-                        }}
-                      >
-                        {windLabel}
-                      </span>
-                    )}
+                    <p className="text-xs font-medium text-slate-200">{timeRange}</p>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {windLabel && (
+                        <span
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold"
+                          style={{
+                            backgroundColor: windColor(midKnots),
+                            color: windTextColor(midKnots),
+                          }}
+                        >
+                          {windLabel}
+                        </span>
+                      )}
+                      {waveLabel && (
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">
+                          {waveLabel}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               });
