@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme inline {
@@ -26,7 +26,8 @@
 }
 
 :root {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
+  background-color: var(--background);
 }
 
 .scrollbar-thin {
@@ -53,24 +54,24 @@
 
 @layer base {
   :root {
-    --background:             hsl(221, 47%,  9%);
-    --foreground:             hsl(220, 14%, 91%);
-    --card:                   hsl(217, 33%, 12%);
-    --card-foreground:        hsl(220, 14%, 91%);
-    --popover:                hsl(217, 33%, 12%);
-    --popover-foreground:     hsl(220, 14%, 91%);
-    --primary:                hsl(199, 89%, 48%);
-    --primary-foreground:     hsl(  0,  0%, 100%);
-    --secondary:              hsl(215, 28%, 17%);
-    --secondary-foreground:   hsl(220, 14%, 91%);
-    --muted:                  hsl(215, 28%, 17%);
-    --muted-foreground:       hsl(215, 20%, 65%);
-    --accent:                 hsl(215, 28%, 17%);
-    --accent-foreground:      hsl(220, 14%, 91%);
-    --destructive:            hsl(  0, 84%, 60%);
-    --border:                 hsl(215, 28%, 17%);
-    --input:                  hsl(215, 28%, 17%);
-    --ring:                   hsl(199, 89%, 48%);
-    --radius:                 0.5rem;
+    --background: hsl(221, 47%, 9%);
+    --foreground: hsl(220, 14%, 91%);
+    --card: hsl(217, 33%, 12%);
+    --card-foreground: hsl(220, 14%, 91%);
+    --popover: hsl(217, 33%, 12%);
+    --popover-foreground: hsl(220, 14%, 91%);
+    --primary: hsl(199, 89%, 48%);
+    --primary-foreground: hsl(0, 0%, 100%);
+    --secondary: hsl(215, 28%, 17%);
+    --secondary-foreground: hsl(220, 14%, 91%);
+    --muted: hsl(215, 28%, 17%);
+    --muted-foreground: hsl(215, 20%, 65%);
+    --accent: hsl(215, 28%, 17%);
+    --accent-foreground: hsl(220, 14%, 91%);
+    --destructive: hsl(0, 84%, 60%);
+    --border: hsl(215, 28%, 17%);
+    --input: hsl(215, 28%, 17%);
+    --ring: hsl(199, 89%, 48%);
+    --radius: 0.5rem;
   }
 }

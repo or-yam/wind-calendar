@@ -52,8 +52,7 @@ function App() {
   const calendarUrl = useMemo(() => buildApiUrl(debouncedConfig), [debouncedConfig]);
 
   const { events, loading, error } = useCalendarFeed(calendarUrl);
-  const { weekStart, goToToday, goToPrev, goToNext, goToFirstEvent } =
-    useWeekNavigation(events);
+  const { weekStart, goToToday, goToPrev, goToNext, goToFirstEvent } = useWeekNavigation(events);
 
   // Go to first event when events load
   useEffect(() => {
@@ -63,7 +62,7 @@ function App() {
   }, [events.length, goToFirstEvent]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0B1220] text-slate-200">
+    <div className="flex flex-col min-h-screen bg-background  text-slate-200">
       <Hero
         location={config.location}
         windMin={config.windMin}
@@ -84,6 +83,17 @@ function App() {
         onToday={goToToday}
       />
       <SubscribeButtons config={debouncedConfig} />
+      <section className="py-12 px-5">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-slate-200 font-semibold text-lg mb-3">About</h2>
+          <p className="text-slate-400 text-sm leading-relaxed">
+            Wind Calendar exists to give surfers a rough sense of when conditions might be worth
+            checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
+            view into your regular calendar so promising days are visible alongside everything else
+            in your life.
+          </p>
+        </div>
+      </section>
       <Caveats />
       <Footer />
     </div>

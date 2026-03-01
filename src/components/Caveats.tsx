@@ -9,10 +9,6 @@ export function Caveats() {
   return (
     <section className="bg-[#0B1220] py-16 px-5">
       <h2 className="text-2xl font-semibold text-slate-200 mb-8 text-center">Notes & FAQ</h2>
-      {/* About the goal of this app
-          that it's goal is to give general idea of when there might be good surfing conditions along side the "normal" calendar
-          it's not about accuracy
-      */}
       <div className="max-w-2xl mx-auto">
         <Accordion type="single" collapsible className="flex flex-col gap-3">
           <AccordionItem
@@ -40,6 +36,20 @@ export function Caveats() {
               Wind predictions are forecasts, not guarantees. Always check current conditions before
               heading out. Data is sourced from third-party weather APIs and may differ from
               reality.
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem
+            value="forecast-data-source"
+            className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
+          >
+            <AccordionTrigger className="text-slate-200 font-medium">
+              Where does the forecast data come from?
+            </AccordionTrigger>
+            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+              Forecast data is sourced from Windguru using the GFS 13km model. Wind predictions
+              beyond 2–3 days are inherently uncertain. Treat them as rough guidance, not reliable
+              schedules.
             </AccordionContent>
           </AccordionItem>
 

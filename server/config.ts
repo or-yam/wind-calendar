@@ -8,6 +8,9 @@ export const DEFAULTS = {
 
 export const LOCATIONS: Record<string, { spotId: string; tz: string }> = {
   "beit-yanai": { spotId: "771", tz: "Asia/Jerusalem" },
+  "bat-galim": { spotId: "885332", tz: "Asia/Jerusalem" },
+  "herzliya": { spotId: "2354", tz: "Asia/Jerusalem" },
+  "tel-aviv": { spotId: "308", tz: "Asia/Jerusalem" },
 };
 
 export type CalendarConfig = {

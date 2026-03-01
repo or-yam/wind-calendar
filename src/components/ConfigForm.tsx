@@ -40,15 +40,18 @@ export function ConfigForm({
   return (
     <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="location" className="text-slate-200">
-          Location
+        <Label htmlFor="spot" className="text-slate-200">
+          Spot
         </Label>
         <Select value={location} onValueChange={onLocationChange}>
-          <SelectTrigger id="location">
+          <SelectTrigger id="spot">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="beit-yanai">Beit Yanai</SelectItem>
+            <SelectItem value="bat-galim">Bat-galim (Haifa)</SelectItem>
+            <SelectItem value="herzliya">Herzliya</SelectItem>
+            <SelectItem value="tel-aviv">Tel Aviv</SelectItem>
           </SelectContent>
         </Select>
       </div>
