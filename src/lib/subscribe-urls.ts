@@ -44,3 +44,11 @@ export function buildGoogleCalendarUrl(config: CalendarConfig): string {
   const fullUrl = buildFullUrl(config);
   return `https://www.google.com/calendar/render?cid=${encodeURIComponent(fullUrl)}`;
 }
+
+/**
+ * Build Outlook Web calendar subscription URL
+ */
+export function buildOutlookUrl(config: CalendarConfig): string {
+  const fullUrl = buildFullUrl(config);
+  return `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(fullUrl)}`;
+}

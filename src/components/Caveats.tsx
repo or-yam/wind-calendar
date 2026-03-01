@@ -1,48 +1,85 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
 export function Caveats() {
   return (
-    <section className="caveats">
-      <h2>Important Notes</h2>
+    <section className="bg-[#0B1220] py-16 px-5">
+      <h2 className="text-2xl font-semibold text-slate-200 mb-8 text-center">Notes & FAQ</h2>
+      {/* About the goal of this app
+          that it's goal is to give general idea of when there might be good surfing conditions along side the "normal" calendar
+          it's not about accuracy
+      */}
+      <div className="max-w-2xl mx-auto">
+        <Accordion type="single" collapsible className="flex flex-col gap-3">
+          <AccordionItem
+            value="sync-frequency"
+            className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
+          >
+            <AccordionTrigger className="text-slate-200 font-medium">
+              Sync Frequency
+            </AccordionTrigger>
+            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+              Calendar refresh rates vary by provider: Apple Calendar ~15 minutes (configurable),
+              Google Calendar ~12–24 hours (can't be changed), Outlook ~12 hours. Changes to your
+              wind settings won't appear instantly.
+            </AccordionContent>
+          </AccordionItem>
 
-      <div className="caveat-item">
-        <h3>Sync Frequency</h3>
-        <p>
-          Calendar refresh rates vary by provider:
-          <strong> Google Calendar</strong> ~12–24 hours,
-          <strong> Apple Calendar</strong> ~15 minutes (configurable),
-          <strong> Outlook</strong> ~12 hours. Changes to your wind settings won't appear instantly.
-        </p>
-      </div>
+          <AccordionItem
+            value="forecast-accuracy"
+            className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
+          >
+            <AccordionTrigger className="text-slate-200 font-medium">
+              Forecast Accuracy
+            </AccordionTrigger>
+            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+              Wind predictions are forecasts, not guarantees. Always check current conditions before
+              heading out. Data is sourced from third-party weather APIs and may differ from
+              reality.
+            </AccordionContent>
+          </AccordionItem>
 
-      <div className="caveat-item">
-        <h3>Forecast Accuracy</h3>
-        <p>
-          Wind predictions are forecasts, not guarantees. Always check current conditions before
-          heading out. Data is sourced from third-party weather APIs and may differ from reality.
-        </p>
-      </div>
+          <AccordionItem
+            value="session-definition"
+            className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
+          >
+            <AccordionTrigger className="text-slate-200 font-medium">
+              Session Definition
+            </AccordionTrigger>
+            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+              A "session" is any consecutive block of hours where wind speed stays within your
+              configured range. Events shorter than your minimum session hours are filtered out.
+            </AccordionContent>
+          </AccordionItem>
 
-      <div className="caveat-item">
-        <h3>Session Definition</h3>
-        <p>
-          A "session" is any consecutive block of hours where wind speed stays within your
-          configured range. Events shorter than your minimum session hours are filtered out.
-        </p>
-      </div>
+          <AccordionItem
+            value="daylight-hours"
+            className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
+          >
+            <AccordionTrigger className="text-slate-200 font-medium">
+              Daylight Hours
+            </AccordionTrigger>
+            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+              Calendar shows 06:00–20:00 local time. Sessions outside this window are still included
+              but may not be visible in the grid.
+            </AccordionContent>
+          </AccordionItem>
 
-      <div className="caveat-item">
-        <h3>Daylight Hours</h3>
-        <p>
-          Calendar shows 06:00–20:00 local time. Sessions outside this window are still included but
-          may not be visible in the grid.
-        </p>
-      </div>
-
-      <div className="caveat-item">
-        <h3>Timezone</h3>
-        <p>
-          All times are displayed in your local timezone. Events are stored in UTC and converted for
-          display.
-        </p>
+          <AccordionItem
+            value="timezone"
+            className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
+          >
+            <AccordionTrigger className="text-slate-200 font-medium">Timezone</AccordionTrigger>
+            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+              All times are displayed in your local timezone. Events are stored in UTC and converted
+              for display.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </section>
   );

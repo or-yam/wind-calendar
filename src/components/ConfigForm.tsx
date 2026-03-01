@@ -1,3 +1,14 @@
+import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface ConfigFormProps {
   location: string;
   windMin: number;
@@ -19,49 +30,61 @@ export function ConfigForm({
   onWindMaxChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
+  const [localWind, setLocalWind] = useState([windMin, windMax]);
+  const [localSession, setLocalSession] = useState(minSessionHours);
+
+  // Sync when parent value changes (e.g. URL param update)
+  useEffect(() => { setLocalWind([windMin, windMax]); }, [windMin, windMax]);
+  useEffect(() => { setLocalSession(minSessionHours); }, [minSessionHours]);
+
   return (
-    <form className="config-form">
-      <div className="form-group">
-        <label htmlFor="location">Location</label>
-        <select id="location" value={location} onChange={(e) => onLocationChange(e.target.value)}>
-          <option value="beit-yanai">Beit Yanai</option>
-        </select>
+    <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="location" className="text-slate-200">
+          Location
+        </Label>
+        <Select value={location} onValueChange={onLocationChange}>
+          <SelectTrigger id="location">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="beit-yanai">Beit Yanai</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="windMin">Minimum Wind (knots)</label>
-        <input
-          id="windMin"
-          type="number"
-          min="0"
-          max="50"
-          value={windMin}
-          onChange={(e) => onWindMinChange(Number(e.target.value))}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-slate-200">Wind Range</Label>
+          <span className="text-slate-200 text-sm">
+            {localWind[0]} – {localWind[1]} kn
+          </span>
+        </div>
+        <Slider
+          value={localWind}
+          onValueChange={setLocalWind}
+          onValueCommit={([min, max]) => {
+            onWindMinChange(min);
+            onWindMaxChange(max);
+          }}
+          min={5}
+          max={50}
+          step={1}
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="windMax">Maximum Wind (knots)</label>
-        <input
-          id="windMax"
-          type="number"
-          min="0"
-          max="50"
-          value={windMax}
-          onChange={(e) => onWindMaxChange(Number(e.target.value))}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="minSessionHours">Minimum Session (hours)</label>
-        <input
-          id="minSessionHours"
-          type="number"
-          min="0.5"
-          max="24"
-          step="0.5"
-          value={minSessionHours}
-          onChange={(e) => onMinSessionHoursChange(Number(e.target.value))}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-slate-200">Min Session</Label>
+          <span className="text-slate-200 text-sm">{localSession} hrs</span>
+        </div>
+        <Slider
+          value={[localSession]}
+          onValueChange={([v]) => setLocalSession(v)}
+          onValueCommit={([v]) => onMinSessionHoursChange(v)}
+          min={0.5}
+          max={8}
+          step={0.5}
         />
       </div>
     </form>
