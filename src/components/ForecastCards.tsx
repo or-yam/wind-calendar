@@ -113,16 +113,29 @@ export function ForecastCards({
           <p className="text-red-400 text-sm text-center py-8">{error}</p>
         )}
 
-        {!loading && !error && groups.length === 0 && (
-          <p className="text-slate-400 text-sm text-center py-8">
-            No sessions this week. Use ← → to navigate.
-          </p>
-        )}
+        {!loading && !error && (
+          <div className="flex flex-row gap-3 overflow-x-auto pb-3 scrollbar-thin">
+            {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
+              const dayKey = day.toDateString();
+              const dayGroup = groups.find((g) => g.key === dayKey);
 
-        {!loading && !error && groups.length > 0 && (
-          <div className="flex flex-row gap-3 overflow-x-auto pb-3">
-            {groups.map((group) =>
-              group.events.map((event, idx) => {
+              if (!dayGroup) {
+                return (
+                  <div
+                    key={dayKey}
+                    className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-4 min-w-[200px] flex-shrink-0 opacity-60 border-l-4"
+                    style={{ borderLeftColor: "#FFFFFF" }}
+                  >
+                    <p className="text-xs font-semibold text-slate-400 uppercase mb-1">
+                      {formatDayLabel(day)}
+                    </p>
+                    <p className="text-sm font-medium text-slate-300">Flat day.</p>
+                    <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">no sessions in window</p>
+                  </div>
+                );
+              }
+
+              return dayGroup.events.map((event, idx) => {
                 const wind = parseWindKnots(event.summary);
                 const midKnots = wind ? wind.mid : 15;
                 const borderColor = windColor(midKnots);
@@ -131,12 +144,11 @@ export function ForecastCards({
                 const timeRange = end
                   ? `${formatTime(start)} – ${formatTime(end)} ${formatDuration(start, end)}`
                   : formatTime(start);
-                const windLabel =
-                  wind ? `${wind.lo}–${wind.hi} kn` : null;
+                const windLabel = wind ? `${wind.lo}–${wind.hi} kn` : null;
 
                 return (
                   <div
-                    key={`${group.key}-${idx}`}
+                    key={`${dayKey}-${idx}`}
                     className="bg-[#111827] border border-[#1F2937] rounded-lg p-4 min-w-[200px] flex-shrink-0 border-l-4"
                     style={{ borderLeftColor: borderColor }}
                   >
@@ -156,8 +168,8 @@ export function ForecastCards({
                     )}
                   </div>
                 );
-              })
-            )}
+              });
+            })}
           </div>
         )}
       </div>
