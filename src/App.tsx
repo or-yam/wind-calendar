@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Hero } from "./components/Hero";
 import { ForecastCards } from "./components/ForecastCards";
 import { SubscribeButtons } from "./components/SubscribeButtons";
@@ -96,6 +97,7 @@ function App() {
       </section>
       <Caveats />
       <Footer />
+      <Analytics />
     </div>
   );
 }
