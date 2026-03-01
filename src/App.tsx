@@ -74,6 +74,7 @@ function App() {
         onWindMaxChange={(windMax) => setConfig((c) => ({ ...c, windMax }))}
         onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}
       />
+      <SubscribeButtons config={debouncedConfig} />
       <ForecastCards
         events={events}
         loading={loading}
@@ -83,7 +84,6 @@ function App() {
         onNext={goToNext}
         onToday={goToToday}
       />
-      <SubscribeButtons config={debouncedConfig} />
       <section className="py-12 px-5">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-slate-200 font-semibold text-lg mb-3">About</h2>
