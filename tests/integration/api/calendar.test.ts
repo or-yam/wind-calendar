@@ -186,7 +186,7 @@ let originalFetch: typeof globalThis.fetch;
 
 function installFetchMock(responder?: (url: URL) => Response | null) {
   originalFetch = globalThis.fetch;
-  globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+  globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
     const url = new URL(input.toString());
     const params = Object.fromEntries(url.searchParams);
 

@@ -4,19 +4,19 @@ import type { IcsEvent } from "../lib/ics-parser";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
-  weekStartsOnSunday: boolean;
+  weekStartsOnMonday: boolean;
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
   goToFirstEvent: () => void;
-  toggleWeekStart: (startOnSunday: boolean) => void;
+  toggleWeekStart: (startOnMonday: boolean) => void;
 }
 
-const WEEK_START_KEY = "weekStartsOnSunday";
+const WEEK_START_KEY = "weekStartsOnMonday";
 
 export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
   // Load week start preference from localStorage
-  const [weekStartsOnSunday, setWeekStartsOnSunday] = useState(() => {
+  const [weekStartsOnMonday, setWeekStartsOnMonday] = useState(() => {
     try {
       const saved = localStorage.getItem(WEEK_START_KEY);
       return saved === "1";
@@ -25,13 +25,13 @@ export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
     }
   });
 
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), weekStartsOnSunday));
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), weekStartsOnMonday));
 
   const goToWeek = useCallback(
     (date: Date) => {
-      setWeekStart(getWeekStart(date, weekStartsOnSunday));
+      setWeekStart(getWeekStart(date, weekStartsOnMonday));
     },
-    [weekStartsOnSunday],
+    [weekStartsOnMonday],
   );
 
   const goToToday = useCallback(() => {
@@ -61,19 +61,19 @@ export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
   }, [events, goToToday, goToWeek]);
 
   const toggleWeekStart = useCallback(
-    (startOnSunday: boolean) => {
-      setWeekStartsOnSunday(startOnSunday);
+    (startOnMonday: boolean) => {
+      setWeekStartsOnMonday(startOnMonday);
 
       // Save preference
       try {
-        localStorage.setItem(WEEK_START_KEY, startOnSunday ? "1" : "0");
+        localStorage.setItem(WEEK_START_KEY, startOnMonday ? "1" : "0");
       } catch {
         // localStorage may not be available
       }
 
       // Re-calculate week start for current date
       const midWeek = addDays(weekStart, 3);
-      setWeekStart(getWeekStart(midWeek, startOnSunday));
+      setWeekStart(getWeekStart(midWeek, startOnMonday));
     },
     [weekStart],
   );
@@ -105,7 +105,7 @@ export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
 
   return {
     weekStart,
-    weekStartsOnSunday,
+    weekStartsOnMonday,
     goToToday,
     goToPrev,
     goToNext,

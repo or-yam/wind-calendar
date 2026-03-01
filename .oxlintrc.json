@@ -1,4 +1,48 @@
 {
-  "plugins": ["typescript", "unicorn", "import"],
-  "ignorePatterns": ["dist/**"]
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // ─── Base: applies to ALL files ───
+  "plugins": ["typescript", "unicorn", "import", "oxc"],
+  "env": {
+    "es2024": true
+  },
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "ignorePatterns": ["dist/**"],
+  // ─── Overrides per environment ───
+  // NOTE: plugins in overrides REPLACE the base set — must include all needed plugins
+  "overrides": [
+    // ─── Browser/React: src/**/*.{ts,tsx} ───
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "plugins": ["typescript", "unicorn", "import", "oxc", "react"],
+      "env": {
+        "browser": true
+      }
+    },
+    // ─── Server/API: server/**/*.ts, api/**/*.ts ───
+    {
+      "files": ["server/**/*.ts", "api/**/*.ts"],
+      "plugins": ["typescript", "unicorn", "import", "oxc", "node"],
+      "env": {
+        "node": true
+      }
+    },
+    // ─── Tests: tests/**/*.ts ───
+    {
+      "files": ["tests/**/*.ts"],
+      "plugins": ["typescript", "unicorn", "import", "oxc", "node", "vitest"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
 }

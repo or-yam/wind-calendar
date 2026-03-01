@@ -34,8 +34,12 @@ export function ConfigForm({
   const [localSession, setLocalSession] = useState(minSessionHours);
 
   // Sync when parent value changes (e.g. URL param update)
-  useEffect(() => { setLocalWind([windMin, windMax]); }, [windMin, windMax]);
-  useEffect(() => { setLocalSession(minSessionHours); }, [minSessionHours]);
+  useEffect(() => {
+    setLocalWind([windMin, windMax]);
+  }, [windMin, windMax]);
+  useEffect(() => {
+    setLocalSession(minSessionHours);
+  }, [minSessionHours]);
 
   return (
     <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">

@@ -96,7 +96,7 @@ describe("getForecast", () => {
   it("should return single model forecast when modelId is provided", async () => {
     const originalFetch = globalThis.fetch;
     try {
-      globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+      globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
         const url = input.toString();
         const urlObj = new URL(url);
         const params = Object.fromEntries(urlObj.searchParams);
@@ -124,7 +124,7 @@ describe("getForecast", () => {
   it("should throw if requested model is not available", async () => {
     const originalFetch = globalThis.fetch;
     try {
-      globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+      globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
         const url = input.toString();
         const urlObj = new URL(url);
         const params = Object.fromEntries(urlObj.searchParams);
@@ -146,8 +146,8 @@ describe("getForecast", () => {
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = async (
-        input: RequestInfo | URL,
-        init?: RequestInit
+        input: string | URL | Request,
+        init?: RequestInit,
       ) => {
         const url = input.toString();
         const urlObj = new URL(url);
@@ -175,7 +175,7 @@ describe("getForecast", () => {
   it("should throw if model fetch fails", async () => {
     const originalFetch = globalThis.fetch;
     try {
-      globalThis.fetch = async (input: RequestInfo | URL, _init?: RequestInit) => {
+      globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
         const url = input.toString();
         const urlObj = new URL(url);
         const params = Object.fromEntries(urlObj.searchParams);

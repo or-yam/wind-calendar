@@ -50,13 +50,11 @@ function groupByDay(events: IcsEvent[]): DayGroup[] {
     }
     map.get(key)!.events.push(event);
   }
-  return Array.from(map.values()).sort(
-    (a, b) => a.date.getTime() - b.date.getTime()
-  );
+  return Array.from(map.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 function parseWindKnots(summary: string): { lo: number; hi: number; mid: number } | null {
-  const match = summary.match(/(\d+)\s*[–\-]\s*(\d+)\s*kn/i);
+  const match = summary.match(/(\d+)\s*[–-]\s*(\d+)\s*kn/i);
   if (!match) return null;
   const lo = parseInt(match[1], 10);
   const hi = parseInt(match[2], 10);
@@ -64,7 +62,7 @@ function parseWindKnots(summary: string): { lo: number; hi: number; mid: number 
 }
 
 function windTextColor(knots: number): string {
-  return knots <= 20 ? '#0B1220' : '#E5E7EB';
+  return knots <= 20 ? "#0B1220" : "#E5E7EB";
 }
 
 export function ForecastCards({
@@ -77,16 +75,14 @@ export function ForecastCards({
   onToday,
 }: ForecastCardsProps) {
   const weekEvents = events.filter(
-    (e) => e.dtstart.date >= weekStart && e.dtstart.date < addDays(weekStart, 7)
+    (e) => e.dtstart.date >= weekStart && e.dtstart.date < addDays(weekStart, 7),
   );
   const groups = groupByDay(weekEvents);
 
   return (
     <section className="py-12 px-5 bg-[#0B1220]">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl font-semibold text-slate-200 mb-6">
-          Upcoming Sessions
-        </h2>
+        <h2 className="text-2xl font-semibold text-slate-200 mb-6">Upcoming Sessions</h2>
         <p className="text-sm text-slate-500 mb-4">{formatWeekRange(weekStart)}</p>
 
         <div className="flex gap-2 mb-6">
@@ -109,9 +105,7 @@ export function ForecastCards({
           />
         )}
 
-        {!loading && error && (
-          <p className="text-red-400 text-sm text-center py-8">{error}</p>
-        )}
+        {!loading && error && <p className="text-red-400 text-sm text-center py-8">{error}</p>}
 
         {!loading && !error && (
           <div className="flex flex-row gap-3 overflow-x-auto pb-3 scrollbar-thin">
@@ -130,7 +124,9 @@ export function ForecastCards({
                       {formatDayLabel(day)}
                     </p>
                     <p className="text-sm font-medium text-slate-300">Flat day.</p>
-                    <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">no sessions in window</p>
+                    <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">
+                      no sessions in window
+                    </p>
                   </div>
                 );
               }
@@ -155,13 +151,14 @@ export function ForecastCards({
                     <p className="text-xs font-semibold text-slate-400 uppercase mb-1">
                       {formatDayLabel(start)}
                     </p>
-                    <p className="text-sm font-medium text-slate-200">
-                      {timeRange}
-                    </p>
+                    <p className="text-sm font-medium text-slate-200">{timeRange}</p>
                     {windLabel && (
                       <span
                         className="inline-block mt-2 px-2 py-0.5 rounded text-xs font-bold"
-                        style={{ backgroundColor: windColor(midKnots), color: windTextColor(midKnots) }}
+                        style={{
+                          backgroundColor: windColor(midKnots),
+                          color: windTextColor(midKnots),
+                        }}
                       >
                         {windLabel}
                       </span>

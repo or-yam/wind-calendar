@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { filterEvents, FilterConfig } from "../../../server/utils/filterEvents";
-import { WindConditionRaw } from "../../../server/types/wind-conditions";
+import { filterEvents, type FilterConfig } from "../../../server/utils/filterEvents";
+import type { WindConditionRaw } from "../../../server/types/wind-conditions";
 
 const baseConfig: FilterConfig = {
   windMin: 10,
