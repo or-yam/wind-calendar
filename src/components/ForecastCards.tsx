@@ -26,8 +26,6 @@ function formatDayLabel(date: Date): string {
   return `${dow} ${mon} ${day}`;
 }
 
-
-
 interface DayGroup {
   key: string;
   date: Date;
