@@ -58,5 +58,6 @@
       "oxlint --fix",
       "bash -c 'tsc -b --noEmit'"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.30.3"
 }
