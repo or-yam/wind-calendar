@@ -1,26 +1,6 @@
-export const DEFAULTS = {
-  windMin: 14,
-  windMax: 35,
-  minSessionHours: 2,
-  model: 3,
-  waveHeightMin: 0.4,
-} as const;
-
-export const LOCATIONS: Record<string, { spotId: string; tz: string }> = {
-  "beit-yanai": { spotId: "771", tz: "Asia/Jerusalem" },
-  "bat-galim": { spotId: "885332", tz: "Asia/Jerusalem" },
-  herzliya: { spotId: "2354", tz: "Asia/Jerusalem" },
-  "tel-aviv": { spotId: "308", tz: "Asia/Jerusalem" },
-};
-
-export type CalendarConfig = {
-  location: string;
-  windMin: number;
-  windMax: number;
-  minSessionHours: number;
-  model: number;
-  waveHeightMin: number;
-};
+import type { CalendarConfig } from "../shared/types.js";
+import { DEFAULTS } from "../shared/constants.js";
+import { LOCATIONS } from "../shared/locations.js";
 
 export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig {
   const location = searchParams.get("location") ?? "beit-yanai";

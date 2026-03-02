@@ -28,9 +28,9 @@
         "browser": true
       }
     },
-    // ─── Server/API: server/**/*.ts, api/**/*.ts ───
+    // ─── Server/API: server/**/*.ts, api/**/*.ts, shared/**/*.ts ───
     {
-      "files": ["server/**/*.ts", "api/**/*.ts"],
+      "files": ["server/**/*.ts", "api/**/*.ts", "shared/**/*.ts"],
       "plugins": ["typescript", "unicorn", "import", "oxc", "node"],
       "env": {
         "node": true

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parseQueryParams, resolveLocation, DEFAULTS } from "../../server/config";
+import { parseQueryParams, resolveLocation } from "../../server/config";
+import { DEFAULTS } from "../../shared/constants";
 
 describe("parseQueryParams", () => {
   it("returns defaults when no params given", () => {

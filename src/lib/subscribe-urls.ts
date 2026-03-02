@@ -1,9 +1,4 @@
-export interface CalendarConfig {
-  location: string;
-  windMin: number;
-  windMax: number;
-  minSessionHours: number;
-}
+import type { CalendarConfig } from "@shared/types";
 
 /**
  * Build the API URL with query params from config

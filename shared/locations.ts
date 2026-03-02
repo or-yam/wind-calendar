@@ -1,0 +1,27 @@
+import type { LocationConfig } from "./types.js";
+
+export const LOCATIONS: Record<string, LocationConfig> = {
+  ashkelon: { spotId: "735", tz: "Asia/Jerusalem", label: "Ashkelon" },
+  atlit: { spotId: "910107", tz: "Asia/Jerusalem", label: "Atlit" },
+  "bat-galim": { spotId: "885332", tz: "Asia/Jerusalem", label: "Bat Galim (Haifa)" },
+  "bat-yam": { spotId: "769", tz: "Asia/Jerusalem", label: "Bat Yam" },
+  "beit-yanai": { spotId: "771", tz: "Asia/Jerusalem", label: "Beit Yanai" },
+  // "beit-zida": { spotId: "1108903", tz: "Asia/Jerusalem", label: "Beit Zida" },
+  bezet: { spotId: "1291209", tz: "Asia/Jerusalem", label: "Bezet (Rosh Hanikra)" },
+  caesarea: { spotId: "910318", tz: "Asia/Jerusalem", label: "Caesarea" },
+  eilat: { spotId: "435", tz: "Asia/Jerusalem", label: "Eilat" },
+  hadera: { spotId: "1108886", tz: "Asia/Jerusalem", label: "Hadera" },
+  // haifa: { spotId: "734", tz: "Asia/Jerusalem", label: "Haifa" },
+  herzliya: { spotId: "2354", tz: "Asia/Jerusalem", label: "Herzliya" },
+  // "kfar-nachum": { spotId: "1116403", tz: "Asia/Jerusalem", label: "Kfar Nachum" },
+  "kiryat-yam": { spotId: "378048", tz: "Asia/Jerusalem", label: "Kiryat Yam" },
+  "maagan-michael": { spotId: "637636", tz: "Asia/Jerusalem", label: "Maagan Michael" },
+  // migdal: { spotId: "856408", tz: "Asia/Jerusalem", label: "Migdal (Sea of Galilee)" },
+  naharia: { spotId: "757", tz: "Asia/Jerusalem", label: "Naharia" },
+  "sea-of-galilee": { spotId: "583", tz: "Asia/Jerusalem", label: "Kinnert" },
+  "shave-ziyyon": { spotId: "993220", tz: "Asia/Jerusalem", label: "Shave Ziyyon" },
+  "tel-aviv": { spotId: "308", tz: "Asia/Jerusalem", label: "Tel Aviv" },
+  // tveria: { spotId: "1285502", tz: "Asia/Jerusalem", label: "Tveria (Tiberias)" },
+  // zemach: { spotId: "1240810", tz: "Asia/Jerusalem", label: "Zemach" },
+  zichron: { spotId: "1164336", tz: "Asia/Jerusalem", label: "Zichron Yaakov" },
+} as const;

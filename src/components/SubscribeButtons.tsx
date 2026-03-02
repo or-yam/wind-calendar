@@ -5,8 +5,8 @@ import {
   buildWebcalUrl,
   buildGoogleCalendarUrl,
   buildOutlookUrl,
-  type CalendarConfig,
 } from "../lib/subscribe-urls";
+import type { CalendarConfig } from "@shared/types";
 
 interface SubscribeButtonsProps {
   config: CalendarConfig;

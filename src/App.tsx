@@ -7,22 +7,19 @@ import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
 import { useCalendarFeed } from "./hooks/useCalendarFeed";
 import { useWeekNavigation } from "./hooks/useWeekNavigation";
-import { buildApiUrl, type CalendarConfig } from "./lib/subscribe-urls";
-
-const DEFAULTS: CalendarConfig = {
-  location: "beit-yanai",
-  windMin: 14,
-  windMax: 35,
-  minSessionHours: 2,
-};
+import { buildApiUrl } from "./lib/subscribe-urls";
+import type { CalendarConfig } from "@shared/types";
+import { DEFAULTS } from "@shared/constants";
 
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
   return {
-    location: params.get("location") || DEFAULTS.location,
+    location: params.get("location") || "beit-yanai",
     windMin: Number(params.get("windMin")) || DEFAULTS.windMin,
     windMax: Number(params.get("windMax")) || DEFAULTS.windMax,
     minSessionHours: Number(params.get("minSessionHours")) || DEFAULTS.minSessionHours,
+    model: DEFAULTS.model,
+    waveHeightMin: DEFAULTS.waveHeightMin,
   };
 }
 

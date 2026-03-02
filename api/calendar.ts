@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-import type { CalendarConfig } from "../server/config.js";
+import type { CalendarConfig } from "../shared/types.js";
 import { parseQueryParams, resolveLocation } from "../server/config.js";
 import { ApiError } from "../server/scraper/fetch.js";
 import { fetchWindData } from "../server/scraper/api-scraper.js";

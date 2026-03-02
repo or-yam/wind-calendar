@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LOCATIONS } from "@shared/locations";
 
 interface ConfigFormProps {
   location: string;
@@ -19,6 +20,11 @@ interface ConfigFormProps {
   onWindMaxChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
 }
+
+const LOCATIONS_ARRAY = Object.entries(LOCATIONS).map(([key, { label }]) => ({
+  key,
+  label,
+}));
 
 export function ConfigForm({
   location,
@@ -52,10 +58,11 @@ export function ConfigForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="beit-yanai">Beit Yanai</SelectItem>
-            <SelectItem value="bat-galim">Bat-galim (Haifa)</SelectItem>
-            <SelectItem value="herzliya">Herzliya</SelectItem>
-            <SelectItem value="tel-aviv">Tel Aviv</SelectItem>
+            {LOCATIONS_ARRAY.map((loc) => (
+              <SelectItem key={loc.key} value={loc.key}>
+                {loc.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
