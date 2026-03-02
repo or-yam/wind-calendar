@@ -47,9 +47,9 @@ export function Caveats() {
               Where does the forecast data come from?
             </AccordionTrigger>
             <AccordionContent className="text-slate-400 text-sm leading-relaxed">
-              Forecast data is sourced from Windguru using the GFS 13km model. Wind predictions
-              beyond 2–3 days are inherently uncertain. Treat them as rough guidance, not reliable
-              schedules.
+              Forecast data is sourced from Windguru using the selected forecast model. Wind
+              predictions beyond 2–3 days are inherently uncertain. Treat them as rough guidance,
+              not reliable schedules.
             </AccordionContent>
           </AccordionItem>
 

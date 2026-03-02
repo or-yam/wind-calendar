@@ -70,19 +70,44 @@ function mergeWaveData(windData: WindConditionRaw[], waveForecast: Forecast): vo
   }
 }
 
-export async function fetchWindData(locationCode: string): Promise<{
+export async function fetchWindData(
+  locationCode: string,
+  modelId: number,
+): Promise<{
   windData: WindConditionRaw[];
   sunrise: string;
   sunset: string;
 }> {
   // Fetch wind and wave models independently — wave failure is non-fatal
   const [windResult, waveResult] = await Promise.all([
-    tryCatch(getForecast(locationCode, 3)),
+    tryCatch(getForecast(locationCode, modelId)),
     tryCatch(getForecast(locationCode, 84)),
   ]);
 
   if (windResult.error) {
-    throw windResult.error; // Wind data is required — propagate original error
+    // Try to fallback to GFS (model 3) if a different model was requested
+    if (modelId !== 3) {
+      console.error(
+        `Model ${modelId} fetch failed for spot ${locationCode}, falling back to GFS (model 3): ${windResult.error.message}`,
+      );
+      const fallbackResult = await tryCatch(getForecast(locationCode, 3));
+      if (fallbackResult.error) {
+        throw fallbackResult.error; // Both failed, propagate fallback error
+      }
+      // Use fallback data
+      const sunrise = validateTimeString(fallbackResult.data.sunrise, "sunrise");
+      const sunset = validateTimeString(fallbackResult.data.sunset, "sunset");
+      const windData = extractWindData(fallbackResult.data, locationCode);
+      if (waveResult.error) {
+        console.error(
+          `Wave model fetch failed for spot ${locationCode} (non-fatal): ${waveResult.error.message}`,
+        );
+      } else {
+        mergeWaveData(windData, waveResult.data);
+      }
+      return { windData, sunrise, sunset };
+    }
+    throw windResult.error; // GFS itself failed — propagate original error
   }
 
   const sunrise = validateTimeString(windResult.data.sunrise, "sunrise");

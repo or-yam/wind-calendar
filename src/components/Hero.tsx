@@ -2,10 +2,13 @@ import { ConfigForm } from "./ConfigForm";
 
 interface HeroProps {
   location: string;
+  model: number;
+  availableModels: number[];
   windMin: number;
   windMax: number;
   minSessionHours: number;
   onLocationChange: (location: string) => void;
+  onModelChange: (model: number) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
@@ -13,10 +16,13 @@ interface HeroProps {
 
 export function Hero({
   location,
+  model,
+  availableModels,
   windMin,
   windMax,
   minSessionHours,
   onLocationChange,
+  onModelChange,
   onWindMinChange,
   onWindMaxChange,
   onMinSessionHoursChange,
@@ -33,10 +39,13 @@ export function Hero({
       </div>
       <ConfigForm
         location={location}
+        model={model}
+        availableModels={availableModels}
         windMin={windMin}
         windMax={windMax}
         minSessionHours={minSessionHours}
         onLocationChange={onLocationChange}
+        onModelChange={onModelChange}
         onWindMinChange={onWindMinChange}
         onWindMaxChange={onWindMaxChange}
         onMinSessionHoursChange={onMinSessionHoursChange}

@@ -9,13 +9,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LOCATIONS } from "@shared/locations";
+import { MODELS } from "@shared/models";
 
 interface ConfigFormProps {
   location: string;
+  model: number;
+  availableModels: number[];
   windMin: number;
   windMax: number;
   minSessionHours: number;
   onLocationChange: (location: string) => void;
+  onModelChange: (model: number) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
@@ -28,10 +32,13 @@ const LOCATIONS_ARRAY = Object.entries(LOCATIONS).map(([key, { label }]) => ({
 
 export function ConfigForm({
   location,
+  model,
+  availableModels,
   windMin,
   windMax,
   minSessionHours,
   onLocationChange,
+  onModelChange,
   onWindMinChange,
   onWindMaxChange,
   onMinSessionHoursChange,
@@ -61,6 +68,29 @@ export function ConfigForm({
             {LOCATIONS_ARRAY.map((loc) => (
               <SelectItem key={loc.key} value={loc.key}>
                 {loc.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="model" className="text-slate-200">
+          Forecast Model
+        </Label>
+        <Select value={model.toString()} onValueChange={(v) => onModelChange(Number(v))}>
+          <SelectTrigger id="model">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.values(MODELS).map((m) => (
+              <SelectItem
+                key={m.id}
+                value={m.id.toString()}
+                disabled={!availableModels.includes(m.id)}
+              >
+                {m.name}
+                {!availableModels.includes(m.id) && " (unavailable)"}
               </SelectItem>
             ))}
           </SelectContent>
