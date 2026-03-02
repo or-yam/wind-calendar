@@ -1,6 +1,6 @@
 ---
 name: wind-calendar
-description: Get wind forecast calendar feeds for windsurfing and kitesurfing spots in Israel. Returns ICS calendar feeds with sessions filtered by wind speed, wave height, and duration. Use when users want to add wind forecasts to their calendar, check upcoming good wind days, find optimal windsurfing/kitesurfing conditions, or subscribe to automated wind session alerts. Triggers on "wind forecast", "windsurfing", "kitesurfing", "wind calendar", "wind conditions", "good wind days", "when is good wind", or mentions of Israeli beach spots (Beit Yanai, Herzliya, Tel Aviv, Bat Galim).
+description: Display current wind forecasts and calendar feeds for Israeli windsurfing/kitesurfing spots. **Fetch and parse ICS data immediately** when users ask to see forecasts, then offer calendar subscription. Use when users want to see upcoming wind conditions, check "when is good wind", or add forecasts to their calendar. Triggers on "show wind", "wind forecast", "what's the forecast", "when is good wind", "windsurfing", "kitesurfing", or Israeli beach spot names (Beit Yanai, Herzliya, Tel Aviv, Bat Galim).
 ---
 
 # Wind Calendar
@@ -23,12 +23,33 @@ The calendar feeds can be subscribed to in Apple Calendar, Google Calendar, Outl
 
 Use this skill when:
 
-- User wants to add wind forecasts to their calendar
-- User asks about upcoming good wind conditions or "when is good wind"
+- User asks to **see/show/display** wind forecasts ("show me wind", "what's the forecast", "tell me the forecast")
+- User asks about upcoming good wind conditions ("when is good wind", "any good wind days")
+- User wants to add wind forecasts to their calendar or subscribe
 - User mentions windsurfing, kitesurfing, or wind sports activities
 - User asks about wind conditions at specific Israeli beach locations
-- User wants automated alerts for optimal wind sessions
-- User wants to subscribe to ongoing wind forecasts
+
+## Default Behavior: Fetch First, Then Offer Subscription
+
+**When users ask to see/show the forecast:**
+
+1. **Immediately fetch** the ICS data from the API endpoint
+2. **Parse and display** upcoming wind sessions in readable format:
+   - Date and time range (convert UTC to local or show as-is)
+   - Wind speed range, direction, wave height (from SUMMARY field)
+   - Hourly breakdown (from DESCRIPTION field)
+3. **Then recommend** subscribing for automatic updates with platform-specific instructions
+
+**When users explicitly ask to subscribe or add to calendar:**
+
+Skip the fetch and go straight to subscription instructions.
+
+**ICS Format Overview:**
+
+- Each wind session is a VEVENT block
+- SUMMARY: "Wind 13-14kn N | 0.7m waves"
+- DTSTART/DTEND: UTC timestamps
+- DESCRIPTION: Hourly conditions (newline-separated)
 
 ## Available Locations
 
@@ -197,7 +218,35 @@ When the forecast updates, subscribed calendars will automatically receive the n
 
 ## Example Agent Workflows
 
-### Workflow 1: Basic Calendar Subscription
+### Workflow 1: Display Current Forecast
+
+**User**: "Show me wind forecast in Beit Yanai" / "When is good wind at Herzliya this week?"
+
+**Agent Actions**:
+
+1. Construct URL: `https://wind-calendar.vercel.app/api/calendar?location=beit-yanai`
+2. **Fetch the ICS data** using curl/HTTP/WebFetch
+3. **Parse and display** upcoming sessions in readable format:
+
+```
+Upcoming wind sessions for Beit Yanai:
+
+1. March 12, 2026 — 08:00–20:00 (Asia/Jerusalem)
+   Wind: 14–25kn NE | Waves: 1.4m
+   • 08:00 — 24.9kn (gusts 26.6kn) E
+   • 11:00 — 16.7kn (gusts 16.5kn) NE
+   • 14:00 — 14kn (gusts 13.6kn) NE
+   • 17:00 — 15kn (gusts 16.4kn) N
+
+2. March 15, 2026 — 14:00–20:00 (Asia/Jerusalem)
+   Wind: 15–16kn NW | Waves: 0.8m
+   • 14:00 — 14.6kn (gusts 10.9kn) NW
+   • 17:00 — 15.6kn (gusts 16kn) N
+```
+
+4. **Recommend subscription**: "Want me to add this to your calendar so it updates automatically?"
+
+### Workflow 2: Calendar Subscription
 
 **User**: "Add windsurfing forecasts for Herzliya to my calendar"
 
@@ -206,17 +255,8 @@ When the forecast updates, subscribed calendars will automatically receive the n
 1. Construct URL: `https://wind-calendar.vercel.app/api/calendar?location=herzliya`
 2. Detect user's platform (if possible) or provide all options
 3. For Apple users, provide webcal URL: `webcal://wind-calendar.vercel.app/api/calendar?location=herzliya`
-4. Explain: "This will show upcoming wind sessions with 14-35 knot winds, minimum 2-hour duration, updating automatically every 6 hours"
-
-### Workflow 2: Custom Wind Thresholds
-
-**User**: "When is good wind at Beit Yanai this week? I need at least 18 knots"
-
-**Agent Actions**:
-
-1. Construct customized URL: `https://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=18`
-2. Provide subscription instructions based on user's platform
-3. Explain: "This calendar will show sessions with 18+ knot winds. The forecast updates automatically, so you'll always see the latest predictions"
+4. For Google/Outlook users, provide https:// URL with platform-specific instructions (see sections below)
+5. Explain: "This calendar will update automatically every 6 hours with fresh forecasts (14-35kn winds, 2+ hour sessions)"
 
 ### Workflow 3: Kitesurfing-Specific Requirements
 
