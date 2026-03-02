@@ -10,12 +10,14 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "lint:ci": "oxlint --format=github",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
     "test": "vitest run",
     "check": "pnpm run fmt:check && pnpm run lint && tsc -b && vitest run",
     "start": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -41,11 +43,21 @@
     "@types/react-dom": "^19.2.3",
     "@vercel/node": "^5.6.9",
     "@vitejs/plugin-react": "^5.1.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.1",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "typescript": "~5.9.3",
     "vercel": "^50.25.4",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
-  }
+  },
+  "lint-staged": {
+    "*": "oxfmt --no-error-on-unmatched-pattern --write",
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "oxlint --fix",
+      "bash -c 'tsc -b --noEmit'"
+    ]
+  },
+  "packageManager": "pnpm@10.30.3"
 }
