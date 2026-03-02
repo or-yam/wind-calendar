@@ -34,24 +34,36 @@ The filtering logic:
 
 API query parameters:
 
-| Parameter         | Type   | Default      | Description                                               |
-| ----------------- | ------ | ------------ | --------------------------------------------------------- |
-| `location`        | string | `beit-yanai` | One of: `beit-yanai`, `bat-galim`, `herzliya`, `tel-aviv` |
-| `windMin`         | number | `14`         | Minimum wind speed in knots (>= 0)                        |
-| `windMax`         | number | `35`         | Maximum wind speed in knots (<= 200)                      |
-| `minSessionHours` | number | `2`          | Minimum session duration in hours (0-24)                  |
+| Parameter         | Type   | Default      | Description                                                                              |
+| ----------------- | ------ | ------------ | ---------------------------------------------------------------------------------------- |
+| `location`        | string | `beit-yanai` | One of: `beit-yanai`, `bat-galim`, `herzliya`, `tel-aviv`                                |
+| `windMin`         | number | `14`         | Minimum wind speed in knots (>= 0)                                                       |
+| `windMax`         | number | `35`         | Maximum wind speed in knots (<= 200)                                                     |
+| `minSessionHours` | number | `2`          | Minimum session duration in hours (0-24)                                                 |
+| `model`           | number | `3`          | Forecast model: `3` (GFS 13km), `45` (ICON 13km), `59` (GDPS 15km), `117` (IFS-HRES 9km) |
 
 **Example API request:**
 
 ```bash
-curl "https://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=14&windMax=35&minSessionHours=2"
+curl "https://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=14&windMax=35&minSessionHours=2&model=3"
 ```
 
 **Subscribe in calendar apps:**
 
 ```
-webcal://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=14&windMax=35&minSessionHours=2
+webcal://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=14&windMax=35&minSessionHours=2&model=3
 ```
+
+### Forecast Models
+
+Choose from 4 different weather models:
+
+- **Model 3 (GFS 13km)** - Global model, default, good general coverage
+- **Model 45 (ICON 13km)** - German model, good for Europe/Mediterranean
+- **Model 59 (GDPS 15km)** - Canadian model, alternative global view
+- **Model 117 (IFS-HRES 9km)** - ECMWF high-resolution, often most accurate
+
+Different models can show different forecasts. If a model fails, the API automatically falls back to GFS (model 3).
 
 Replace `https://` with `webcal://` and paste into your calendar app (Apple Calendar, Google Calendar, etc.)
 

@@ -78,6 +78,11 @@ https://wind-calendar.vercel.app/api/calendar
 - `windMax` - Maximum wind speed in knots (default: 35)
 - `minSessionHours` - Minimum session duration in hours (default: 2)
 - `waveHeightMin` - Minimum wave height in meters (default: 0.4)
+- `model` - Forecast model ID (default: 3)
+  - `3` - GFS 13km (Global Forecast System - default)
+  - `45` - ICON 13km (German weather model)
+  - `59` - GDPS 15km (Canadian global model)
+  - `117` - IFS-HRES 9km (ECMWF high-resolution)
 
 ### Parameter Constraints
 
@@ -103,6 +108,14 @@ https://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=18&win
 ```
 
 This filters for stronger, longer sessions.
+
+### Using Alternative Forecast Model
+
+```
+https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=117
+```
+
+This uses the ECMWF IFS-HRES 9km model (often considered most accurate). If the selected model is unavailable or fails, the API automatically falls back to GFS (model 3).
 
 ### Beginner-Friendly Settings
 
@@ -210,11 +223,12 @@ When the forecast updates, subscribed calendars will automatically receive the n
 
 ## Important Limitations
 
-- **Forecast Accuracy**: Forecasts come from Windguru and are subject to typical weather prediction limitations
+- **Forecast Accuracy**: Forecasts come from Windguru and are subject to typical weather prediction limitations. Different models can show different predictions - no model is always correct.
 - **Geographic Coverage**: Currently limited to Israeli Mediterranean coast locations
 - **Daylight Hours Only**: Sessions are filtered to occur during daylight (based on sunrise/sunset)
 - **Timezone**: All times are in Asia/Jerusalem timezone
 - **Sync Delays**: Calendar app sync frequencies vary (Google Calendar is the slowest)
+- **Model Availability**: All locations currently support all 4 models, but if a model fails, the API automatically falls back to GFS (model 3)
 
 ## Example Agent Workflows
 
@@ -288,6 +302,18 @@ Upcoming wind sessions for Beit Yanai:
 2. Suggest subscribing to both calendars with different names/colors
 3. Or: Offer to fetch both ICS files and compare upcoming sessions
 4. Explain: "You can subscribe to both and see them side-by-side in your calendar"
+
+### Workflow 6: Comparing Different Models
+
+**User**: "Show me what ECMWF says about the wind this week versus GFS"
+
+**Agent Actions**:
+
+1. Fetch ICS for same location with model=117 (ECMWF): `https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=117`
+2. Fetch ICS for same location with model=3 (GFS): `https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=3`
+3. Parse and compare the sessions from both models
+4. Display differences: "ECMWF predicts wind on March 12-13, while GFS shows March 13-14"
+5. Explain: "Different models can show different forecasts. ECMWF (IFS-HRES) is often considered most accurate for short-term forecasts."
 
 ## Troubleshooting
 

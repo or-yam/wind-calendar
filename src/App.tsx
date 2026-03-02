@@ -10,6 +10,7 @@ import { useWeekNavigation } from "./hooks/useWeekNavigation";
 import { buildApiUrl } from "./lib/subscribe-urls";
 import type { CalendarConfig } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
+import { LOCATIONS } from "@shared/locations";
 
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
@@ -18,7 +19,7 @@ function parseUrlParams(): CalendarConfig {
     windMin: Number(params.get("windMin")) || DEFAULTS.windMin,
     windMax: Number(params.get("windMax")) || DEFAULTS.windMax,
     minSessionHours: Number(params.get("minSessionHours")) || DEFAULTS.minSessionHours,
-    model: DEFAULTS.model,
+    model: Number(params.get("model")) || DEFAULTS.model,
     waveHeightMin: DEFAULTS.waveHeightMin,
   };
 }
@@ -38,6 +39,7 @@ function App() {
         windMin: config.windMin.toString(),
         windMax: config.windMax.toString(),
         minSessionHours: config.minSessionHours.toString(),
+        model: config.model.toString(),
       });
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       window.history.replaceState(null, "", newUrl);
@@ -59,14 +61,30 @@ function App() {
     }
   }, [events.length, goToFirstEvent]);
 
+  // Handler for location change - check if model is available in new location
+  const handleLocationChange = (location: string) => {
+    const newLocation = LOCATIONS[location];
+    const newModel = newLocation.models.includes(config.model) ? config.model : DEFAULTS.model;
+
+    setConfig((c) => ({ ...c, location, model: newModel }));
+  };
+
+  // Handler for model change
+  const handleModelChange = (model: number) => {
+    setConfig((c) => ({ ...c, model }));
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background  text-slate-200">
       <Hero
         location={config.location}
+        model={config.model}
+        availableModels={LOCATIONS[config.location].models}
         windMin={config.windMin}
         windMax={config.windMax}
         minSessionHours={config.minSessionHours}
-        onLocationChange={(location) => setConfig((c) => ({ ...c, location }))}
+        onLocationChange={handleLocationChange}
+        onModelChange={handleModelChange}
         onWindMinChange={(windMin) => setConfig((c) => ({ ...c, windMin }))}
         onWindMaxChange={(windMax) => setConfig((c) => ({ ...c, windMax }))}
         onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}

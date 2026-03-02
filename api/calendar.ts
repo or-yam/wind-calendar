@@ -166,7 +166,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const location = resolveLocation(config.location);
 
-  const { data: fetchResult, error: fetchError } = await tryCatch(fetchWindData(location.spotId));
+  const { data: fetchResult, error: fetchError } = await tryCatch(
+    fetchWindData(location.spotId, config.model),
+  );
 
   if (fetchError) {
     const { status, body } = classifyFetchError(fetchError, location.spotId);

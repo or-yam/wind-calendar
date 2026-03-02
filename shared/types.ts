@@ -11,4 +11,5 @@ export interface LocationConfig {
   spotId: string;
   tz: string;
   label: string;
+  models: number[];
 }
