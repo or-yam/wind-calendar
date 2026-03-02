@@ -45,11 +45,19 @@ function groupByDay(events: IcsEvent[]): DayGroup[] {
 }
 
 function parseWindKnots(summary: string): { lo: number; hi: number; mid: number } | null {
-  const match = summary.match(/(\d+)\s*[–-]\s*(\d+)\s*kn/i);
-  if (!match) return null;
-  const lo = parseInt(match[1], 10);
-  const hi = parseInt(match[2], 10);
-  return { lo, hi, mid: (lo + hi) / 2 };
+  // Match range "15-20kn" or single value "15kn"
+  const rangeMatch = summary.match(/(\d+)\s*[–-]\s*(\d+)\s*kn/i);
+  if (rangeMatch) {
+    const lo = parseInt(rangeMatch[1], 10);
+    const hi = parseInt(rangeMatch[2], 10);
+    return { lo, hi, mid: (lo + hi) / 2 };
+  }
+  const singleMatch = summary.match(/(\d+)\s*kn/i);
+  if (singleMatch) {
+    const val = parseInt(singleMatch[1], 10);
+    return { lo: val, hi: val, mid: val };
+  }
+  return null;
 }
 
 function windTextColor(knots: number): string {
@@ -132,7 +140,11 @@ export function ForecastCards({
                 const timeRange = end
                   ? `${formatTime(start)} – ${formatTime(end)}`
                   : formatTime(start);
-                const windLabel = wind ? `${wind.lo}–${wind.hi} kn` : null;
+                const windLabel = wind
+                  ? wind.lo === wind.hi
+                    ? `${wind.lo} kn`
+                    : `${wind.lo}–${wind.hi} kn`
+                  : null;
                 const waveLabel = parseWaveHeight(event.summary);
 
                 return (

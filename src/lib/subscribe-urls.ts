@@ -9,6 +9,7 @@ export function buildApiUrl(config: CalendarConfig): string {
     windMin: config.windMin.toString(),
     windMax: config.windMax.toString(),
     minSessionHours: config.minSessionHours.toString(),
+    model: config.model.toString(),
   });
   return `/api/calendar?${params.toString()}`;
 }

@@ -41,19 +41,22 @@ export function useCalendarFeed(url: string): UseCalendarFeedResult {
         setEvents(parsedEvents);
         setError(null);
       } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          // Request was cancelled, ignore
+          return;
+        }
+        let msg = "Unknown error";
         if (err instanceof Error) {
-          if (err.name === "AbortError") {
-            // Request was cancelled, ignore
-            return;
-          }
-          let msg = err.message || "Unknown error";
+          msg = err.message || msg;
           if (err.name === "TypeError" && msg === "Failed to fetch") {
             msg =
               "Network error.\n\nThe server may be down or CORS is blocking the request. Make sure the dev server is running at the URL above.";
           }
-          setError(msg);
-          setEvents([]);
+        } else {
+          msg = String(err);
         }
+        setError(msg);
+        setEvents([]);
       } finally {
         setLoading(false);
       }

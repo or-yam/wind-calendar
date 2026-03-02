@@ -8,6 +8,7 @@ import { tryCatch } from "../server/utils/try-catch.js";
 import { filterEvents } from "../server/utils/filterEvents.js";
 import { groupSessions } from "../server/utils/groupSessions.js";
 import { generateIcsEvents } from "../server/utils/generateIcsEvents.js";
+import { checkRateLimit } from "../server/utils/rate-limit.js";
 
 interface ErrorResponse {
   error: string;
@@ -16,7 +17,11 @@ interface ErrorResponse {
   debug?: Record<string, unknown>;
 }
 
-function classifyFetchError(error: Error, spotId: string): { status: number; body: ErrorResponse } {
+function classifyFetchError(
+  error: Error,
+  spotId: string,
+  isDev: boolean,
+): { status: number; body: ErrorResponse } {
   const debug: Record<string, unknown> = { spotId };
 
   if (error instanceof ApiError) {
@@ -30,7 +35,7 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
           error: "Windguru rate limit exceeded",
           code: "WINDGURU_RATE_LIMIT",
           suggestion: "Try again in 5 minutes",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -42,7 +47,7 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
           error: "Invalid request to Windguru",
           code: "WINDGURU_BAD_REQUEST",
           suggestion: "Check that the spot ID is valid",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -54,7 +59,7 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
           error: "Windguru denied access",
           code: "WINDGURU_FORBIDDEN",
           suggestion: "The spot may be restricted or Windguru may be blocking requests",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -66,7 +71,7 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
           error: "Spot not found on Windguru",
           code: "WINDGURU_NOT_FOUND",
           suggestion: "The spot ID may have changed or been removed",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -78,7 +83,7 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
           error: "Windguru is temporarily unavailable",
           code: "WINDGURU_DOWN",
           suggestion: "Try again later",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -91,7 +96,7 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
           error: "Invalid response from Windguru",
           code: "WINDGURU_BAD_RESPONSE",
           suggestion: "Windguru may have changed their API format",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -101,10 +106,10 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
       return {
         status: 504,
         body: {
-          error: error.message,
+          error: "Could not reach Windguru",
           code: "WINDGURU_UNREACHABLE",
           suggestion: "Could not reach Windguru. Try again in a few minutes",
-          debug,
+          ...(isDev && { debug }),
         },
       };
     }
@@ -114,9 +119,9 @@ function classifyFetchError(error: Error, spotId: string): { status: number; bod
   return {
     status: 502,
     body: {
-      error: error.message,
+      error: "Upstream request failed",
       code: "FETCH_FAILED",
-      debug,
+      ...(isDev && { debug }),
     },
   };
 }
@@ -156,6 +161,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  const clientIp =
+    (Array.isArray(req.headers["x-forwarded-for"])
+      ? req.headers["x-forwarded-for"][0]
+      : req.headers["x-forwarded-for"]?.split(",")[0]?.trim()) ??
+    req.socket?.remoteAddress ??
+    "unknown";
+
+  const rateCheck = checkRateLimit(clientIp);
+  if (rateCheck.limited) {
+    res.setHeader("Retry-After", rateCheck.retryAfter.toString());
+    return res.status(429).json({
+      error: "Too many requests",
+      code: "RATE_LIMITED",
+      suggestion: `Try again in ${rateCheck.retryAfter} seconds`,
+    });
+  }
+
   let config;
   try {
     config = parseQueryParams(url.searchParams);
@@ -171,7 +193,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   );
 
   if (fetchError) {
-    const { status, body } = classifyFetchError(fetchError, location.spotId);
+    const { status, body } = classifyFetchError(fetchError, location.spotId, isDev);
     return res.status(status).json(body);
   }
 
@@ -183,11 +205,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       error: "Failed to generate calendar",
       code: "PIPELINE_ERROR",
-      debug: {
-        message,
-        spotId: location.spotId,
-        location: config.location,
-      },
+      ...(isDev && {
+        debug: {
+          message,
+          spotId: location.spotId,
+          location: config.location,
+        },
+      }),
     });
   }
 

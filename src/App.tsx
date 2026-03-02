@@ -12,14 +12,21 @@ import type { CalendarConfig } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
 import { LOCATIONS } from "@shared/locations";
 
+function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
+  const raw = params.get(key);
+  if (raw === null) return fallback;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : fallback;
+}
+
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
   return {
     location: params.get("location") || "beit-yanai",
-    windMin: Number(params.get("windMin")) || DEFAULTS.windMin,
-    windMax: Number(params.get("windMax")) || DEFAULTS.windMax,
-    minSessionHours: Number(params.get("minSessionHours")) || DEFAULTS.minSessionHours,
-    model: Number(params.get("model")) || DEFAULTS.model,
+    windMin: parseNumParam(params, "windMin", DEFAULTS.windMin),
+    windMax: parseNumParam(params, "windMax", DEFAULTS.windMax),
+    minSessionHours: parseNumParam(params, "minSessionHours", DEFAULTS.minSessionHours),
+    model: parseNumParam(params, "model", DEFAULTS.model),
     waveHeightMin: DEFAULTS.waveHeightMin,
   };
 }
@@ -75,7 +82,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background  text-slate-200">
+    <div className="flex flex-col min-h-screen bg-background text-slate-200">
       <Hero
         location={config.location}
         model={config.model}

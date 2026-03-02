@@ -74,8 +74,8 @@ export function Caveats() {
               Daylight Hours
             </AccordionTrigger>
             <AccordionContent className="text-slate-400 text-sm leading-relaxed">
-              Calendar shows 06:00–20:00 local time. Sessions outside this window are still included
-              but may not be visible in the grid.
+              Only daylight hours (sunrise to sunset) are shown. Sessions starting before sunrise or
+              after sunset are filtered out.
             </AccordionContent>
           </AccordionItem>
 
