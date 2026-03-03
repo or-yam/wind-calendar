@@ -4,7 +4,7 @@ export interface OpenMeteoForecastResponse {
   longitude: number;
   elevation: number;
   generationtime_ms: number;
-  utc_offset_seconds: number;
+  utc_offset_seconds: number; // Timezone offset in seconds (e.g. 7200 for UTC+2)
   timezone: string;
   timezone_abbreviation: string;
   hourly: {

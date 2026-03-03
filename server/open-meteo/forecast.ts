@@ -16,6 +16,27 @@ function extractTime(isoTimestamp: string): string {
 }
 
 /**
+ * Convert Open-Meteo ISO timestamp (without TZ suffix) to Date in UTC.
+ * Open-Meteo returns timestamps in the requested timezone but without suffix.
+ * We need to interpret them correctly by applying the UTC offset.
+ *
+ * Example: "2026-03-03T00:00" with utc_offset_seconds=7200 (Asia/Jerusalem)
+ *   → Represents 2026-03-03 00:00 in Asia/Jerusalem timezone
+ *   → Equivalent to 2026-03-02 22:00 UTC
+ */
+function parseOpenMeteoTimestamp(isoString: string, utcOffsetSeconds: number): Date {
+  // Append "Z" to force UTC interpretation, then subtract offset
+  // This ensures consistent parsing regardless of server timezone
+  const utcDate = new Date(isoString + "Z");
+
+  // Subtract the UTC offset to convert from "local time" to actual UTC
+  // If timezone is UTC+2 (7200s), a timestamp "00:00" in that zone is "22:00" UTC the previous day
+  const utcTimestamp = utcDate.getTime() - utcOffsetSeconds * 1000;
+
+  return new Date(utcTimestamp);
+}
+
+/**
  * Convert Open-Meteo forecast response to WindConditionRaw[].
  */
 function extractWindData(forecast: OpenMeteoForecastResponse): WindConditionRaw[] {
@@ -25,11 +46,12 @@ function extractWindData(forecast: OpenMeteoForecastResponse): WindConditionRaw[
     throw new Error("Missing required forecast data (time or wind_speed_10m)");
   }
 
+  const utcOffset = forecast.utc_offset_seconds;
   const windData: WindConditionRaw[] = [];
 
   for (let i = 0; i < time.length; i++) {
     windData.push({
-      date: new Date(time[i]),
+      date: parseOpenMeteoTimestamp(time[i], utcOffset),
       windSpeed: wind_speed_10m[i] ?? null,
       windDirection: wind_direction_10m?.[i] ?? null,
       windGusts: wind_gusts_10m?.[i] ?? null,

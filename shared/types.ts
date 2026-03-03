@@ -12,4 +12,5 @@ export interface LocationConfig {
   tz: string;
   label: string;
   models: number[];
+  coordinates?: { lat: number; lon: number };
 }
