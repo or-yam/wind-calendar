@@ -125,7 +125,7 @@ export function ConfigForm({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <Label className="text-slate-200">Wind Range</Label>
-          <span className="text-slate-200 text-sm">
+          <span className="text-slate-200 text-sm tabular-nums">
             {localWind[0]} – {localWind[1]} kn
           </span>
         </div>
@@ -145,7 +145,7 @@ export function ConfigForm({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <Label className="text-slate-200">Min Session</Label>
-          <span className="text-slate-200 text-sm">{localSession} hrs</span>
+          <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
         </div>
         <Slider
           value={[localSession]}

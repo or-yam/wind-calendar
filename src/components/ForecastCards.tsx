@@ -160,7 +160,7 @@ export function ForecastCards({
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {windLabel && (
                         <span
-                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold"
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
                           style={{
                             backgroundColor: windColor(midKnots),
                             color: windTextColor(midKnots),
@@ -170,7 +170,7 @@ export function ForecastCards({
                         </span>
                       )}
                       {waveLabel && (
-                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white tabular-nums">
                           {waveLabel}
                         </span>
                       )}
