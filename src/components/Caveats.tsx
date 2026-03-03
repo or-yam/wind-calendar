@@ -47,7 +47,8 @@ export function Caveats() {
               Where does the forecast data come from?
             </AccordionTrigger>
             <AccordionContent className="text-slate-400 text-sm leading-relaxed">
-              Forecast data is sourced from Windguru using the selected forecast model. Wind
+              Forecast data is sourced from Open-Meteo (primary) or Windguru (fallback) using public
+              weather model data (GFS, ICON, GDPS, IFS-HRES) from NOAA, DWD, CMC, and ECMWF. Wind
               predictions beyond 2–3 days are inherently uncertain. Treat them as rough guidance,
               not reliable schedules.
             </AccordionContent>
