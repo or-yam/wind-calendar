@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 import type { CalendarConfig } from "../shared/types.js";
 import { parseQueryParams, resolveLocation } from "../server/config.js";
-import { ApiError } from "../server/scraper/fetch.js";
-import { fetchWindData } from "../server/scraper/api-scraper.js";
+import { ApiError } from "../server/windguru/fetch.js";
+import { fetchWindData } from "../server/windguru/api.js";
 import { fetchOpenMeteoData } from "../server/open-meteo/forecast.js";
 import {
   getProvider,
@@ -12,6 +12,7 @@ import {
   isOpenMeteoModelId,
   type Provider,
   type WindguruModelId,
+  type ModelId,
 } from "../shared/models.js";
 import { tryCatch } from "../server/utils/try-catch.js";
 import { filterEvents } from "../server/utils/filterEvents.js";
@@ -232,7 +233,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const location = resolveLocation(config.location);
 
   // Type assertion safe because parseQueryParams validates with isValidModelId
-  const modelId = config.model as import("../shared/models.js").ModelId;
+  const modelId = config.model as ModelId;
   const provider = getProvider(modelId);
 
   let fetchResult: Awaited<ReturnType<typeof fetchWindData>>;

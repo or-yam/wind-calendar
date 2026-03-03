@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getForecast } from "../../../server/scraper/forecast";
+import { getForecast } from "../../../server/windguru/forecast";
 import type { SpotInfo, ModelForecast } from "../../../server/types/forecast";
 
 const mockSpotInfo: SpotInfo = {

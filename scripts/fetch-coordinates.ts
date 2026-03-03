@@ -5,7 +5,7 @@
  */
 
 import { LOCATIONS } from "../shared/locations.js";
-import { fetchSpotInfo } from "../server/scraper/fetch.js";
+import { fetchSpotInfo } from "../server/windguru/fetch.js";
 
 async function fetchCoordinates(spotId: string): Promise<{ lat: number; lon: number } | null> {
   try {

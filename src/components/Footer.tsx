@@ -26,7 +26,14 @@ export function Footer() {
           >
             Open-Meteo.com
           </a>{" "}
-          and Windguru
+          <a
+            href="https://www.windguru.cz/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-400 transition-colors"
+          >
+            and Windguru
+          </a>
         </div>
       </div>
     </footer>
