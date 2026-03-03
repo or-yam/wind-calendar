@@ -205,12 +205,12 @@ Open-Meteo requires CC-BY 4.0 attribution. Add a visible link/credit in the UI, 
 10. ✅ **Fix failing tests** — Updated test assertions for new error structure (`debug.locationInfo`)
 11. ✅ **Fix CSP for dev** — Relaxed Content Security Policy for Vite dev mode compatibility
 
-### Phase 3 (IN PROGRESS)
+### Phase 3 (COMPLETE - 2026-03-03)
 
 12. ✅ **Apply CSP conditionally** — Environment-based CSP via Vite plugin (strict prod, relaxed dev)
-13. ⏳ **Update tests with Open-Meteo mocks** — Add test coverage for Open-Meteo provider
-14. ⏳ **Delete Windguru code** — Remove `server/scraper/`, old types (or keep as fallback)
-15. ⏳ **Update README** — Remove Windguru references, document Open-Meteo
+13. ✅ **Update tests with Open-Meteo mocks** — Added comprehensive test coverage for Open-Meteo provider
+14. ✅ **Keep Windguru code** — Retained as fallback provider for reliability
+15. ✅ **Update README** — Documented both providers, Open-Meteo as primary with Windguru as legacy fallback
 
 ## Resolved Questions
 
@@ -219,8 +219,8 @@ Open-Meteo requires CC-BY 4.0 attribution. Add a visible link/credit in the UI, 
 - ✅ **Sunrise/sunset: use Open-Meteo `daily` param?** → Yes, implemented in Phase 1
 - ✅ **Inland spots marine API coverage?** → Non-fatal failure pattern, works correctly
 
-## Open Questions (Phase 2b+)
+## Resolved Questions (Phase 3+)
 
-- Should Windguru be deprecated or kept indefinitely as fallback?
-- Monitoring/alerting for fallback usage?
-- When to make Open-Meteo the default in UI?
+- ✅ **Should Windguru be deprecated or kept indefinitely as fallback?** → Kept as fallback provider for reliability
+- ⏳ **Monitoring/alerting for fallback usage?** → Monitor via response headers (`X-Fallback-Used`)
+- ✅ **When to make Open-Meteo the default in UI?** → Already default (Open-Meteo listed first as "Recommended")
