@@ -241,21 +241,44 @@ GET /api/calendar?location=tel-aviv&model=3&wind_min=14&wind_max=30&min_session_
 
 ---
 
+## Phase 2a: Backend Unification (COMPLETE - 2026-03-03)
+
+✅ **Implemented unified provider routing:**
+
+1. ✅ Unified model namespace (`om_gfs`, `om_icon`, `om_gdps`, `om_ifs` for Open-Meteo)
+2. ✅ Provider routing in `/api/calendar` based on model ID
+3. ✅ Open-Meteo → Windguru fallback implemented
+4. ✅ Response headers: `X-Data-Source`, `X-Fallback-Used`
+5. ✅ Full backward compatibility (`?model=3` still works)
+
+**Files modified (7):**
+
+- Backend: `shared/models.ts`, `shared/types.ts`, `server/config.ts`, `api/calendar.ts`
+- Frontend: `src/App.tsx`, `src/components/Hero.tsx`, `src/components/ConfigForm.tsx` (type compatibility only)
+
+**Testing results:**
+
+- All 4 Open-Meteo models: ✓
+- All 4 Windguru models: ✓
+- Fallback behavior: ✓
+- TypeScript: ✓
+- Linter: ✓
+
+---
+
 ## Next Steps (Future Work)
 
 As per migration/02.md:
 
-1. Add model dropdown in UI with provider grouping (Windguru / Open-Meteo)
-2. Implement Open-Meteo → Windguru fallback
-3. Add Open-Meteo attribution in footer (CC-BY 4.0)
-4. Unified model namespace (`om_gfs`, `om_icon`, etc.)
-5. Deprecation plan for Windguru (keep indefinitely as fallback)
+1. **Phase 2b:** Add model dropdown in UI with provider grouping (Windguru / Open-Meteo)
+2. **Phase 2b:** Add Open-Meteo attribution in footer (CC-BY 4.0)
+3. **Phase 2c:** Deprecation plan for Windguru (keep indefinitely as fallback)
 
 ---
 
 ## Validation Summary
 
-✅ **All tests pass:**
+✅ **Phase 1 - Isolated endpoint:**
 
 - Sunrise/sunset extraction: ✓
 - Wind data integrity: ✓
@@ -265,4 +288,12 @@ As per migration/02.md:
 - All 18 locations ready: ✓
 - No Windguru regressions: ✓
 
-**Ready for production deployment as isolated endpoint.**
+✅ **Phase 2a - Backend unification:**
+
+- Provider routing: ✓
+- Open-Meteo models (`om_gfs`, etc.): ✓
+- Windguru backward compatibility: ✓
+- Fallback behavior: ✓
+- Response headers: ✓
+
+**Status:** Ready for Phase 2b (Frontend integration)

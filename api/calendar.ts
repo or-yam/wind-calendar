@@ -4,6 +4,15 @@ import type { CalendarConfig } from "../shared/types.js";
 import { parseQueryParams, resolveLocation } from "../server/config.js";
 import { ApiError } from "../server/scraper/fetch.js";
 import { fetchWindData } from "../server/scraper/api-scraper.js";
+import { fetchOpenMeteoData } from "../server/open-meteo/forecast.js";
+import {
+  getProvider,
+  getWindguruFallback,
+  getOpenMeteoSlug,
+  isOpenMeteoModelId,
+  type Provider,
+  type WindguruModelId,
+} from "../shared/models.js";
 import { tryCatch } from "../server/utils/try-catch.js";
 import { filterEvents } from "../server/utils/filterEvents.js";
 import { groupSessions } from "../server/utils/groupSessions.js";
@@ -19,10 +28,12 @@ interface ErrorResponse {
 
 function classifyFetchError(
   error: Error,
-  spotId: string,
+  provider: Provider,
+  locationInfo: string,
   isDev: boolean,
 ): { status: number; body: ErrorResponse } {
-  const debug: Record<string, unknown> = { spotId };
+  const providerName = provider === "windguru" ? "Windguru" : "Open-Meteo";
+  const debug: Record<string, unknown> = { provider, locationInfo };
 
   if (error instanceof ApiError) {
     debug.url = error.url;
@@ -32,8 +43,8 @@ function classifyFetchError(
       return {
         status: 429,
         body: {
-          error: "Windguru rate limit exceeded",
-          code: "WINDGURU_RATE_LIMIT",
+          error: `${providerName} rate limit exceeded`,
+          code: `${provider.toUpperCase()}_RATE_LIMIT`,
           suggestion: "Try again in 5 minutes",
           ...(isDev && { debug }),
         },
@@ -44,9 +55,12 @@ function classifyFetchError(
       return {
         status: 502,
         body: {
-          error: "Invalid request to Windguru",
-          code: "WINDGURU_BAD_REQUEST",
-          suggestion: "Check that the spot ID is valid",
+          error: `Invalid request to ${providerName}`,
+          code: `${provider.toUpperCase()}_BAD_REQUEST`,
+          suggestion:
+            provider === "windguru"
+              ? "Check that the spot ID is valid"
+              : "Check that coordinates and model are valid",
           ...(isDev && { debug }),
         },
       };
@@ -56,9 +70,12 @@ function classifyFetchError(
       return {
         status: 502,
         body: {
-          error: "Windguru denied access",
-          code: "WINDGURU_FORBIDDEN",
-          suggestion: "The spot may be restricted or Windguru may be blocking requests",
+          error: `${providerName} denied access`,
+          code: `${provider.toUpperCase()}_FORBIDDEN`,
+          suggestion:
+            provider === "windguru"
+              ? "The spot may be restricted or Windguru may be blocking requests"
+              : "Open-Meteo may be blocking requests",
           ...(isDev && { debug }),
         },
       };
@@ -68,9 +85,12 @@ function classifyFetchError(
       return {
         status: 502,
         body: {
-          error: "Spot not found on Windguru",
-          code: "WINDGURU_NOT_FOUND",
-          suggestion: "The spot ID may have changed or been removed",
+          error: `Data not found on ${providerName}`,
+          code: `${provider.toUpperCase()}_NOT_FOUND`,
+          suggestion:
+            provider === "windguru"
+              ? "The spot ID may have changed or been removed"
+              : "The location may not be covered by Open-Meteo",
           ...(isDev && { debug }),
         },
       };
@@ -80,8 +100,8 @@ function classifyFetchError(
       return {
         status: 502,
         body: {
-          error: "Windguru is temporarily unavailable",
-          code: "WINDGURU_DOWN",
+          error: `${providerName} is temporarily unavailable`,
+          code: `${provider.toUpperCase()}_DOWN`,
           suggestion: "Try again later",
           ...(isDev && { debug }),
         },
@@ -93,9 +113,9 @@ function classifyFetchError(
       return {
         status: 502,
         body: {
-          error: "Invalid response from Windguru",
-          code: "WINDGURU_BAD_RESPONSE",
-          suggestion: "Windguru may have changed their API format",
+          error: `Invalid response from ${providerName}`,
+          code: `${provider.toUpperCase()}_BAD_RESPONSE`,
+          suggestion: `${providerName} may have changed their API format`,
           ...(isDev && { debug }),
         },
       };
@@ -106,9 +126,9 @@ function classifyFetchError(
       return {
         status: 504,
         body: {
-          error: "Could not reach Windguru",
-          code: "WINDGURU_UNREACHABLE",
-          suggestion: "Could not reach Windguru. Try again in a few minutes",
+          error: `Could not reach ${providerName}`,
+          code: `${provider.toUpperCase()}_UNREACHABLE`,
+          suggestion: `Could not reach ${providerName}. Try again in a few minutes`,
           ...(isDev && { debug }),
         },
       };
@@ -119,11 +139,34 @@ function classifyFetchError(
   return {
     status: 502,
     body: {
-      error: "Upstream request failed",
+      error: `${providerName} request failed`,
       code: "FETCH_FAILED",
       ...(isDev && { debug }),
     },
   };
+}
+
+/**
+ * Fetch wind data from Windguru with error handling.
+ * Extracted to avoid duplication between main path and fallback path.
+ */
+async function fetchWindguruWithErrorHandling(
+  spotId: string,
+  modelId: WindguruModelId,
+  locationInfo: string,
+  isDev: boolean,
+): Promise<
+  | { success: true; data: Awaited<ReturnType<typeof fetchWindData>> }
+  | { success: false; status: number; body: ErrorResponse }
+> {
+  const { data, error } = await tryCatch(fetchWindData(spotId, modelId));
+
+  if (error) {
+    const { status, body } = classifyFetchError(error, "windguru", locationInfo, isDev);
+    return { success: false, status, body };
+  }
+
+  return { success: true, data };
 }
 
 function buildCalendar(
@@ -178,7 +221,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  let config;
+  let config: CalendarConfig;
   try {
     config = parseQueryParams(url.searchParams);
   } catch (err) {
@@ -188,13 +231,106 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const location = resolveLocation(config.location);
 
-  const { data: fetchResult, error: fetchError } = await tryCatch(
-    fetchWindData(location.spotId, config.model),
-  );
+  // Type assertion safe because parseQueryParams validates with isValidModelId
+  const modelId = config.model as import("../shared/models.js").ModelId;
+  const provider = getProvider(modelId);
 
-  if (fetchError) {
-    const { status, body } = classifyFetchError(fetchError, location.spotId, isDev);
-    return res.status(status).json(body);
+  let fetchResult: Awaited<ReturnType<typeof fetchWindData>>;
+  let dataSource: Provider = provider;
+  let fallbackUsed = false;
+
+  if (isOpenMeteoModelId(modelId)) {
+    // Open-Meteo path with Windguru fallback
+    if (!location.coordinates) {
+      return res.status(400).json({
+        error: "Location coordinates unavailable for Open-Meteo",
+        code: "MISSING_COORDINATES",
+        suggestion: "This location does not support Open-Meteo models",
+      });
+    }
+
+    const openMeteoSlug = getOpenMeteoSlug(modelId);
+
+    if (isDev) {
+      console.log(`[API] Fetching Open-Meteo: ${config.location}, model ${openMeteoSlug}`);
+    }
+
+    const { data: omData, error: omError } = await tryCatch(
+      fetchOpenMeteoData(
+        location.coordinates.lat,
+        location.coordinates.lon,
+        openMeteoSlug,
+        location.tz,
+      ),
+    );
+
+    if (omError) {
+      // Fallback to Windguru
+      if (isDev) {
+        console.error(`[API] Open-Meteo failed: ${omError.message}`);
+      }
+
+      const fallbackModelId = getWindguruFallback(modelId);
+
+      if (fallbackModelId) {
+        if (isDev) {
+          console.log(`[API] Falling back to Windguru model ${fallbackModelId}`);
+        }
+
+        const locationInfo = `location=${config.location}, spotId=${location.spotId}`;
+        const result = await fetchWindguruWithErrorHandling(
+          location.spotId,
+          fallbackModelId,
+          locationInfo,
+          isDev,
+        );
+
+        if (!result.success) {
+          return res.status(result.status).json(result.body);
+        }
+
+        fetchResult = result.data;
+        dataSource = "windguru";
+        fallbackUsed = true;
+      } else {
+        // No fallback available (shouldn't happen, but handle it)
+        const { status, body } = classifyFetchError(
+          omError,
+          "openmeteo",
+          `location=${config.location}, model=${config.model}`,
+          isDev,
+        );
+        return res.status(status).json(body);
+      }
+    } else {
+      fetchResult = omData;
+      dataSource = "openmeteo";
+    }
+  } else {
+    // Windguru path (no fallback to Open-Meteo)
+    if (isDev) {
+      console.log(`[API] Fetching Windguru: ${config.location}, model ${modelId}`);
+    }
+
+    const locationInfo = `location=${config.location}, spotId=${location.spotId}`;
+    const result = await fetchWindguruWithErrorHandling(
+      location.spotId,
+      modelId,
+      locationInfo,
+      isDev,
+    );
+
+    if (!result.success) {
+      return res.status(result.status).json(result.body);
+    }
+
+    fetchResult = result.data;
+    dataSource = "windguru";
+  }
+
+  // Assert non-null (TypeScript can't prove this through complex control flow)
+  if (!fetchResult) {
+    throw new Error("Internal error: fetchResult is null after provider routing");
   }
 
   let icsString;
@@ -216,6 +352,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  res.setHeader("X-Data-Source", dataSource);
+  if (fallbackUsed) {
+    res.setHeader("X-Fallback-Used", "true");
+  }
   res.setHeader(
     "Cache-Control",
     "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",

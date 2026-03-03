@@ -19,6 +19,13 @@ function parseNumParam(params: URLSearchParams, key: string, fallback: number): 
   return Number.isFinite(num) ? num : fallback;
 }
 
+function parseModelParam(params: URLSearchParams, fallback: number | string): number | string {
+  const raw = params.get("model");
+  if (raw === null) return fallback;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : raw; // Return string if not a number
+}
+
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
   return {
@@ -26,7 +33,7 @@ function parseUrlParams(): CalendarConfig {
     windMin: parseNumParam(params, "windMin", DEFAULTS.windMin),
     windMax: parseNumParam(params, "windMax", DEFAULTS.windMax),
     minSessionHours: parseNumParam(params, "minSessionHours", DEFAULTS.minSessionHours),
-    model: parseNumParam(params, "model", DEFAULTS.model),
+    model: parseModelParam(params, DEFAULTS.model),
     waveHeightMin: DEFAULTS.waveHeightMin,
   };
 }
@@ -71,13 +78,16 @@ function App() {
   // Handler for location change - check if model is available in new location
   const handleLocationChange = (location: string) => {
     const newLocation = LOCATIONS[location];
-    const newModel = newLocation.models.includes(config.model) ? config.model : DEFAULTS.model;
+    const newModel =
+      typeof config.model === "number" && newLocation.models.includes(config.model)
+        ? config.model
+        : DEFAULTS.model;
 
     setConfig((c) => ({ ...c, location, model: newModel }));
   };
 
   // Handler for model change
-  const handleModelChange = (model: number) => {
+  const handleModelChange = (model: number | string) => {
     setConfig((c) => ({ ...c, model }));
   };
 

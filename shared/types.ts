@@ -3,7 +3,7 @@ export interface CalendarConfig {
   windMin: number;
   windMax: number;
   minSessionHours: number;
-  model: number;
+  model: number | string; // Support both Windguru (number) and Open-Meteo (string)
   waveHeightMin: number;
 }
 
