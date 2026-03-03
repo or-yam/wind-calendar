@@ -1,8 +1,9 @@
 # Phase 3: Conditional CSP Based on Environment
 
-**Date:** TBD  
-**Status:** ⏳ TODO  
-**Priority:** Medium (Security improvement)
+**Date:** 2026-03-03  
+**Status:** ✅ COMPLETE  
+**Priority:** Medium (Security improvement)  
+**Completed:** 2026-03-03
 
 ---
 
@@ -225,6 +226,51 @@ For even better security, use nonces instead of `'unsafe-inline'`:
 This eliminates need for `'unsafe-inline'` entirely.
 
 ---
+
+## Implementation Results
+
+**Approach Used:** Vite HTML transform plugin (not Edge middleware)
+
+**Rationale:** This is a Vite SPA + Vercel API routes project (not Next.js). Using Vite's `transformIndexHtml` hook is simpler and more appropriate than Edge middleware for static builds.
+
+### Files Modified
+
+1. ✅ `vite.config.ts` — Added `injectCSP()` plugin that transforms HTML at build/dev time
+2. ✅ `vercel.json` — Removed CSP header (kept other security headers)
+
+### Implementation
+
+Created a Vite plugin that injects a CSP meta tag:
+
+- **Dev mode** (`ctx.server !== undefined`): Relaxed CSP with `'unsafe-inline'` and localhost
+- **Production build**: Strict CSP without `'unsafe-inline'` in script-src
+
+The CSP is injected as:
+
+```html
+<meta http-equiv="Content-Security-Policy" content="..." />
+```
+
+### Test Results
+
+✅ **Development mode:**
+
+- CSP includes `script-src 'self' 'unsafe-inline'` for Vite HMR
+- CSP includes `connect-src ... http://localhost:* ws://localhost:*` for Vite websocket
+- No CSP violations in console
+- Vite HMR works correctly
+
+✅ **Production build:**
+
+- CSP has strict `script-src 'self' https://va.vercel-scripts.com` (no `'unsafe-inline'`)
+- No localhost URLs in connect-src
+- Other security headers unchanged in `vercel.json`
+
+✅ **Tests:**
+
+- All 65 tests passing
+- TypeScript: ✓
+- Linter: ✓
 
 ## Acceptance Criteria
 

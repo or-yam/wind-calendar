@@ -205,9 +205,9 @@ Open-Meteo requires CC-BY 4.0 attribution. Add a visible link/credit in the UI, 
 10. ✅ **Fix failing tests** — Updated test assertions for new error structure (`debug.locationInfo`)
 11. ✅ **Fix CSP for dev** — Relaxed Content Security Policy for Vite dev mode compatibility
 
-### Phase 3 (FUTURE)
+### Phase 3 (IN PROGRESS)
 
-12. ⏳ **Apply CSP conditionally** — Environment-based CSP (strict in prod, relaxed in dev)
+12. ✅ **Apply CSP conditionally** — Environment-based CSP via Vite plugin (strict prod, relaxed dev)
 13. ⏳ **Update tests with Open-Meteo mocks** — Add test coverage for Open-Meteo provider
 14. ⏳ **Delete Windguru code** — Remove `server/scraper/`, old types (or keep as fallback)
 15. ⏳ **Update README** — Remove Windguru references, document Open-Meteo
