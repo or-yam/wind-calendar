@@ -70,7 +70,7 @@ export function resolveLocation(name: string): {
   tz: string;
   coordinates?: { lat: number; lon: number };
 } {
-  const loc = LOCATIONS[name];
+  const loc = LOCATIONS[name as keyof typeof LOCATIONS];
   if (!loc) {
     throw new Error(
       `Unknown location: "${name}". Valid locations: ${Object.keys(LOCATIONS).join(", ")}`,

@@ -15,9 +15,6 @@ import { filterEvents } from "../server/utils/filterEvents.js";
 import { groupSessions } from "../server/utils/groupSessions.js";
 import { generateIcsEvents } from "../server/utils/generateIcsEvents.js";
 import { checkRateLimit } from "../server/utils/rate-limit.js";
-import fs from "node:fs";
-import path from "node:path";
-import os from "node:os";
 
 interface ErrorResponse {
   error: string;
@@ -87,35 +84,26 @@ function classifyOpenMeteoError(
 }
 
 /**
- * Log raw API response to temp file for validation.
+ * Log raw API response for dev diagnostics.
  */
 function logRawResponse(
   locationId: string,
   model: string,
   data: { windData: unknown; sunrise: string; sunset: string },
 ): void {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const filename = `openmeteo-${locationId}-${model}-${timestamp}.json`;
-  const filepath = path.join(os.tmpdir(), filename);
-
-  try {
-    fs.writeFileSync(
-      filepath,
-      JSON.stringify(
-        {
-          location: locationId,
-          model,
-          timestamp: new Date().toISOString(),
-          data,
-        },
-        null,
-        2,
-      ),
-    );
-    console.log(`[Open-Meteo] Raw response logged to: ${filepath}`);
-  } catch (err) {
-    console.error(`[Open-Meteo] Failed to log response:`, err);
-  }
+  console.log(
+    `[Open-Meteo] Raw response for ${locationId} (${model}):`,
+    JSON.stringify(
+      {
+        location: locationId,
+        model,
+        timestamp: new Date().toISOString(),
+        data,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

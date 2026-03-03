@@ -1,6 +1,6 @@
 import type { LocationConfig } from "./types.js";
 
-export const LOCATIONS: Record<string, LocationConfig> = {
+export const LOCATIONS = {
   ashkelon: {
     spotId: "735",
     tz: "Asia/Jerusalem",
@@ -126,4 +126,4 @@ export const LOCATIONS: Record<string, LocationConfig> = {
     models: [3, 45, 59, 117],
     coordinates: { lat: 32.57996, lon: 34.94584 },
   },
-} as const;
+} as const satisfies Record<string, LocationConfig>;

@@ -187,9 +187,7 @@ describe("getForecast", () => {
         return new Response("Error", { status: 500 });
       };
 
-      await expect(() => getForecast("771", 1)).rejects.toThrow(
-        /Failed to fetch any valid forecasts/,
-      );
+      await expect(() => getForecast("771", 1)).rejects.toThrow(/Failed to fetch model 1/);
     } finally {
       globalThis.fetch = originalFetch;
     }

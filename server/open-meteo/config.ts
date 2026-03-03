@@ -75,7 +75,7 @@ export function parseOpenMeteoQueryParams(params: URLSearchParams): OpenMeteoCal
  * Throws if location not found or missing coordinates.
  */
 export function resolveOpenMeteoLocation(locationId: string): OpenMeteoLocation {
-  const location = LOCATIONS[locationId];
+  const location = LOCATIONS[locationId as keyof typeof LOCATIONS];
   if (!location) {
     const validLocations = Object.keys(LOCATIONS).join(", ");
     throw new Error(`Unknown location: ${locationId}. Valid locations: ${validLocations}`);

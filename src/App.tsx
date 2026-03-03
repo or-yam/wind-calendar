@@ -1,5 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
-import { Analytics } from "@vercel/analytics/react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+
+const Analytics = lazy(() =>
+  import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
+);
+import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
 import { ForecastCards } from "./components/ForecastCards";
 import { SubscribeButtons } from "./components/SubscribeButtons";
@@ -68,18 +72,28 @@ function App() {
   const { events, loading, error } = useCalendarFeed(calendarUrl);
   const { weekStart, goToToday, goToPrev, goToNext, goToFirstEvent } = useWeekNavigation(events);
 
-  // Go to first event when events load
+  // Track if we've already navigated to first event for this calendar config
+  const hasNavigatedRef = useRef(false);
+
+  // Reset navigation tracking when calendar URL changes (new config)
   useEffect(() => {
-    if (events.length > 0) {
+    hasNavigatedRef.current = false;
+  }, [calendarUrl]);
+
+  // Go to first event only once when events first load
+  useEffect(() => {
+    if (events.length > 0 && !hasNavigatedRef.current) {
       goToFirstEvent();
+      hasNavigatedRef.current = true;
     }
   }, [events.length, goToFirstEvent]);
 
   // Handler for location change - check if model is available in new location
   const handleLocationChange = (location: string) => {
-    const newLocation = LOCATIONS[location];
+    const newLocation = LOCATIONS[location as keyof typeof LOCATIONS];
     const newModel =
-      typeof config.model === "number" && newLocation.models.includes(config.model)
+      typeof config.model === "number" &&
+      (newLocation.models as readonly number[]).includes(config.model)
         ? config.model
         : DEFAULTS.model;
 
@@ -96,7 +110,7 @@ function App() {
       <Hero
         location={config.location}
         model={config.model}
-        availableModels={LOCATIONS[config.location].models}
+        availableModels={LOCATIONS[config.location as keyof typeof LOCATIONS].models}
         windMin={config.windMin}
         windMax={config.windMax}
         minSessionHours={config.minSessionHours}
@@ -106,16 +120,36 @@ function App() {
         onWindMaxChange={(windMax) => setConfig((c) => ({ ...c, windMax }))}
         onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}
       />
-      <SubscribeButtons config={debouncedConfig} />
-      <ForecastCards
-        events={events}
-        loading={loading}
-        error={error}
-        weekStart={weekStart}
-        onPrev={goToPrev}
-        onNext={goToNext}
-        onToday={goToToday}
-      />
+      <ErrorBoundary
+        fallback={
+          <div className="py-12 px-5 text-center">
+            <p className="text-red-400 text-sm">
+              Something went wrong. Please try refreshing the page.
+            </p>
+          </div>
+        }
+      >
+        <SubscribeButtons config={debouncedConfig} />
+      </ErrorBoundary>
+      <ErrorBoundary
+        fallback={
+          <div className="py-12 px-5 text-center">
+            <p className="text-red-400 text-sm">
+              Something went wrong. Please try refreshing the page.
+            </p>
+          </div>
+        }
+      >
+        <ForecastCards
+          events={events}
+          loading={loading}
+          error={error}
+          weekStart={weekStart}
+          onPrev={goToPrev}
+          onNext={goToNext}
+          onToday={goToToday}
+        />
+      </ErrorBoundary>
       <section className="py-12 px-5">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-slate-200 font-semibold text-lg mb-3">About</h2>
@@ -129,7 +163,9 @@ function App() {
       </section>
       <Caveats />
       <Footer />
-      <Analytics />
+      <Suspense fallback={null}>
+        <Analytics />
+      </Suspense>
     </div>
   );
 }
