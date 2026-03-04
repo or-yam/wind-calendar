@@ -74,9 +74,10 @@ function mergeWaveData(
   if (!time || !wave_height) return;
 
   // Build timestamp → waveHeight map
+  const utcOffset = marineResponse.utc_offset_seconds;
   const waveMap = new Map<number, number>();
   for (let i = 0; i < time.length; i++) {
-    const timestamp = new Date(time[i]).getTime();
+    const timestamp = parseOpenMeteoTimestamp(time[i], utcOffset).getTime();
     const height = wave_height[i];
     if (height != null) {
       waveMap.set(timestamp, height);
