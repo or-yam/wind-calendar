@@ -242,7 +242,7 @@ describe("groupSessions", () => {
     expect(sessions[0].matchType).toBe("wave");
   });
 
-  it("matchType is 'both' when conditions have mixed reasons", () => {
+  it("matchType change breaks session into separate sessions", () => {
     const c1 = makeCondition(0, 15, 20, 180);
     const c2 = makeCondition(1, 15, 20, 180, 1.5);
     const reasons = new Map<WindConditionRaw, MatchReason>([
@@ -250,7 +250,10 @@ describe("groupSessions", () => {
       [c2, "wave"],
     ]);
     const sessions = groupSessions([c1, c2], reasons, 1);
-    expect(sessions[0].matchType).toBe("both");
+    // Should create 2 separate sessions (wind + wave)
+    expect(sessions).toHaveLength(2);
+    expect(sessions[0].matchType).toBe("wind");
+    expect(sessions[1].matchType).toBe("wave");
   });
 
   it("matchType is 'both' when any condition has 'both' reason", () => {

@@ -52,24 +52,13 @@ function avg(values: number[]): number {
   return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
 }
 
-function dominantMatchType(
+function getSessionMatchType(
   conditions: WindConditionRaw[],
   matchReasons: Map<WindConditionRaw, MatchReason>,
 ): MatchReason {
-  let wind = 0;
-  let wave = 0;
-  let both = 0;
-
-  for (const c of conditions) {
-    const reason = matchReasons.get(c);
-    if (reason === "both") both++;
-    else if (reason === "wind") wind++;
-    else if (reason === "wave") wave++;
-  }
-
-  // If any hour matches both, or session has a mix of wind-only and wave-only hours
-  if (both > 0 || (wind > 0 && wave > 0)) return "both";
-  return wind >= wave ? "wind" : "wave";
+  // Sessions are homogeneous — all hours share same matchType
+  // Return the matchType of the first hour
+  return matchReasons.get(conditions[0]) ?? "wind";
 }
 
 function finalizeGroup(
@@ -101,7 +90,7 @@ function finalizeGroup(
     waveDominantDirection: getDominantDirection(group, "waveDirection"),
     swellHeightAvg: avg(swellHeights),
     swellPeriodAvg: avg(swellPeriods),
-    matchType: dominantMatchType(group, matchReasons),
+    matchType: getSessionMatchType(group, matchReasons),
     conditions: group,
   };
 }
@@ -117,14 +106,19 @@ export function groupSessions(
 
   const groups: WindConditionRaw[][] = [];
   let current: WindConditionRaw[] = [sorted[0]];
+  let currentMatchType = matchReasons.get(sorted[0]);
 
   for (let i = 1; i < sorted.length; i++) {
     const gap = sorted[i].date.getTime() - sorted[i - 1].date.getTime();
-    if (gap > 0 && gap <= THREE_HOURS) {
-      current.push(sorted[i]);
-    } else {
+    const matchType = matchReasons.get(sorted[i]);
+
+    // Break session if matchType changes OR gap exceeds 3 hours
+    if (matchType !== currentMatchType || gap <= 0 || gap > THREE_HOURS) {
       groups.push(current);
       current = [sorted[i]];
+      currentMatchType = matchType;
+    } else {
+      current.push(sorted[i]);
     }
   }
   groups.push(current);
