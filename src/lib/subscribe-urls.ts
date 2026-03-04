@@ -37,8 +37,8 @@ export function buildWebcalUrl(config: CalendarConfig): string {
  * Build Google Calendar subscribe URL
  */
 export function buildGoogleCalendarUrl(config: CalendarConfig): string {
-  const fullUrl = buildFullUrl(config);
-  return `https://www.google.com/calendar/render?cid=${encodeURIComponent(fullUrl)}`;
+  const webcalUrl = buildWebcalUrl(config);
+  return `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`;
 }
 
 /**
