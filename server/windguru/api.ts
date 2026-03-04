@@ -37,6 +37,11 @@ function extractWindData(forecast: Forecast, spotId: string): WindConditionRaw[]
       windGusts: fcst.GUST?.[i] ?? null,
       windDirection: fcst.WINDDIR?.[i] ?? null,
       waveHeight: null,
+      wavePeriod: null,
+      waveDirection: null,
+      swellHeight: null,
+      swellPeriod: null,
+      swellDirection: null,
     };
 
     windData.push(windCondition);

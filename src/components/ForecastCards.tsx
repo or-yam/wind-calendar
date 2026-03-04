@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 
 const RANGE_RE = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
 const SINGLE_RE = /(\d+)\s*kn/i;
-const WAVE_RE = /\|\s*([\d.]+)m\s*waves/i;
+const WAVE_RE = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
+const WAVE_ONLY_RE = /^Waves\s+([\d.]+)m\s*(?:(\d+)s)?\s*(\w+)/i;
 
 // Cached Intl.DateTimeFormat instances
 const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
@@ -66,9 +67,22 @@ function windTextColor(knots: number): string {
   return knots <= 20 ? "#0B1220" : "#E5E7EB";
 }
 
-function parseWaveHeight(summary: string): string | null {
-  const match = summary.match(WAVE_RE);
-  return match ? `${match[1]}m` : null;
+function parseWaveInfo(summary: string): { height: string; period?: string } | null {
+  // "| 1.5m 12s waves" (both match type)
+  const bothMatch = summary.match(WAVE_RE);
+  if (bothMatch) {
+    return { height: `${bothMatch[1]}m`, period: bothMatch[2] ? `${bothMatch[2]}s` : undefined };
+  }
+  // "Waves 1.5m 12s SW" (wave-only match type)
+  const waveOnly = summary.match(WAVE_ONLY_RE);
+  if (waveOnly) {
+    return { height: `${waveOnly[1]}m`, period: waveOnly[2] ? `${waveOnly[2]}s` : undefined };
+  }
+  return null;
+}
+
+function isWaveOnlyEvent(summary: string): boolean {
+  return WAVE_ONLY_RE.test(summary);
 }
 
 export function ForecastCards({
@@ -135,8 +149,9 @@ export function ForecastCards({
 
               return dayGroup.events.map((event) => {
                 const wind = parseWindKnots(event.summary);
+                const waveOnly = isWaveOnlyEvent(event.summary);
                 const midKnots = wind ? wind.mid : 15;
-                const borderColor = windColor(midKnots);
+                const borderColor = waveOnly ? "#2563EB" : windColor(midKnots);
                 const start = event.dtstart.date;
                 const end = event.dtend?.date ?? null;
                 const timeRange = end
@@ -147,7 +162,7 @@ export function ForecastCards({
                     ? `${wind.lo} kn`
                     : `${wind.lo}–${wind.hi} kn`
                   : null;
-                const waveLabel = parseWaveHeight(event.summary);
+                const waveInfo = parseWaveInfo(event.summary);
 
                 return (
                   <div
@@ -171,9 +186,10 @@ export function ForecastCards({
                           {windLabel}
                         </span>
                       )}
-                      {waveLabel && (
+                      {waveInfo && (
                         <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white tabular-nums">
-                          {waveLabel}
+                          {waveInfo.height}
+                          {waveInfo.period && ` ${waveInfo.period}`}
                         </span>
                       )}
                     </div>

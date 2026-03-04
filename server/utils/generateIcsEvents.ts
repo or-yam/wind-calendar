@@ -25,18 +25,32 @@ export function dateToTuple(date: Date, tz: string): [number, number, number, nu
   return [get("year"), get("month"), get("day"), get("hour"), get("minute")];
 }
 
-function formatTitle(session: Session, waveHeightMin: number): string {
+function formatWindPart(session: Session): string {
   const windMin = Math.round(session.windMin);
   const windMax = Math.round(session.windMax);
   const wind = windMin === windMax ? `${windMin}kn` : `${windMin}-${windMax}kn`;
+  return `Wind ${wind} ${session.dominantDirection}`;
+}
 
-  let title = `Wind ${wind} ${session.dominantDirection}`;
+function formatWavePart(session: Session): string {
+  const height = session.waveAvg.toFixed(1);
+  const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
+  const dir = session.waveDominantDirection;
+  return `Waves ${height}m${period} ${dir}`;
+}
 
-  if (session.waveAvg > waveHeightMin) {
-    title += ` | ${session.waveAvg.toFixed(1)}m waves`;
+function formatTitle(session: Session): string {
+  switch (session.matchType) {
+    case "wind":
+      return formatWindPart(session);
+    case "wave":
+      return formatWavePart(session);
+    case "both": {
+      const height = session.waveAvg.toFixed(1);
+      const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
+      return `${formatWindPart(session)} | ${height}m${period} waves`;
+    }
   }
-
-  return title;
 }
 
 function formatDescription(session: Session, tz: string): string {
@@ -46,14 +60,18 @@ function formatDescription(session: Session, tz: string): string {
       const speed = c.windSpeed != null ? `${c.windSpeed}kn` : "?kn";
       const gusts = c.windGusts != null ? `gusts ${c.windGusts}kn` : "";
       const dir = c.windDirection != null ? degreesToCardinal(c.windDirection) : "?";
-      return `${time}  ${speed}  ${gusts}  ${dir}`;
+      const wave =
+        c.waveHeight != null
+          ? `  waves ${c.waveHeight.toFixed(1)}m${c.wavePeriod != null ? ` ${Math.round(c.wavePeriod)}s` : ""}`
+          : "";
+      return `${time}  ${speed}  ${gusts}  ${dir}${wave}`;
     })
     .join("\n");
 }
 
-export function generateIcsEvents(sessions: Session[], tz: string, waveHeightMin: number): string {
+export function generateIcsEvents(sessions: Session[], tz: string): string {
   const events: EventAttributes[] = sessions.map((session) => ({
-    title: formatTitle(session, waveHeightMin),
+    title: formatTitle(session),
     start: dateToTuple(session.start, "UTC") as DateArray,
     startInputType: "utc" as const,
     startOutputType: "utc" as const,
@@ -64,7 +82,7 @@ export function generateIcsEvents(sessions: Session[], tz: string, waveHeightMin
   }));
 
   const { error, value } = createEvents(events, {
-    calName: "Wind Forecast",
+    calName: "Forecast",
   });
 
   if (error) {

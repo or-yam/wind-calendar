@@ -93,7 +93,8 @@ export async function fetchMarine(
   const params = new URLSearchParams({
     latitude: lat.toString(),
     longitude: lon.toString(),
-    hourly: "wave_height",
+    hourly:
+      "wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_period,swell_wave_direction",
     timezone: tz,
     forecast_days: "7",
   });

@@ -189,17 +189,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Build calendar
   let icsString;
   try {
-    const filtered = filterEvents(fetchResult.windData, {
+    const { conditions, matchReasons } = filterEvents(fetchResult.windData, {
+      windEnabled: true,
       windMin: config.windMin,
       windMax: config.windMax,
+      waveEnabled: false,
+      waveSource: "total",
+      waveHeightMin: config.waveHeightMin,
+      waveHeightMax: 5.0,
+      wavePeriodMin: 0,
       sunrise: fetchResult.sunrise,
       sunset: fetchResult.sunset,
       tz: location.tz,
-      waveHeightMin: config.waveHeightMin,
     });
 
-    const sessions = groupSessions(filtered, config.minSessionHours);
-    icsString = generateIcsEvents(sessions, location.tz, config.waveHeightMin);
+    const sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
+    icsString = generateIcsEvents(sessions, location.tz);
 
     console.log(
       `[Open-Meteo] Generated calendar with ${sessions.length} sessions for ${config.location}`,

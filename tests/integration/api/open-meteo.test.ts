@@ -79,10 +79,20 @@ const mockOpenMeteoMarine: OpenMeteoMarineResponse = {
   hourly: {
     time: mockOpenMeteoForecast.hourly.time,
     wave_height: Array(21).fill(1.2),
+    wave_period: Array(21).fill(8),
+    wave_direction: Array(21).fill(270),
+    swell_wave_height: Array(21).fill(0.8),
+    swell_wave_period: Array(21).fill(10),
+    swell_wave_direction: Array(21).fill(270),
   },
   hourly_units: {
     time: "iso8601",
     wave_height: "m",
+    wave_period: "s",
+    wave_direction: "°",
+    swell_wave_height: "m",
+    swell_wave_period: "s",
+    swell_wave_direction: "°",
   },
 };
 

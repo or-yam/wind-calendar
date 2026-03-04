@@ -61,10 +61,20 @@ const mockMarineResponse: OpenMeteoMarineResponse = {
       "2026-03-03T04:00",
     ],
     wave_height: [0.8, 0.9, 1.1, 1.3, 1.2],
+    wave_period: [7, 8, 9, 10, 9],
+    wave_direction: [270, 275, 280, 285, 280],
+    swell_wave_height: [0.5, 0.6, 0.7, 0.8, 0.7],
+    swell_wave_period: [10, 11, 12, 13, 12],
+    swell_wave_direction: [260, 265, 270, 275, 270],
   },
   hourly_units: {
     time: "iso8601",
     wave_height: "m",
+    wave_period: "s",
+    wave_direction: "°",
+    swell_wave_height: "m",
+    swell_wave_period: "s",
+    swell_wave_direction: "°",
   },
 };
 
@@ -236,6 +246,11 @@ describe("fetchOpenMeteoData", () => {
           "2026-03-03T05:00", // No match in wind data
         ],
         wave_height: [0.9, 1.1, 1.5],
+        wave_period: [8, 9, 10],
+        wave_direction: [270, 275, 280],
+        swell_wave_height: [0.5, 0.6, 0.8],
+        swell_wave_period: [10, 11, 12],
+        swell_wave_direction: [260, 265, 270],
       },
     };
 
