@@ -1,32 +1,33 @@
 import { ConfigForm } from "./ConfigForm";
+import type { WaveSource } from "@shared/types";
 
-interface HeroProps {
+export interface HeroProps {
   location: string;
   model: number | string;
   availableModels: number[];
+  windEnabled: boolean;
   windMin: number;
   windMax: number;
+  waveEnabled: boolean;
+  waveSource: WaveSource;
+  waveHeightMin: number;
+  waveHeightMax: number;
+  wavePeriodMin: number;
   minSessionHours: number;
   onLocationChange: (location: string) => void;
   onModelChange: (model: number | string) => void;
+  onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
+  onWaveEnabledChange: (enabled: boolean) => void;
+  onWaveSourceChange: (source: WaveSource) => void;
+  onWaveHeightMinChange: (value: number) => void;
+  onWaveHeightMaxChange: (value: number) => void;
+  onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
 }
 
-export function Hero({
-  location,
-  model,
-  availableModels,
-  windMin,
-  windMax,
-  minSessionHours,
-  onLocationChange,
-  onModelChange,
-  onWindMinChange,
-  onWindMaxChange,
-  onMinSessionHoursChange,
-}: HeroProps) {
+export function Hero(props: HeroProps) {
   return (
     <section className="bg-[#0B1220] py-16 px-5">
       <div className="text-center">
@@ -37,19 +38,7 @@ export function Hero({
           Auto-sync wind sessions to your calendar. Only see the days worth surfing.
         </p>
       </div>
-      <ConfigForm
-        location={location}
-        model={model}
-        availableModels={availableModels}
-        windMin={windMin}
-        windMax={windMax}
-        minSessionHours={minSessionHours}
-        onLocationChange={onLocationChange}
-        onModelChange={onModelChange}
-        onWindMinChange={onWindMinChange}
-        onWindMaxChange={onWindMaxChange}
-        onMinSessionHoursChange={onMinSessionHoursChange}
-      />
+      <ConfigForm {...props} />
     </section>
   );
 }

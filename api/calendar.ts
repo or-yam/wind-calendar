@@ -175,17 +175,22 @@ function buildCalendar(
   config: CalendarConfig,
   tz: string,
 ): string {
-  const filtered = filterEvents(fetchResult.windData, {
+  const { conditions, matchReasons } = filterEvents(fetchResult.windData, {
+    windEnabled: config.windEnabled,
     windMin: config.windMin,
     windMax: config.windMax,
+    waveEnabled: config.waveEnabled,
+    waveSource: config.waveSource,
+    waveHeightMin: config.waveHeightMin,
+    waveHeightMax: config.waveHeightMax,
+    wavePeriodMin: config.wavePeriodMin,
     sunrise: fetchResult.sunrise,
     sunset: fetchResult.sunset,
     tz,
-    waveHeightMin: config.waveHeightMin,
   });
 
-  const sessions = groupSessions(filtered, config.minSessionHours);
-  return generateIcsEvents(sessions, tz, config.waveHeightMin);
+  const sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
+  return generateIcsEvents(sessions, tz);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -286,7 +291,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           isDev,
         );
 
-        if (!result.success) {
+        if (result.success === false) {
           return res.status(result.status).json(result.body);
         }
 
@@ -321,7 +326,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       isDev,
     );
 
-    if (!result.success) {
+    if (result.success === false) {
       return res.status(result.status).json(result.body);
     }
 

@@ -30,15 +30,27 @@ function parseModelParam(params: URLSearchParams, fallback: number | string): nu
   return Number.isFinite(num) ? num : raw; // Return string if not a number
 }
 
+function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean): boolean {
+  const raw = params.get(key);
+  if (raw === null) return fallback;
+  return raw === "true";
+}
+
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
+  const waveSource = params.get("waveSource");
   return {
     location: params.get("location") || "beit-yanai",
-    windMin: parseNumParam(params, "windMin", DEFAULTS.windMin),
-    windMax: parseNumParam(params, "windMax", DEFAULTS.windMax),
     minSessionHours: parseNumParam(params, "minSessionHours", DEFAULTS.minSessionHours),
     model: parseModelParam(params, DEFAULTS.model),
-    waveHeightMin: DEFAULTS.waveHeightMin,
+    windEnabled: parseBoolParam(params, "windEnabled", DEFAULTS.windEnabled),
+    windMin: parseNumParam(params, "windMin", DEFAULTS.windMin),
+    windMax: parseNumParam(params, "windMax", DEFAULTS.windMax),
+    waveEnabled: parseBoolParam(params, "waveEnabled", DEFAULTS.waveEnabled),
+    waveSource: waveSource === "swell" ? "swell" : "total",
+    waveHeightMin: parseNumParam(params, "waveHeightMin", DEFAULTS.waveHeightMin),
+    waveHeightMax: parseNumParam(params, "waveHeightMax", DEFAULTS.waveHeightMax),
+    wavePeriodMin: parseNumParam(params, "wavePeriodMin", DEFAULTS.wavePeriodMin),
   };
 }
 
@@ -51,13 +63,21 @@ function App() {
     const timer = setTimeout(() => {
       setDebouncedConfig(config);
 
-      // Update URL without navigation
+      // Update URL without navigation — only include non-default values
       const params = new URLSearchParams({
         location: config.location,
+        model: config.model.toString(),
+        minSessionHours: config.minSessionHours.toString(),
+        windEnabled: config.windEnabled.toString(),
         windMin: config.windMin.toString(),
         windMax: config.windMax.toString(),
-        minSessionHours: config.minSessionHours.toString(),
-        model: config.model.toString(),
+        waveEnabled: config.waveEnabled.toString(),
+        ...(config.waveEnabled && {
+          waveSource: config.waveSource,
+          waveHeightMin: config.waveHeightMin.toString(),
+          waveHeightMax: config.waveHeightMax.toString(),
+          wavePeriodMin: config.wavePeriodMin.toString(),
+        }),
       });
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       window.history.replaceState(null, "", newUrl);
@@ -111,13 +131,25 @@ function App() {
         location={config.location}
         model={config.model}
         availableModels={LOCATIONS[config.location as keyof typeof LOCATIONS].models}
+        windEnabled={config.windEnabled}
         windMin={config.windMin}
         windMax={config.windMax}
+        waveEnabled={config.waveEnabled}
+        waveSource={config.waveSource}
+        waveHeightMin={config.waveHeightMin}
+        waveHeightMax={config.waveHeightMax}
+        wavePeriodMin={config.wavePeriodMin}
         minSessionHours={config.minSessionHours}
         onLocationChange={handleLocationChange}
         onModelChange={handleModelChange}
+        onWindEnabledChange={(windEnabled) => setConfig((c) => ({ ...c, windEnabled }))}
         onWindMinChange={(windMin) => setConfig((c) => ({ ...c, windMin }))}
         onWindMaxChange={(windMax) => setConfig((c) => ({ ...c, windMax }))}
+        onWaveEnabledChange={(waveEnabled) => setConfig((c) => ({ ...c, waveEnabled }))}
+        onWaveSourceChange={(waveSource) => setConfig((c) => ({ ...c, waveSource }))}
+        onWaveHeightMinChange={(waveHeightMin) => setConfig((c) => ({ ...c, waveHeightMin }))}
+        onWaveHeightMaxChange={(waveHeightMax) => setConfig((c) => ({ ...c, waveHeightMax }))}
+        onWavePeriodMinChange={(wavePeriodMin) => setConfig((c) => ({ ...c, wavePeriodMin }))}
         onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}
       />
       <ErrorBoundary

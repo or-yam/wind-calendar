@@ -1,4 +1,5 @@
 import type { WindConditionRaw } from "../types/wind-conditions.js";
+import type { MatchReason } from "./filterEvents.js";
 
 export type Session = {
   start: Date;
@@ -8,6 +9,11 @@ export type Session = {
   gustMax: number;
   dominantDirection: string;
   waveAvg: number;
+  wavePeriodAvg: number;
+  waveDominantDirection: string;
+  swellHeightAvg: number;
+  swellPeriodAvg: number;
+  matchType: MatchReason;
   conditions: WindConditionRaw[];
 };
 
@@ -19,11 +25,15 @@ export function degreesToCardinal(degrees: number): string {
   return CARDINALS[Math.round(degrees / 45) % 8];
 }
 
-function getDominantDirection(conditions: WindConditionRaw[]): string {
+function getDominantDirection(
+  conditions: WindConditionRaw[],
+  directionKey: "windDirection" | "waveDirection" | "swellDirection",
+): string {
   const counts = new Map<string, number>();
   for (const c of conditions) {
-    if (c.windDirection == null) continue;
-    const cardinal = degreesToCardinal(c.windDirection);
+    const deg = c[directionKey];
+    if (deg == null) continue;
+    const cardinal = degreesToCardinal(deg);
     counts.set(cardinal, (counts.get(cardinal) ?? 0) + 1);
   }
 
@@ -38,34 +48,56 @@ function getDominantDirection(conditions: WindConditionRaw[]): string {
   return best;
 }
 
-function finalizeGroup(group: WindConditionRaw[]): Session {
+function avg(values: number[]): number {
+  return values.length > 0 ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
+}
+
+function getSessionMatchType(
+  conditions: WindConditionRaw[],
+  matchReasons: Map<WindConditionRaw, MatchReason>,
+): MatchReason {
+  // Sessions are homogeneous — all hours share same matchType
+  // Return the matchType of the first hour
+  return matchReasons.get(conditions[0]) ?? "wind";
+}
+
+function finalizeGroup(
+  group: WindConditionRaw[],
+  matchReasons: Map<WindConditionRaw, MatchReason>,
+): Session {
   const speeds = group.map((c) => c.windSpeed).filter((s): s is number => s != null);
   const gusts = group.map((c) => c.windGusts).filter((g): g is number => g != null);
   const waves = group.map((c) => c.waveHeight).filter((w): w is number => w != null);
+  const wavePeriods = group.map((c) => c.wavePeriod).filter((p): p is number => p != null);
+  const swellHeights = group.map((c) => c.swellHeight).filter((h): h is number => h != null);
+  const swellPeriods = group.map((c) => c.swellPeriod).filter((p): p is number => p != null);
 
   // End time = last point + the step to the next point.
-  // Infer step from the last two points in the group, or default to 1h for single-point groups.
   const lastStep =
     group.length >= 2
       ? group[group.length - 1].date.getTime() - group[group.length - 2].date.getTime()
       : ONE_HOUR;
 
-  const waveAvg = waves.length > 0 ? waves.reduce((sum, w) => sum + w, 0) / waves.length : 0;
-
   return {
     start: group[0].date,
     end: new Date(group[group.length - 1].date.getTime() + lastStep),
-    windMin: Math.min(...speeds),
-    windMax: Math.max(...speeds),
-    gustMax: Math.max(...gusts),
-    dominantDirection: getDominantDirection(group),
-    waveAvg,
+    windMin: speeds.length > 0 ? Math.min(...speeds) : 0,
+    windMax: speeds.length > 0 ? Math.max(...speeds) : 0,
+    gustMax: gusts.length > 0 ? Math.max(...gusts) : 0,
+    dominantDirection: getDominantDirection(group, "windDirection"),
+    waveAvg: avg(waves),
+    wavePeriodAvg: avg(wavePeriods),
+    waveDominantDirection: getDominantDirection(group, "waveDirection"),
+    swellHeightAvg: avg(swellHeights),
+    swellPeriodAvg: avg(swellPeriods),
+    matchType: getSessionMatchType(group, matchReasons),
     conditions: group,
   };
 }
 
 export function groupSessions(
   conditions: WindConditionRaw[],
+  matchReasons: Map<WindConditionRaw, MatchReason>,
   minSessionHours: number = 1,
 ): Session[] {
   if (conditions.length === 0) return [];
@@ -74,19 +106,24 @@ export function groupSessions(
 
   const groups: WindConditionRaw[][] = [];
   let current: WindConditionRaw[] = [sorted[0]];
+  let currentMatchType = matchReasons.get(sorted[0]);
 
   for (let i = 1; i < sorted.length; i++) {
     const gap = sorted[i].date.getTime() - sorted[i - 1].date.getTime();
-    if (gap > 0 && gap <= THREE_HOURS) {
-      current.push(sorted[i]);
-    } else {
+    const matchType = matchReasons.get(sorted[i]);
+
+    // Break session if matchType changes OR gap exceeds 3 hours
+    if (matchType !== currentMatchType || gap <= 0 || gap > THREE_HOURS) {
       groups.push(current);
       current = [sorted[i]];
+      currentMatchType = matchType;
+    } else {
+      current.push(sorted[i]);
     }
   }
   groups.push(current);
 
   return groups
-    .map(finalizeGroup)
+    .map((g) => finalizeGroup(g, matchReasons))
     .filter((s) => (s.end.getTime() - s.start.getTime()) / ONE_HOUR >= minSessionHours);
 }

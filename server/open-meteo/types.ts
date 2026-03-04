@@ -42,10 +42,20 @@ export interface OpenMeteoMarineResponse {
   hourly: {
     time: string[]; // ISO 8601: ["2026-03-03T00:00", ...]
     wave_height: (number | null)[];
+    wave_period: (number | null)[];
+    wave_direction: (number | null)[];
+    swell_wave_height: (number | null)[];
+    swell_wave_period: (number | null)[];
+    swell_wave_direction: (number | null)[];
   };
   hourly_units: {
     time: string;
     wave_height: string; // "m"
+    wave_period: string; // "s"
+    wave_direction: string; // "°"
+    swell_wave_height: string; // "m"
+    swell_wave_period: string; // "s"
+    swell_wave_direction: string; // "°"
   };
 }
 

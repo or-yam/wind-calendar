@@ -6,11 +6,19 @@ import type { CalendarConfig } from "@shared/types";
 export function buildApiUrl(config: CalendarConfig): string {
   const params = new URLSearchParams({
     location: config.location,
+    model: config.model.toString(),
+    minSessionHours: config.minSessionHours.toString(),
+    windEnabled: config.windEnabled.toString(),
     windMin: config.windMin.toString(),
     windMax: config.windMax.toString(),
-    minSessionHours: config.minSessionHours.toString(),
-    model: config.model.toString(),
+    waveEnabled: config.waveEnabled.toString(),
   });
+  if (config.waveEnabled) {
+    params.set("waveSource", config.waveSource);
+    params.set("waveHeightMin", config.waveHeightMin.toString());
+    params.set("waveHeightMax", config.waveHeightMax.toString());
+    params.set("wavePeriodMin", config.wavePeriodMin.toString());
+  }
   return `/api/calendar?${params.toString()}`;
 }
 

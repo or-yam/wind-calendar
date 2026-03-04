@@ -56,11 +56,25 @@ function extractWindData(forecast: OpenMeteoForecastResponse): WindConditionRaw[
       windDirection: wind_direction_10m?.[i] ?? null,
       windGusts: wind_gusts_10m?.[i] ?? null,
       waveHeight: null,
+      wavePeriod: null,
+      waveDirection: null,
+      swellHeight: null,
+      swellPeriod: null,
+      swellDirection: null,
     });
   }
 
   return windData;
 }
+
+type MarineDataPoint = {
+  waveHeight: number | null;
+  wavePeriod: number | null;
+  waveDirection: number | null;
+  swellHeight: number | null;
+  swellPeriod: number | null;
+  swellDirection: number | null;
+};
 
 /**
  * Merge wave data into wind data in-place by matching timestamps.
@@ -69,27 +83,43 @@ function mergeWaveData(
   windData: WindConditionRaw[],
   marineResponse: OpenMeteoMarineResponse,
 ): void {
-  const { time, wave_height } = marineResponse.hourly;
+  const {
+    time,
+    wave_height,
+    wave_period,
+    wave_direction,
+    swell_wave_height,
+    swell_wave_period,
+    swell_wave_direction,
+  } = marineResponse.hourly;
 
   if (!time || !wave_height) return;
 
-  // Build timestamp → waveHeight map
+  // Build timestamp → marine data map
   const utcOffset = marineResponse.utc_offset_seconds;
-  const waveMap = new Map<number, number>();
+  const marineMap = new Map<number, MarineDataPoint>();
   for (let i = 0; i < time.length; i++) {
     const timestamp = parseOpenMeteoTimestamp(time[i], utcOffset).getTime();
-    const height = wave_height[i];
-    if (height != null) {
-      waveMap.set(timestamp, height);
-    }
+    marineMap.set(timestamp, {
+      waveHeight: wave_height[i] ?? null,
+      wavePeriod: wave_period?.[i] ?? null,
+      waveDirection: wave_direction?.[i] ?? null,
+      swellHeight: swell_wave_height?.[i] ?? null,
+      swellPeriod: swell_wave_period?.[i] ?? null,
+      swellDirection: swell_wave_direction?.[i] ?? null,
+    });
   }
 
   // Match by timestamp
   for (const condition of windData) {
-    const timestamp = condition.date.getTime();
-    const height = waveMap.get(timestamp);
-    if (height !== undefined) {
-      condition.waveHeight = height;
+    const marine = marineMap.get(condition.date.getTime());
+    if (marine) {
+      condition.waveHeight = marine.waveHeight;
+      condition.wavePeriod = marine.wavePeriod;
+      condition.waveDirection = marine.waveDirection;
+      condition.swellHeight = marine.swellHeight;
+      condition.swellPeriod = marine.swellPeriod;
+      condition.swellDirection = marine.swellDirection;
     }
   }
 }
