@@ -1,11 +1,21 @@
 {
-  "name": "wind-calendar",
-  "short_name": "Wind Calendar",
+  "name": "Wind-calendar",
+  "short_name": "Wind-cal",
   "icons": [
-    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
-  "theme_color": "hsl(220, 14%, 91%)",
-  "background_color": "hsl(221, 47%, 9%)",
+  "theme_color": "#0a6bc8",
+  "background_color": "#80b3e2",
   "display": "standalone"
 }
