@@ -11,7 +11,8 @@ Generate calendar feeds for windsurfing and kitesurfing sessions based on wind f
 
 This skill provides access to an API that generates calendar feeds (ICS format) for windsurfing and kitesurfing sessions. The API:
 
-- Fetches wind forecasts from Windguru for Israeli Mediterranean coast locations
+- Fetches wind forecasts from Open-Meteo (primary) or Windguru (fallback) for Israeli Mediterranean coast locations
+- Uses public weather model data (GFS, ICON, GDPS, IFS-HRES) from NOAA, DWD, CMC, and ECMWF
 - Filters sessions based on customizable wind speed, wave height, and duration thresholds
 - Groups consecutive hours of good conditions into sessions
 - Returns standard ICS calendar format compatible with all calendar applications
@@ -78,11 +79,17 @@ https://wind-calendar.vercel.app/api/calendar
 - `windMax` - Maximum wind speed in knots (default: 35)
 - `minSessionHours` - Minimum session duration in hours (default: 2)
 - `waveHeightMin` - Minimum wave height in meters (default: 0.4)
-- `model` - Forecast model ID (default: 3)
-  - `3` - GFS 13km (Global Forecast System - default)
-  - `45` - ICON 13km (German weather model)
-  - `59` - GDPS 15km (Canadian global model)
-  - `117` - IFS-HRES 9km (ECMWF high-resolution)
+- `model` - Forecast model ID (default: `om_gfs`)
+  - **Open-Meteo (Recommended)**:
+    - `om_gfs` - GFS 13km (NOAA Global Forecast System - default)
+    - `om_icon` - ICON 13km (DWD German weather model)
+    - `om_gdps` - GDPS 15km (Canadian Meteorological Centre)
+    - `om_ifs` - IFS-HRES 9km (ECMWF high-resolution)
+  - **Windguru (Legacy, for backward compatibility)**:
+    - `3` - GFS 13km
+    - `45` - ICON 13km
+    - `59` - GDPS 15km
+    - `117` - IFS-HRES 9km
 
 ### Parameter Constraints
 
@@ -112,10 +119,10 @@ This filters for stronger, longer sessions.
 ### Using Alternative Forecast Model
 
 ```
-https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=117
+https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=om_ifs
 ```
 
-This uses the ECMWF IFS-HRES 9km model (often considered most accurate). If the selected model is unavailable or fails, the API automatically falls back to GFS (model 3).
+This uses the ECMWF IFS-HRES 9km model (often considered most accurate). If Open-Meteo fails, the API automatically falls back to the equivalent Windguru model.
 
 ### Beginner-Friendly Settings
 
@@ -223,12 +230,12 @@ When the forecast updates, subscribed calendars will automatically receive the n
 
 ## Important Limitations
 
-- **Forecast Accuracy**: Forecasts come from Windguru and are subject to typical weather prediction limitations. Different models can show different predictions - no model is always correct.
+- **Forecast Accuracy**: Forecasts use public weather model data (GFS, ICON, GDPS, IFS-HRES) and are subject to typical weather prediction limitations. Different models can show different predictions - no model is always correct.
+- **Data Source**: Primary provider is Open-Meteo. If Open-Meteo fails, the API automatically falls back to Windguru for the equivalent model.
 - **Geographic Coverage**: Currently limited to Israeli Mediterranean coast locations
 - **Daylight Hours Only**: Sessions are filtered to occur during daylight (based on sunrise/sunset)
 - **Timezone**: All times are in Asia/Jerusalem timezone
 - **Sync Delays**: Calendar app sync frequencies vary (Google Calendar is the slowest)
-- **Model Availability**: All locations currently support all 4 models, but if a model fails, the API automatically falls back to GFS (model 3)
 
 ## Example Agent Workflows
 
@@ -309,8 +316,8 @@ Upcoming wind sessions for Beit Yanai:
 
 **Agent Actions**:
 
-1. Fetch ICS for same location with model=117 (ECMWF): `https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=117`
-2. Fetch ICS for same location with model=3 (GFS): `https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=3`
+1. Fetch ICS for same location with model=om_ifs (ECMWF): `https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=om_ifs`
+2. Fetch ICS for same location with model=om_gfs (GFS): `https://wind-calendar.vercel.app/api/calendar?location=herzliya&model=om_gfs`
 3. Parse and compare the sessions from both models
 4. Display differences: "ECMWF predicts wind on March 12-13, while GFS shows March 13-14"
 5. Explain: "Different models can show different forecasts. ECMWF (IFS-HRES) is often considered most accurate for short-term forecasts."

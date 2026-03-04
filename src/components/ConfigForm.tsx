@@ -4,7 +4,10 @@ import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -13,13 +16,13 @@ import { MODELS } from "@shared/models";
 
 interface ConfigFormProps {
   location: string;
-  model: number;
+  model: number | string;
   availableModels: number[];
   windMin: number;
   windMax: number;
   minSessionHours: number;
   onLocationChange: (location: string) => void;
-  onModelChange: (model: number) => void;
+  onModelChange: (model: number | string) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
@@ -78,21 +81,43 @@ export function ConfigForm({
         <Label htmlFor="model" className="text-slate-200">
           Forecast Model
         </Label>
-        <Select value={model.toString()} onValueChange={(v) => onModelChange(Number(v))}>
+        <Select
+          value={model.toString()}
+          onValueChange={(v) => {
+            const num = Number(v);
+            onModelChange(Number.isNaN(num) ? v : num);
+          }}
+        >
           <SelectTrigger id="model">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.values(MODELS).map((m) => (
-              <SelectItem
-                key={m.id}
-                value={m.id.toString()}
-                disabled={!availableModels.includes(m.id)}
-              >
-                {m.name}
-                {!availableModels.includes(m.id) && " (unavailable)"}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>Open-Meteo (Recommended)</SelectLabel>
+              {Object.values(MODELS)
+                .filter((m) => m.provider === "openmeteo")
+                .map((m) => (
+                  <SelectItem key={m.id} value={m.id.toString()}>
+                    {m.name}
+                  </SelectItem>
+                ))}
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel>Windguru</SelectLabel>
+              {Object.values(MODELS)
+                .filter((m) => m.provider === "windguru")
+                .map((m) => (
+                  <SelectItem
+                    key={m.id}
+                    value={m.id.toString()}
+                    disabled={!availableModels.includes(m.id as number)}
+                  >
+                    {m.name}
+                    {!availableModels.includes(m.id as number) && " (unavailable)"}
+                  </SelectItem>
+                ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -100,7 +125,7 @@ export function ConfigForm({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <Label className="text-slate-200">Wind Range</Label>
-          <span className="text-slate-200 text-sm">
+          <span className="text-slate-200 text-sm tabular-nums">
             {localWind[0]} – {localWind[1]} kn
           </span>
         </div>
@@ -120,7 +145,7 @@ export function ConfigForm({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <Label className="text-slate-200">Min Session</Label>
-          <span className="text-slate-200 text-sm">{localSession} hrs</span>
+          <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
         </div>
         <Slider
           value={[localSession]}

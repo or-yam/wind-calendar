@@ -1,5 +1,3 @@
-import type { APIRoot } from "./api-response";
-
 export interface SpotInfo {
   tabs: Array<{
     share: boolean;
@@ -19,9 +17,9 @@ export interface SpotInfo {
       id_blend_settings: number;
       id_user: number;
       name: string;
-      lat: any;
-      lon: any;
-      range: any;
+      lat: unknown;
+      lon: unknown;
+      range: unknown;
       res_sensitivity: number;
       init_sensitivity: number;
       model_koef: {
@@ -110,7 +108,7 @@ export interface SpotInfo {
         RH: number;
       };
       mix_skip: Array<string>;
-      var_map: any;
+      var_map: unknown;
     };
     id_model_wave?: number;
     options: {
@@ -126,11 +124,11 @@ export interface SpotInfo {
       limit3: number;
       tlimit: number;
       vt: string;
-      wrapnew: any;
+      wrapnew: unknown;
       show_flhgt_opt: number;
       map_open_fn: string;
       params: Array<string>;
-      var_map: any;
+      var_map: unknown;
       tide: {
         style: string;
         min: number;
@@ -139,7 +137,7 @@ export interface SpotInfo {
     };
     header?: string;
   }>;
-  tabs_hidden: Array<any>;
+  tabs_hidden: Array<unknown>;
   spots: {
     [key: string]: {
       id_spot: string;
@@ -219,19 +217,4 @@ export interface ModelForecast {
   resolution: number;
   initdate: string;
   forecast: ForecastData;
-}
-
-export interface MixedForecast extends APIRoot {
-  source_models: Array<{
-    id_model: number;
-    model_name: string;
-    weight: number;
-  }>;
-  mix_timestamp: number;
-}
-
-export type ForecastResult = ModelForecast | MixedForecast;
-
-export function isMixedForecast(forecast: ForecastResult): forecast is MixedForecast {
-  return "source_models" in forecast;
 }

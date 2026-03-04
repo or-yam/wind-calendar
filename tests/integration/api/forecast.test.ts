@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getForecast } from "../../../server/scraper/forecast";
+import { getForecast } from "../../../server/windguru/forecast";
 import type { SpotInfo, ModelForecast } from "../../../server/types/forecast";
 
 const mockSpotInfo: SpotInfo = {
@@ -187,9 +187,7 @@ describe("getForecast", () => {
         return new Response("Error", { status: 500 });
       };
 
-      await expect(() => getForecast("771", 1)).rejects.toThrow(
-        /Failed to fetch any valid forecasts/,
-      );
+      await expect(() => getForecast("771", 1)).rejects.toThrow(/Failed to fetch model 1/);
     } finally {
       globalThis.fetch = originalFetch;
     }

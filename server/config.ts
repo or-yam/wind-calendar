@@ -1,7 +1,7 @@
 import type { CalendarConfig } from "../shared/types.js";
 import { DEFAULTS } from "../shared/constants.js";
 import { LOCATIONS } from "../shared/locations.js";
-import { MODELS } from "../shared/models.js";
+import { MODELS, isValidModelId } from "../shared/models.js";
 
 export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig {
   const location = searchParams.get("location") ?? "beit-yanai";
@@ -20,7 +20,7 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
   let windMin: number = DEFAULTS.windMin;
   let windMax: number = DEFAULTS.windMax;
   let minSessionHours: number = DEFAULTS.minSessionHours;
-  let model: number = DEFAULTS.model;
+  let model: number | string = DEFAULTS.model;
 
   if (windMinParam !== null) {
     windMin = parseFloat(windMinParam);
@@ -45,11 +45,13 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
   }
 
   if (modelParam !== null) {
-    model = parseInt(modelParam, 10);
-    if (isNaN(model)) throw new Error(`Invalid model: "${modelParam}" is not a number`);
-    if (!(model in MODELS)) {
+    // Try parse as number first (legacy Windguru IDs like "3", "45")
+    const numericModel = Number(modelParam);
+    model = Number.isNaN(numericModel) ? modelParam : numericModel;
+
+    if (!isValidModelId(model)) {
       const validModels = Object.keys(MODELS).join(", ");
-      throw new Error(`Invalid model: "${model}". Valid models: ${validModels}`);
+      throw new Error(`Invalid model: "${modelParam}". Valid models: ${validModels}`);
     }
   }
 
@@ -63,8 +65,12 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
   };
 }
 
-export function resolveLocation(name: string): { spotId: string; tz: string } {
-  const loc = LOCATIONS[name];
+export function resolveLocation(name: string): {
+  spotId: string;
+  tz: string;
+  coordinates?: { lat: number; lon: number };
+} {
+  const loc = LOCATIONS[name as keyof typeof LOCATIONS];
   if (!loc) {
     throw new Error(
       `Unknown location: "${name}". Valid locations: ${Object.keys(LOCATIONS).join(", ")}`,

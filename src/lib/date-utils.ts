@@ -92,6 +92,13 @@ export function formatTime(hour: number, minute: number): string {
 }
 
 /**
+ * Format time from Date object as HH:MM
+ */
+export function formatTimeFromDate(date: Date): string {
+  return formatTime(date.getHours(), date.getMinutes());
+}
+
+/**
  * Get day names for a week
  */
 export function getDayNames(weekStartsOnSunday: boolean): string[] {

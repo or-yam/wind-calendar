@@ -68,7 +68,7 @@ export type APIRoot = {
     id_model: number;
     update_last: string;
     update_next: string;
-    img_var_map: Array<any>;
+    img_var_map: Array<unknown>;
   };
   fcst_sea: {
     GUST: Array<number>;

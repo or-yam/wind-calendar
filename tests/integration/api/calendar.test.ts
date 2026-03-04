@@ -309,7 +309,7 @@ describe("calendar API handler", () => {
       expect(body.code).toBe("WINDGURU_DOWN");
       expect(body.error).toBe("Windguru is temporarily unavailable");
       expect(body.suggestion).toBeTruthy();
-      expect(body.debug?.spotId).toBeTruthy();
+      expect(body.debug?.locationInfo).toBeTruthy();
       expect(body.debug.upstreamStatus).toBe(500);
     } finally {
       restoreFetch();
@@ -416,7 +416,7 @@ describe("calendar API handler", () => {
       expect(result.statusCode).toBe(504);
       const body = JSON.parse(result.body);
       expect(body.code).toBe("WINDGURU_UNREACHABLE");
-      expect(body.debug?.spotId).toBeTruthy();
+      expect(body.debug?.locationInfo).toBeTruthy();
     } finally {
       restoreFetch();
     }
@@ -461,7 +461,7 @@ describe("calendar API handler", () => {
     }
   });
 
-  it("all error responses include debug.spotId", async () => {
+  it("all error responses include debug.locationInfo", async () => {
     const errorResponders: Array<{ name: string; responder: () => Response }> = [
       { name: "500", responder: () => new Response("error", { status: 500 }) },
       { name: "429", responder: () => new Response("error", { status: 429 }) },
@@ -478,7 +478,7 @@ describe("calendar API handler", () => {
         await handler(req, res);
 
         const body = JSON.parse(result.body);
-        expect(body.debug?.spotId).toBeTruthy();
+        expect(body.debug?.locationInfo).toBeTruthy();
         expect(body.code).toBeTruthy();
       } finally {
         restoreFetch();

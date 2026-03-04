@@ -1,7 +1,15 @@
 import type { IcsEvent } from "@/lib/ics-parser";
 import { windColor } from "@/lib/wind-colors";
-import { addDays } from "@/lib/date-utils";
+import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
+
+const RANGE_RE = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
+const SINGLE_RE = /(\d+)\s*kn/i;
+const WAVE_RE = /\|\s*([\d.]+)m\s*waves/i;
+
+// Cached Intl.DateTimeFormat instances
+const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
+const MON_FMT = new Intl.DateTimeFormat("en-US", { month: "short" });
 
 interface ForecastCardsProps {
   events: IcsEvent[];
@@ -13,15 +21,9 @@ interface ForecastCardsProps {
   onToday: () => void;
 }
 
-function formatTime(date: Date): string {
-  const h = date.getHours().toString().padStart(2, "0");
-  const m = date.getMinutes().toString().padStart(2, "0");
-  return `${h}:${m}`;
-}
-
 function formatDayLabel(date: Date): string {
-  const dow = date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-  const mon = date.toLocaleDateString("en-US", { month: "short" });
+  const dow = DOW_FMT.format(date).toUpperCase();
+  const mon = MON_FMT.format(date);
   const day = date.getDate();
   return `${dow} ${mon} ${day}`;
 }
@@ -45,11 +47,19 @@ function groupByDay(events: IcsEvent[]): DayGroup[] {
 }
 
 function parseWindKnots(summary: string): { lo: number; hi: number; mid: number } | null {
-  const match = summary.match(/(\d+)\s*[–-]\s*(\d+)\s*kn/i);
-  if (!match) return null;
-  const lo = parseInt(match[1], 10);
-  const hi = parseInt(match[2], 10);
-  return { lo, hi, mid: (lo + hi) / 2 };
+  // Match range "15-20kn" or single value "15kn"
+  const rangeMatch = summary.match(RANGE_RE);
+  if (rangeMatch) {
+    const lo = parseInt(rangeMatch[1], 10);
+    const hi = parseInt(rangeMatch[2], 10);
+    return { lo, hi, mid: (lo + hi) / 2 };
+  }
+  const singleMatch = summary.match(SINGLE_RE);
+  if (singleMatch) {
+    const val = parseInt(singleMatch[1], 10);
+    return { lo: val, hi: val, mid: val };
+  }
+  return null;
 }
 
 function windTextColor(knots: number): string {
@@ -57,7 +67,7 @@ function windTextColor(knots: number): string {
 }
 
 function parseWaveHeight(summary: string): string | null {
-  const match = summary.match(/\|\s*([\d.]+)m\s*waves/i);
+  const match = summary.match(WAVE_RE);
   return match ? `${match[1]}m` : null;
 }
 
@@ -123,21 +133,25 @@ export function ForecastCards({
                 );
               }
 
-              return dayGroup.events.map((event, idx) => {
+              return dayGroup.events.map((event) => {
                 const wind = parseWindKnots(event.summary);
                 const midKnots = wind ? wind.mid : 15;
                 const borderColor = windColor(midKnots);
                 const start = event.dtstart.date;
                 const end = event.dtend?.date ?? null;
                 const timeRange = end
-                  ? `${formatTime(start)} – ${formatTime(end)}`
-                  : formatTime(start);
-                const windLabel = wind ? `${wind.lo}–${wind.hi} kn` : null;
+                  ? `${formatTimeFromDate(start)} – ${formatTimeFromDate(end)}`
+                  : formatTimeFromDate(start);
+                const windLabel = wind
+                  ? wind.lo === wind.hi
+                    ? `${wind.lo} kn`
+                    : `${wind.lo}–${wind.hi} kn`
+                  : null;
                 const waveLabel = parseWaveHeight(event.summary);
 
                 return (
                   <div
-                    key={`${dayKey}-${idx}`}
+                    key={`${dayKey}-${event.dtstart.date.getTime()}`}
                     className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 border-l-4 aspect-[3/2]"
                     style={{ borderLeftColor: borderColor }}
                   >
@@ -148,7 +162,7 @@ export function ForecastCards({
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {windLabel && (
                         <span
-                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold"
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
                           style={{
                             backgroundColor: windColor(midKnots),
                             color: windTextColor(midKnots),
@@ -158,7 +172,7 @@ export function ForecastCards({
                         </span>
                       )}
                       {waveLabel && (
-                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white">
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white tabular-nums">
                           {waveLabel}
                         </span>
                       )}
