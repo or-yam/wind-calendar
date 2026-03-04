@@ -60,7 +60,7 @@ export const filterEvents = (events: WindConditionRaw[], config: FilterConfig): 
       height !== null &&
       height >= config.waveHeightMin &&
       height <= config.waveHeightMax &&
-      (period === null || period >= config.wavePeriodMin);
+      (period ?? 0) >= config.wavePeriodMin;
 
     if (!passesWind && !passesWave) continue;
 

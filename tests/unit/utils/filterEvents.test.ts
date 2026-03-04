@@ -151,11 +151,28 @@ describe("filterEvents", () => {
     expect(conditions[0].waveHeight).toBe(1.5);
   });
 
-  it("wave-only: null period passes (period is optional)", () => {
-    const config: FilterConfig = { ...baseConfig, windEnabled: false, waveEnabled: true };
+  it("wave-only: null period defaults to 0 (passes when wavePeriodMin=0)", () => {
+    const config: FilterConfig = {
+      ...baseConfig,
+      windEnabled: false,
+      waveEnabled: true,
+      wavePeriodMin: 0,
+    };
     const events = [makeEvent({ waveHeight: 1.5, wavePeriod: null })];
     const { conditions } = filterEvents(events, config);
-    expect(conditions.length).toBe(1);
+    expect(conditions.length).toBe(1); // null treated as 0, passes >= 0
+  });
+
+  it("wave-only: null period defaults to 0 (fails when wavePeriodMin > 0)", () => {
+    const config: FilterConfig = {
+      ...baseConfig,
+      windEnabled: false,
+      waveEnabled: true,
+      wavePeriodMin: 8,
+    };
+    const events = [makeEvent({ waveHeight: 1.5, wavePeriod: null })];
+    const { conditions } = filterEvents(events, config);
+    expect(conditions.length).toBe(0); // null treated as 0, fails < 8
   });
 
   it("wave-only: null wave height fails", () => {

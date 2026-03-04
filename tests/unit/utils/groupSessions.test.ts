@@ -261,6 +261,63 @@ describe("groupSessions", () => {
     const sessions = groupSessions(conditions, makeReasons(conditions, "both"), 1);
     expect(sessions[0].matchType).toBe("both");
   });
+
+  it("wave-only session discarded if < minSessionHours", () => {
+    // 1 hour of waves, low wind
+    const c1 = makeCondition(0, 5, 10, 0, 1.5, { wavePeriod: 10 });
+    const reasons = new Map([[c1, "wave" as MatchReason]]);
+    const sessions = groupSessions([c1], reasons, 2);
+    expect(sessions).toHaveLength(0); // < 2 hour minimum
+  });
+
+  it("mixed: wind session passes, wave session fails minSessionHours", () => {
+    // 3 hours wind, then 1 hour wave-only
+    const c1 = makeCondition(0, 15, 20, 180);
+    const c2 = makeCondition(1, 15, 20, 180);
+    const c3 = makeCondition(2, 15, 20, 180);
+    const c4 = makeCondition(3, 5, 10, 180, 1.5, { wavePeriod: 10 });
+
+    const reasons = new Map<WindConditionRaw, MatchReason>([
+      [c1, "wind"],
+      [c2, "wind"],
+      [c3, "wind"],
+      [c4, "wave"],
+    ]);
+
+    const sessions = groupSessions([c1, c2, c3, c4], reasons, 2);
+    expect(sessions).toHaveLength(1); // Only wind session
+    expect(sessions[0].matchType).toBe("wind");
+  });
+
+  it("three consecutive hours with alternating matchTypes create 3 sessions", () => {
+    const c1 = makeCondition(0, 15, 20, 180, null);
+    const c2 = makeCondition(1, 5, 10, 180, 2.0, { wavePeriod: 10 });
+    const c3 = makeCondition(2, 15, 20, 180, null);
+
+    const reasons = new Map<WindConditionRaw, MatchReason>([
+      [c1, "wind"],
+      [c2, "wave"],
+      [c3, "wind"],
+    ]);
+    const sessions = groupSessions([c1, c2, c3], reasons, 1);
+
+    expect(sessions).toHaveLength(3);
+    expect(sessions.map((s) => s.matchType)).toEqual(["wind", "wave", "wind"]);
+  });
+
+  it("matchType 'both' does NOT break sessions", () => {
+    const c1 = makeCondition(0, 15, 20, 180, 1.5, { wavePeriod: 10 });
+    const c2 = makeCondition(1, 15, 20, 180, 1.5, { wavePeriod: 10 });
+
+    const reasons = new Map<WindConditionRaw, MatchReason>([
+      [c1, "both"],
+      [c2, "both"],
+    ]);
+    const sessions = groupSessions([c1, c2], reasons, 1);
+
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].matchType).toBe("both");
+  });
 });
 
 describe("degreesToCardinal", () => {

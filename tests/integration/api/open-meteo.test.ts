@@ -541,4 +541,267 @@ describe("Open-Meteo provider integration", () => {
       restoreFetch();
     }
   });
+
+  describe("Wave filtering", () => {
+    it("wave-only mode filters by waveHeightMin", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "marine-api.open-meteo.com") {
+          // Set wave heights below threshold
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(0.5), // Below 1.0m threshold
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=false&waveEnabled=true&waveHeightMin=1.0",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
+        // No waves meet criteria
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(false);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("wave-only mode filters by wavePeriodMin", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "marine-api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(1.5), // Good height
+                wave_period: Array(21).fill(6), // Below 10s threshold
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=false&waveEnabled=true&waveHeightMin=1.0&wavePeriodMin=10",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        // No waves meet period criteria
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(false);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("wave-only mode with waveSource=swell uses swell data", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "marine-api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(0.3), // Total wave is low
+                swell_wave_height: Array(21).fill(1.5), // Swell is good
+                swell_wave_period: Array(21).fill(12),
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=false&waveEnabled=true&waveSource=swell&waveHeightMin=1.0",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        // Should pass because swell meets criteria
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(true);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("mixed mode: OR logic - wind passes, wave fails", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "marine-api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(0.3), // Below threshold
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=true&waveEnabled=true&windMin=10&waveHeightMin=1.0",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        // Should pass because wind meets criteria (OR logic)
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(true);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("mixed mode: OR logic - wave passes, wind fails", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoForecast,
+              hourly: {
+                ...mockOpenMeteoForecast.hourly,
+                wind_speed_10m: Array(21).fill(5), // Below windMin
+              },
+            }),
+          );
+        }
+        if (url.hostname === "marine-api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(1.5), // Good waves
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=true&waveEnabled=true&windMin=20&waveHeightMin=1.0",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        // Should pass because wave meets criteria (OR logic)
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(true);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("both disabled returns empty calendar", async () => {
+      installFetchMock();
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=false&waveEnabled=false",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
+        // No events when both disabled
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(false);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("wave period null defaults to 0 and passes when wavePeriodMin=0", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "marine-api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(1.5),
+                wave_period: Array(21).fill(null), // Null periods
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=false&waveEnabled=true&waveHeightMin=1.0&wavePeriodMin=0",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        // Should pass because null period treated as 0
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(true);
+      } finally {
+        restoreFetch();
+      }
+    });
+
+    it("wave period null defaults to 0 and fails when wavePeriodMin > 0", async () => {
+      installFetchMock((url) => {
+        if (url.hostname === "marine-api.open-meteo.com") {
+          return new Response(
+            JSON.stringify({
+              ...mockOpenMeteoMarine,
+              hourly: {
+                ...mockOpenMeteoMarine.hourly,
+                wave_height: Array(21).fill(1.5),
+                wave_period: Array(21).fill(null), // Null periods
+              },
+            }),
+          );
+        }
+        return null;
+      });
+
+      try {
+        const req = mockReq(
+          "/api/calendar?location=tel-aviv&model=om_gfs&windEnabled=false&waveEnabled=true&waveHeightMin=1.0&wavePeriodMin=8",
+        );
+        const { res, result } = mockRes();
+
+        await handler(req, res);
+
+        expect(result.statusCode).toBe(200);
+        // Should fail because null period (0) < 8
+        expect(result.body.includes("BEGIN:VEVENT")).toBe(false);
+      } finally {
+        restoreFetch();
+      }
+    });
+  });
 });
