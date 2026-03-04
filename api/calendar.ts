@@ -291,7 +291,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           isDev,
         );
 
-        if (!result.success) {
+        if (result.success === false) {
           return res.status(result.status).json(result.body);
         }
 
@@ -326,7 +326,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       isDev,
     );
 
-    if (!result.success) {
+    if (result.success === false) {
       return res.status(result.status).json(result.body);
     }
 
