@@ -78,10 +78,9 @@ https://wind-calendar.vercel.app/api/calendar
 - `windMin` - Minimum wind speed in knots (default: 14)
 - `windMax` - Maximum wind speed in knots (default: 35)
 - `minSessionHours` - Minimum session duration in hours (default: 2)
-- `waveHeightMin` - Minimum wave height in meters (default: 0.4)
-- `model` - Forecast model ID (default: `om_gfs`)
+- `model` - Forecast model ID (default: `3` for Windguru GFS, or `om_gfs` for Open-Meteo)
   - **Open-Meteo (Recommended)**:
-    - `om_gfs` - GFS 13km (NOAA Global Forecast System - default)
+    - `om_gfs` - GFS 13km (NOAA Global Forecast System)
     - `om_icon` - ICON 13km (DWD German weather model)
     - `om_gdps` - GDPS 15km (Canadian Meteorological Centre)
     - `om_ifs` - IFS-HRES 9km (ECMWF high-resolution)
@@ -90,6 +89,11 @@ https://wind-calendar.vercel.app/api/calendar
     - `45` - ICON 13km
     - `59` - GDPS 15km
     - `117` - IFS-HRES 9km
+- `waveEnabled` - Enable wave filtering (default: false). When true, only sessions with waves matching thresholds are included
+- `waveSource` - Wave source type: `"total"` or `"swell"` (default: `"total"`)
+- `waveHeightMin` - Minimum wave height in meters (default: 0.5)
+- `waveHeightMax` - Maximum wave height in meters (default: 5.0)
+- `wavePeriodMin` - Minimum wave period in seconds (default: 8)
 
 ### Parameter Constraints
 
@@ -106,7 +110,7 @@ https://wind-calendar.vercel.app/api/calendar
 https://wind-calendar.vercel.app/api/calendar?location=herzliya
 ```
 
-This uses default thresholds: 14-35kn wind, 2+ hour sessions, 0.4m+ waves.
+This uses default thresholds: 14-35kn wind, 2+ hour sessions. Wave filtering is disabled by default.
 
 ### Customized for Stronger Winds
 
@@ -222,20 +226,32 @@ Sessions are created by:
 
 ## Update Frequency
 
-- **Forecast Data**: Updated every 6 hours from Windguru
-- **API Cache**: Responses cached for 6 hours
+- **Forecast Data**: Updated every 6 hours from Open-Meteo (primary provider) with Windguru fallback
+- **API Cache**: Responses cached for 6 hours with stale-while-revalidate and stale-if-error fallbacks
 - **Calendar Sync**: Depends on the calendar application (see platform sections above)
 
 When the forecast updates, subscribed calendars will automatically receive the new data on their next sync cycle.
 
+## Data Attribution
+
+**Open-Meteo** provides publicly available weather data under CC-BY 4.0 license from:
+
+- NOAA (GFS - Global Forecast System)
+- DWD (ICON - Germany's weather model)
+- CMC (GDPS - Canadian Global Model)
+- ECMWF (IFS-HRES - European high-resolution model)
+
+**Windguru** is used as a fallback provider for legacy model IDs (3, 45, 59, 117).
+
 ## Important Limitations
 
 - **Forecast Accuracy**: Forecasts use public weather model data (GFS, ICON, GDPS, IFS-HRES) and are subject to typical weather prediction limitations. Different models can show different predictions - no model is always correct.
-- **Data Source**: Primary provider is Open-Meteo. If Open-Meteo fails, the API automatically falls back to Windguru for the equivalent model.
+- **Data Source**: Primary provider is Open-Meteo (CC-BY 4.0). If Open-Meteo fails, the API automatically falls back to Windguru for the equivalent model.
 - **Geographic Coverage**: Currently limited to Israeli Mediterranean coast locations
 - **Daylight Hours Only**: Sessions are filtered to occur during daylight (based on sunrise/sunset)
 - **Timezone**: All times are in Asia/Jerusalem timezone
 - **Sync Delays**: Calendar app sync frequencies vary (Google Calendar is the slowest)
+- **Wave Data**: Wave filtering requires both wind and wave data availability. Not all locations/models provide wave forecasts
 
 ## Example Agent Workflows
 
@@ -281,23 +297,23 @@ Upcoming wind sessions for Beit Yanai:
 
 ### Workflow 3: Kitesurfing-Specific Requirements
 
-**User**: "I want kite forecasts for Tel Aviv but only strong wind days, at least 3 hours long"
+**User**: "I want kite forecasts for Tel Aviv but only strong wind days, at least 3 hours long, with decent waves"
 
 **Agent Actions**:
 
-1. Construct URL for longer, stronger sessions: `https://wind-calendar.vercel.app/api/calendar?location=tel-aviv&windMin=20&windMax=35&minSessionHours=3`
+1. Construct URL for longer, stronger sessions with wave filtering: `https://wind-calendar.vercel.app/api/calendar?location=tel-aviv&windMin=20&windMax=35&minSessionHours=3&waveEnabled=true&waveHeightMin=1.0`
 2. Provide subscription instructions
-3. Explain: "This filters for sustained strong wind sessions (20-35 knots, 3+ hours) ideal for kitesurfing"
+3. Explain: "This filters for sustained strong wind sessions (20-35 knots, 3+ hours) with waves 1m+, ideal for kitesurfing"
 
 ### Workflow 4: Beginner Windsurfer
 
-**User**: "I'm learning to windsurf in Herzliya, what days will have light winds?"
+**User**: "I'm learning to windsurf in Herzliya, what days will have light winds and small waves?"
 
 **Agent Actions**:
 
-1. Construct URL for lighter winds: `https://wind-calendar.vercel.app/api/calendar?location=herzliya&windMin=8&windMax=15&minSessionHours=1`
+1. Construct URL for lighter winds and small waves: `https://wind-calendar.vercel.app/api/calendar?location=herzliya&windMin=8&windMax=15&minSessionHours=1&waveEnabled=true&waveHeightMin=0.3&waveHeightMax=0.8`
 2. Provide subscription instructions
-3. Explain: "This shows gentler wind sessions (8-15 knots) perfect for learning"
+3. Explain: "This shows gentler wind sessions (8-15 knots) with small waves (0.3-0.8m), perfect for learning"
 
 ### Workflow 5: Comparing Multiple Spots
 
@@ -321,6 +337,16 @@ Upcoming wind sessions for Beit Yanai:
 3. Parse and compare the sessions from both models
 4. Display differences: "ECMWF predicts wind on March 12-13, while GFS shows March 13-14"
 5. Explain: "Different models can show different forecasts. ECMWF (IFS-HRES) is often considered most accurate for short-term forecasts."
+
+### Workflow 7: Wave-Specific Filtering
+
+**User**: "Show me days with good swell (not just wind-driven waves) at Herzliya"
+
+**Agent Actions**:
+
+1. Construct URL with swell filtering: `https://wind-calendar.vercel.app/api/calendar?location=herzliya&windMin=12&waveEnabled=true&waveSource=swell&waveHeightMin=0.8`
+2. Parse and display sessions with swell conditions
+3. Explain: "This shows wind sessions with swell waves (0.8m+). Swell is more consistent ocean waves, unlike choppy wind-driven waves"
 
 ## Troubleshooting
 
