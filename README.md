@@ -42,6 +42,12 @@ Paste the `webcal://` URL into your calendar app (Apple Calendar, Google Calenda
 
 This project provides a public API for wind forecast calendar feeds. AI agents can discover this functionality via the SKILL file, located at `skills/wind-calendar/SKILL.md`.
 
+To install the skill, use the following command:
+
+```bash
+npx skills add https://github.com/or-yam/wind-calendar --skill wind-calendar
+```
+
 **Quick Example:**
 
 ```bash
