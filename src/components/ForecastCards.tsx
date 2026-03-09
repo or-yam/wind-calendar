@@ -2,11 +2,12 @@ import type { IcsEvent } from "@/lib/ics-parser";
 import { windColor } from "@/lib/wind-colors";
 import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
+import { WIND_ICON, WAVE_ICON } from "@shared/constants";
 
 const RANGE_RE = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
 const SINGLE_RE = /(\d+)\s*kn/i;
 const WAVE_RE = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
-const WAVE_ONLY_RE = /^Waves\s+([\d.]+)m\s*(?:(\d+)s)?\s*(\w+)/i;
+const WAVE_ONLY_RE = /^[^\w]*Waves\s+([\d.]+)m\s*(?:(\d+)s)?\s*(\w+)/i;
 
 // Cached Intl.DateTimeFormat instances
 const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
@@ -85,6 +86,19 @@ function isWaveOnlyEvent(summary: string): boolean {
   return WAVE_ONLY_RE.test(summary);
 }
 
+function getEventType(summary: string): "wind" | "wave" | "both" {
+  const startsWithBoth = summary.startsWith(`${WIND_ICON}${WAVE_ICON}`);
+  const startsWithWind = summary.startsWith(WIND_ICON);
+  const startsWithWave = summary.startsWith(WAVE_ICON);
+
+  if (startsWithBoth) return "both";
+  if (startsWithWave) return "wave";
+  if (startsWithWind) return "wind";
+
+  // Legacy events without icons - fall back to text pattern matching
+  return isWaveOnlyEvent(summary) ? "wave" : "wind";
+}
+
 export function ForecastCards({
   events,
   loading,
@@ -148,10 +162,10 @@ export function ForecastCards({
               }
 
               return dayGroup.events.map((event) => {
+                const eventType = getEventType(event.summary);
                 const wind = parseWindKnots(event.summary);
-                const waveOnly = isWaveOnlyEvent(event.summary);
                 const midKnots = wind ? wind.mid : 15;
-                const borderColor = waveOnly ? "#2563EB" : windColor(midKnots);
+                const borderColor = eventType === "wave" ? "#2563EB" : windColor(midKnots);
                 const start = event.dtstart.date;
                 const end = event.dtend?.date ?? null;
                 const timeRange = end
@@ -164,6 +178,13 @@ export function ForecastCards({
                   : null;
                 const waveInfo = parseWaveInfo(event.summary);
 
+                const iconDisplay =
+                  eventType === "both"
+                    ? `${WIND_ICON}${WAVE_ICON}`
+                    : eventType === "wave"
+                      ? WAVE_ICON
+                      : WIND_ICON;
+
                 return (
                   <div
                     key={`${dayKey}-${event.dtstart.date.getTime()}`}
@@ -172,6 +193,9 @@ export function ForecastCards({
                   >
                     <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">
                       {formatDayLabel(start)}
+                    </p>
+                    <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
+                      {iconDisplay}
                     </p>
                     <p className="text-xs font-medium text-slate-200">{timeRange}</p>
                     <div className="flex gap-1 mt-1 flex-wrap">

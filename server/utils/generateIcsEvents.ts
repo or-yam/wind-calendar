@@ -2,9 +2,7 @@ import { createEvents, type DateArray, type EventAttributes } from "ics";
 import type { Session } from "./groupSessions.js";
 import { degreesToCardinal } from "./groupSessions.js";
 import { toLocalTimeString } from "./timezone.js";
-
-export const WIND_ICON = "►";
-export const WAVE_ICON = "〰";
+import { WIND_ICON, WAVE_ICON } from "../../shared/constants.js";
 
 export function dateToTuple(date: Date, tz: string): [number, number, number, number, number] {
   const formatter = new Intl.DateTimeFormat("en-US", {
