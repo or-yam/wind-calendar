@@ -14,8 +14,7 @@ import {
 } from "../shared/models.js";
 import { tryCatch } from "../server/utils/try-catch.js";
 import { filterEvents } from "../server/utils/filterEvents.js";
-import { groupSessions } from "../server/utils/groupSessions.js";
-import { generateIcsEvents } from "../server/utils/generateIcsEvents.js";
+import { groupSessions, degreesToCardinal, type Session } from "../server/utils/groupSessions.js";
 import { checkRateLimit } from "../server/utils/rate-limit.js";
 import {
   isDev,
@@ -24,28 +23,90 @@ import {
   classifyFetchError,
   fetchWindguruWithErrorHandling,
 } from "../server/utils/api-handler.js";
+import type { WindConditionRaw } from "../server/types/wind-conditions.js";
 
-function buildCalendar(
-  fetchResult: Awaited<ReturnType<typeof fetchWindData>>,
-  config: CalendarConfig,
-  tz: string,
-): string {
-  const { conditions, matchReasons } = filterEvents(fetchResult.windData, {
-    windEnabled: config.windEnabled,
-    windMin: config.windMin,
-    windMax: config.windMax,
-    waveEnabled: config.waveEnabled,
-    waveSource: config.waveSource,
-    waveHeightMin: config.waveHeightMin,
-    waveHeightMax: config.waveHeightMax,
-    wavePeriodMin: config.wavePeriodMin,
-    sunrise: fetchResult.sunrise,
-    sunset: fetchResult.sunset,
-    tz,
-  });
+interface HourlyCondition {
+  time: string;
+  windSpeed: number | null;
+  windGusts: number | null;
+  windDirection: string | null;
+  windDirectionDeg: number | null;
+  waveHeight: number | null;
+  wavePeriod: number | null;
+  waveDirection: string | null;
+  swellHeight: number | null;
+  swellPeriod: number | null;
+}
 
-  const sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
-  return generateIcsEvents(sessions, tz);
+interface ForecastSession {
+  start: string;
+  end: string;
+  matchType: "wind" | "wave" | "both";
+  wind: {
+    min: number;
+    max: number;
+    gustMax: number;
+    direction: string;
+  };
+  wave: {
+    avgHeight: number;
+    avgPeriod: number;
+    direction: string;
+  };
+  swell: {
+    avgHeight: number;
+    avgPeriod: number;
+  };
+  hourly: HourlyCondition[];
+}
+
+interface ForecastResponse {
+  meta: {
+    location: string;
+    model: string | number;
+    dataSource: string;
+    generatedAt: string;
+  };
+  sessions: ForecastSession[];
+}
+
+function serializeCondition(c: WindConditionRaw): HourlyCondition {
+  return {
+    time: c.date.toISOString(),
+    windSpeed: c.windSpeed,
+    windGusts: c.windGusts,
+    windDirection: c.windDirection != null ? degreesToCardinal(c.windDirection) : null,
+    windDirectionDeg: c.windDirection,
+    waveHeight: c.waveHeight,
+    wavePeriod: c.wavePeriod,
+    waveDirection: c.waveDirection != null ? degreesToCardinal(c.waveDirection) : null,
+    swellHeight: c.swellHeight,
+    swellPeriod: c.swellPeriod,
+  };
+}
+
+function serializeSession(session: Session): ForecastSession {
+  return {
+    start: session.start.toISOString(),
+    end: session.end.toISOString(),
+    matchType: session.matchType,
+    wind: {
+      min: Math.round(session.windMin),
+      max: Math.round(session.windMax),
+      gustMax: Math.round(session.gustMax),
+      direction: session.dominantDirection,
+    },
+    wave: {
+      avgHeight: parseFloat(session.waveAvg.toFixed(2)),
+      avgPeriod: Math.round(session.wavePeriodAvg),
+      direction: session.waveDominantDirection,
+    },
+    swell: {
+      avgHeight: parseFloat(session.swellHeightAvg.toFixed(2)),
+      avgPeriod: Math.round(session.swellPeriodAvg),
+    },
+    hourly: session.conditions.map(serializeCondition),
+  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -177,13 +238,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     throw new Error("Internal error: fetchResult is null after provider routing");
   }
 
-  let icsString;
+  let sessions: Session[];
   try {
-    icsString = buildCalendar(fetchResult, config, location.tz);
+    const { conditions, matchReasons } = filterEvents(fetchResult.windData, {
+      windEnabled: config.windEnabled,
+      windMin: config.windMin,
+      windMax: config.windMax,
+      waveEnabled: config.waveEnabled,
+      waveSource: config.waveSource,
+      waveHeightMin: config.waveHeightMin,
+      waveHeightMax: config.waveHeightMax,
+      wavePeriodMin: config.wavePeriodMin,
+      sunrise: fetchResult.sunrise,
+      sunset: fetchResult.sunset,
+      tz: location.tz,
+    });
+
+    sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return res.status(500).json({
-      error: "Failed to generate calendar",
+      error: "Failed to process forecast data",
       code: "PIPELINE_ERROR",
       ...(dev && {
         debug: {
@@ -195,7 +270,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  const body: ForecastResponse = {
+    meta: {
+      location: config.location,
+      model: config.model,
+      dataSource,
+      generatedAt: new Date().toISOString(),
+    },
+    sessions: sessions.map(serializeSession),
+  };
+
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("X-Data-Source", dataSource);
   if (fallbackUsed) {
     res.setHeader("X-Fallback-Used", "true");
@@ -204,6 +289,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     "Cache-Control",
     "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
   );
-  res.setHeader("Content-Disposition", `inline; filename="wind-forecast-${config.location}.ics"`);
-  return res.status(200).send(icsString);
+  return res.status(200).json(body);
 }
