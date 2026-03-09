@@ -5,10 +5,10 @@ import { getForecast } from "./forecast.js";
 
 type Forecast = Awaited<ReturnType<typeof getForecast>>;
 
-const TIME_PATTERN = /^\d{2}:\d{2}$/;
+const TIME_RGX = /^\d{2}:\d{2}$/;
 
 function validateTimeString(value: unknown, label: string): string {
-  if (typeof value !== "string" || !TIME_PATTERN.test(value)) {
+  if (typeof value !== "string" || !TIME_RGX.test(value)) {
     throw new Error(`Invalid ${label} value from Windguru: ${JSON.stringify(value)}`);
   }
   return value;

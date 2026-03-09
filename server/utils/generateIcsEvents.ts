@@ -33,11 +33,14 @@ function formatWindPart(session: Session): string {
   return `Wind ${wind} ${session.dominantDirection}`;
 }
 
-function formatWavePart(session: Session): string {
+function formatWaveCore(session: Session): string {
   const height = session.waveAvg.toFixed(1);
   const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
-  const dir = session.waveDominantDirection;
-  return `Waves ${height}m${period} ${dir}`;
+  return `${height}m${period} ${session.waveDominantDirection}`;
+}
+
+function formatWavePart(session: Session): string {
+  return `Waves ${formatWaveCore(session)}`;
 }
 
 function formatTitle(session: Session): string {
@@ -46,11 +49,8 @@ function formatTitle(session: Session): string {
       return `${WIND_ICON} ${formatWindPart(session)}`;
     case "wave":
       return `${WAVE_ICON} ${formatWavePart(session)}`;
-    case "both": {
-      const height = session.waveAvg.toFixed(1);
-      const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
-      return `${WIND_ICON}${WAVE_ICON} ${formatWindPart(session)} | ${height}m${period} waves`;
-    }
+    case "both":
+      return `${WIND_ICON}${WAVE_ICON} ${formatWindPart(session)} | ${formatWaveCore(session)} waves`;
   }
 }
 

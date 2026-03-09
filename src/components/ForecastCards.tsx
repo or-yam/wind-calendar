@@ -4,9 +4,10 @@ import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { WIND_ICON, WAVE_ICON } from "@shared/constants";
 
-const RANGE_RE = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
-const SINGLE_RE = /(\d+)\s*kn/i;
-const WAVE_RE = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
+const RANGE_RGX = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
+const SINGLE_RGX = /(\d+)\s*kn/i;
+const WAVE_RGX = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
+const WAVE_ONLY_RGX = /Waves\s+([\d.]+)m\s*(?:(\d+)s)?/i;
 const WAVE_COLOR = "#2563EB";
 
 // Cached Intl.DateTimeFormat instances
@@ -50,13 +51,13 @@ function groupByDay(events: IcsEvent[]): DayGroup[] {
 
 function parseWindKnots(summary: string): { lo: number; hi: number; mid: number } | null {
   // Match range "15-20kn" or single value "15kn"
-  const rangeMatch = summary.match(RANGE_RE);
+  const rangeMatch = summary.match(RANGE_RGX);
   if (rangeMatch) {
     const lo = parseInt(rangeMatch[1], 10);
     const hi = parseInt(rangeMatch[2], 10);
     return { lo, hi, mid: (lo + hi) / 2 };
   }
-  const singleMatch = summary.match(SINGLE_RE);
+  const singleMatch = summary.match(SINGLE_RGX);
   if (singleMatch) {
     const val = parseInt(singleMatch[1], 10);
     return { lo: val, hi: val, mid: val };
@@ -69,9 +70,13 @@ function windTextColor(knots: number): string {
 }
 
 function parseWaveInfo(summary: string): { height: string; period?: string } | null {
-  const bothMatch = summary.match(WAVE_RE);
+  const bothMatch = summary.match(WAVE_RGX);
   if (bothMatch) {
     return { height: `${bothMatch[1]}m`, period: bothMatch[2] ? `${bothMatch[2]}s` : undefined };
+  }
+  const waveOnly = summary.match(WAVE_ONLY_RGX);
+  if (waveOnly) {
+    return { height: `${waveOnly[1]}m`, period: waveOnly[2] ? `${waveOnly[2]}s` : undefined };
   }
   return null;
 }
