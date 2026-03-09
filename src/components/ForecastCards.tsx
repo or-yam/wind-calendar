@@ -7,7 +7,7 @@ import { WIND_ICON, WAVE_ICON } from "@shared/constants";
 const RANGE_RE = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
 const SINGLE_RE = /(\d+)\s*kn/i;
 const WAVE_RE = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
-const WAVE_ONLY_RE = /^[^\w]*Waves\s+([\d.]+)m\s*(?:(\d+)s)?\s*(\w+)/i;
+const WAVE_COLOR = "#2563EB";
 
 // Cached Intl.DateTimeFormat instances
 const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
@@ -69,34 +69,22 @@ function windTextColor(knots: number): string {
 }
 
 function parseWaveInfo(summary: string): { height: string; period?: string } | null {
-  // "| 1.5m 12s waves" (both match type)
   const bothMatch = summary.match(WAVE_RE);
   if (bothMatch) {
     return { height: `${bothMatch[1]}m`, period: bothMatch[2] ? `${bothMatch[2]}s` : undefined };
   }
-  // "Waves 1.5m 12s SW" (wave-only match type)
-  const waveOnly = summary.match(WAVE_ONLY_RE);
-  if (waveOnly) {
-    return { height: `${waveOnly[1]}m`, period: waveOnly[2] ? `${waveOnly[2]}s` : undefined };
-  }
   return null;
 }
 
-function isWaveOnlyEvent(summary: string): boolean {
-  return WAVE_ONLY_RE.test(summary);
-}
-
 function getEventType(summary: string): "wind" | "wave" | "both" {
-  const startsWithBoth = summary.startsWith(`${WIND_ICON}${WAVE_ICON}`);
-  const startsWithWind = summary.startsWith(WIND_ICON);
-  const startsWithWave = summary.startsWith(WAVE_ICON);
-
-  if (startsWithBoth) return "both";
-  if (startsWithWave) return "wave";
-  if (startsWithWind) return "wind";
-
-  // Legacy events without icons - fall back to text pattern matching
-  return isWaveOnlyEvent(summary) ? "wave" : "wind";
+  if (summary.startsWith(WIND_ICON)) {
+    return summary.startsWith(`${WIND_ICON}${WAVE_ICON}`) ? "both" : "wind";
+  }
+  if (summary.startsWith(WAVE_ICON)) {
+    return "wave";
+  }
+  console.warn(`Event missing icon prefix: ${summary}`);
+  return "wind";
 }
 
 export function ForecastCards({
@@ -165,7 +153,7 @@ export function ForecastCards({
                 const eventType = getEventType(event.summary);
                 const wind = parseWindKnots(event.summary);
                 const midKnots = wind ? wind.mid : 15;
-                const borderColor = eventType === "wave" ? "#2563EB" : windColor(midKnots);
+                const borderColor = eventType === "wave" ? WAVE_COLOR : windColor(midKnots);
                 const start = event.dtstart.date;
                 const end = event.dtend?.date ?? null;
                 const timeRange = end
@@ -178,7 +166,7 @@ export function ForecastCards({
                   : null;
                 const waveInfo = parseWaveInfo(event.summary);
 
-                const iconDisplay =
+                const eventIcon =
                   eventType === "both"
                     ? `${WIND_ICON}${WAVE_ICON}`
                     : eventType === "wave"
@@ -195,7 +183,7 @@ export function ForecastCards({
                       {formatDayLabel(start)}
                     </p>
                     <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
-                      {iconDisplay}
+                      {eventIcon}
                     </p>
                     <p className="text-xs font-medium text-slate-200">{timeRange}</p>
                     <div className="flex gap-1 mt-1 flex-wrap">
@@ -211,7 +199,10 @@ export function ForecastCards({
                         </span>
                       )}
                       {waveInfo && (
-                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white tabular-nums">
+                        <span
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold text-white tabular-nums"
+                          style={{ backgroundColor: WAVE_COLOR }}
+                        >
                           {waveInfo.height}
                           {waveInfo.period && ` ${waveInfo.period}`}
                         </span>
