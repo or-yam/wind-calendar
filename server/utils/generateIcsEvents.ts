@@ -3,6 +3,10 @@ import type { Session } from "./groupSessions.js";
 import { degreesToCardinal } from "./groupSessions.js";
 import { toLocalTimeString } from "./timezone.js";
 
+// Calendar event icon constants
+export const WIND_ICON = "►"; // Black Right-Pointing Pointer (U+25BA)
+export const WAVE_ICON = "〰"; // Wavy Dash (U+3030)
+
 export function dateToTuple(date: Date, tz: string): [number, number, number, number, number] {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
@@ -42,13 +46,13 @@ function formatWavePart(session: Session): string {
 function formatTitle(session: Session): string {
   switch (session.matchType) {
     case "wind":
-      return formatWindPart(session);
+      return `${WIND_ICON} ${formatWindPart(session)}`;
     case "wave":
-      return formatWavePart(session);
+      return `${WAVE_ICON} ${formatWavePart(session)}`;
     case "both": {
       const height = session.waveAvg.toFixed(1);
       const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
-      return `${formatWindPart(session)} | ${height}m${period} waves`;
+      return `${WIND_ICON}${WAVE_ICON} ${formatWindPart(session)} | ${height}m${period} waves`;
     }
   }
 }
