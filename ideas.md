@@ -1,0 +1,3 @@
+- multi spots selection
+- download skill from website
+- learn more about forecast and models. for wind and for waves.
