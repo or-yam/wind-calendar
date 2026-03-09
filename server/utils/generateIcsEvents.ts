@@ -3,9 +3,8 @@ import type { Session } from "./groupSessions.js";
 import { degreesToCardinal } from "./groupSessions.js";
 import { toLocalTimeString } from "./timezone.js";
 
-// Calendar event icon constants
-export const WIND_ICON = "►"; // Black Right-Pointing Pointer (U+25BA)
-export const WAVE_ICON = "〰"; // Wavy Dash (U+3030)
+export const WIND_ICON = "►";
+export const WAVE_ICON = "〰";
 
 export function dateToTuple(date: Date, tz: string): [number, number, number, number, number] {
   const formatter = new Intl.DateTimeFormat("en-US", {
