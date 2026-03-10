@@ -16,4 +16,4 @@ export const DEFAULTS = {
 } as const;
 
 export const WIND_ICON = "►";
-export const WAVE_ICON = "〰";
+export const WAVE_ICON = "≈";
