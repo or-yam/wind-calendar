@@ -3,16 +3,6 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { CalendarConfig } from "../shared/types.js";
 import { parseQueryParams, resolveLocation } from "../server/config.js";
 import { fetchWindData } from "../server/windguru/api.js";
-import { fetchOpenMeteoData } from "../server/open-meteo/forecast.js";
-import {
-  getProvider,
-  getWindguruFallback,
-  getOpenMeteoSlug,
-  isOpenMeteoModelId,
-  type Provider,
-  type ModelId,
-} from "../shared/models.js";
-import { tryCatch } from "../server/utils/try-catch.js";
 import { filterEvents } from "../server/utils/filterEvents.js";
 import { groupSessions } from "../server/utils/groupSessions.js";
 import { generateIcsEvents } from "../server/utils/generateIcsEvents.js";
@@ -21,8 +11,7 @@ import {
   isDev,
   getClientIp,
   setDevCors,
-  classifyFetchError,
-  fetchWindguruWithErrorHandling,
+  resolveForecastData,
 } from "../server/utils/api-handler.js";
 
 function buildCalendar(
@@ -81,101 +70,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const location = resolveLocation(config.location);
-  const modelId = config.model as ModelId;
-  const provider = getProvider(modelId);
+  const result = await resolveForecastData(config, location, dev);
 
-  let fetchResult: Awaited<ReturnType<typeof fetchWindData>>;
-  let dataSource: Provider = provider;
-  let fallbackUsed = false;
-
-  if (isOpenMeteoModelId(modelId)) {
-    if (!location.coordinates) {
-      return res.status(400).json({
-        error: "Location coordinates unavailable for Open-Meteo",
-        code: "MISSING_COORDINATES",
-        suggestion: "This location does not support Open-Meteo models",
-      });
-    }
-
-    const openMeteoSlug = getOpenMeteoSlug(modelId);
-
-    if (dev) {
-      console.log(`[API] Fetching Open-Meteo: ${config.location}, model ${openMeteoSlug}`);
-    }
-
-    const { data: omData, error: omError } = await tryCatch(
-      fetchOpenMeteoData(
-        location.coordinates.lat,
-        location.coordinates.lon,
-        openMeteoSlug,
-        location.tz,
-      ),
-    );
-
-    if (omError) {
-      if (dev) {
-        console.error(`[API] Open-Meteo failed: ${omError.message}`);
-      }
-
-      const fallbackModelId = getWindguruFallback(modelId);
-
-      if (fallbackModelId) {
-        if (dev) {
-          console.log(`[API] Falling back to Windguru model ${fallbackModelId}`);
-        }
-
-        const locationInfo = `location=${config.location}, spotId=${location.spotId}`;
-        const result = await fetchWindguruWithErrorHandling(
-          location.spotId,
-          fallbackModelId,
-          locationInfo,
-          dev,
-        );
-
-        if (result.success === false) {
-          return res.status(result.status).json(result.body);
-        }
-
-        fetchResult = result.data;
-        dataSource = "windguru";
-        fallbackUsed = true;
-      } else {
-        const { status, body } = classifyFetchError(
-          omError,
-          "openmeteo",
-          `location=${config.location}, model=${config.model}`,
-          dev,
-        );
-        return res.status(status).json(body);
-      }
-    } else {
-      fetchResult = omData;
-      dataSource = "openmeteo";
-    }
-  } else {
-    if (dev) {
-      console.log(`[API] Fetching Windguru: ${config.location}, model ${modelId}`);
-    }
-
-    const locationInfo = `location=${config.location}, spotId=${location.spotId}`;
-    const result = await fetchWindguruWithErrorHandling(
-      location.spotId,
-      modelId,
-      locationInfo,
-      dev,
-    );
-
-    if (result.success === false) {
-      return res.status(result.status).json(result.body);
-    }
-
-    fetchResult = result.data;
-    dataSource = "windguru";
+  if (result.success === false) {
+    return res.status(result.status).json(result.body);
   }
 
-  if (!fetchResult) {
-    throw new Error("Internal error: fetchResult is null after provider routing");
-  }
+  const { fetchResult, dataSource, fallbackUsed } = result;
 
   let icsString;
   try {
