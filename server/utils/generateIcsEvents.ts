@@ -2,6 +2,7 @@ import { createEvents, type DateArray, type EventAttributes } from "ics";
 import type { Session } from "./groupSessions.js";
 import { degreesToCardinal } from "./groupSessions.js";
 import { toLocalTimeString } from "./timezone.js";
+import { WIND_ICON, WAVE_ICON } from "../../shared/constants.js";
 
 export function dateToTuple(date: Date, tz: string): [number, number, number, number, number] {
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -32,24 +33,24 @@ function formatWindPart(session: Session): string {
   return `Wind ${wind} ${session.dominantDirection}`;
 }
 
-function formatWavePart(session: Session): string {
+function formatWaveCore(session: Session): string {
   const height = session.waveAvg.toFixed(1);
   const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
-  const dir = session.waveDominantDirection;
-  return `Waves ${height}m${period} ${dir}`;
+  return `${height}m${period} ${session.waveDominantDirection}`;
+}
+
+function formatWavePart(session: Session): string {
+  return `Waves ${formatWaveCore(session)}`;
 }
 
 function formatTitle(session: Session): string {
   switch (session.matchType) {
     case "wind":
-      return formatWindPart(session);
+      return `${WIND_ICON} ${formatWindPart(session)}`;
     case "wave":
-      return formatWavePart(session);
-    case "both": {
-      const height = session.waveAvg.toFixed(1);
-      const period = session.wavePeriodAvg > 0 ? ` ${Math.round(session.wavePeriodAvg)}s` : "";
-      return `${formatWindPart(session)} | ${height}m${period} waves`;
-    }
+      return `${WAVE_ICON} ${formatWavePart(session)}`;
+    case "both":
+      return `${WIND_ICON}${WAVE_ICON} ${formatWindPart(session)} | ${formatWaveCore(session)} waves`;
   }
 }
 

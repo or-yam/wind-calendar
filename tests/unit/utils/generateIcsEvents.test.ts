@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { generateIcsEvents } from "../../../server/utils/generateIcsEvents";
 import type { Session } from "../../../server/utils/groupSessions";
 import type { MatchReason } from "../../../server/utils/filterEvents";
+import { WIND_ICON, WAVE_ICON } from "../../../shared/constants";
 
 const TZ = "Asia/Jerusalem";
 
@@ -70,6 +71,43 @@ describe("generateIcsEvents", () => {
     expect(ics).toContain("Wind 12-18kn NW");
   });
 
+  it("wind matchType title has WIND_ICON prefix", () => {
+    const ics = generateIcsEvents([makeSession(0, 3, 15, 20, 25, "NW", { matchType: "wind" })], TZ);
+    expect(ics).toContain(`${WIND_ICON} Wind`);
+    expect(ics).not.toContain(WAVE_ICON);
+  });
+
+  it("wave matchType title has WAVE_ICON prefix", () => {
+    const ics = generateIcsEvents(
+      [
+        makeSession(0, 3, 0, 0, 0, "N", {
+          matchType: "wave",
+          waveAvg: 1.5,
+          wavePeriodAvg: 12,
+          waveDominantDirection: "SW",
+        }),
+      ],
+      TZ,
+    );
+    expect(ics).toContain(`${WAVE_ICON} Waves`);
+    expect(ics).not.toContain(WIND_ICON);
+  });
+
+  it("both matchType title has WIND_ICON+WAVE_ICON prefix", () => {
+    const ics = generateIcsEvents(
+      [
+        makeSession(0, 3, 12, 17, 22, "NW", {
+          matchType: "both",
+          waveAvg: 1.2,
+          wavePeriodAvg: 10,
+          waveDominantDirection: "SW",
+        }),
+      ],
+      TZ,
+    );
+    expect(ics).toContain(`${WIND_ICON}${WAVE_ICON} Wind`);
+  });
+
   it("wind+wave title includes wave data (both matchType)", () => {
     const ics = generateIcsEvents(
       [
@@ -77,11 +115,12 @@ describe("generateIcsEvents", () => {
           matchType: "both",
           waveAvg: 1.2,
           wavePeriodAvg: 10,
+          waveDominantDirection: "SW",
         }),
       ],
       TZ,
     );
-    expect(ics).toContain("Wind 12-17kn NW | 1.2m 10s waves");
+    expect(ics).toContain(`${WIND_ICON}${WAVE_ICON} Wind 12-17kn NW | 1.2m 10s SW waves`);
   });
 
   it("wave-only title shows wave data", () => {
@@ -96,14 +135,31 @@ describe("generateIcsEvents", () => {
       ],
       TZ,
     );
-    expect(ics).toContain("Waves 1.5m 12s SW");
+    expect(ics).toContain(`${WAVE_ICON} Waves 1.5m 12s SW`);
   });
 
   it("wind-only title shows wind data only", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 15, 20, 25, "NW", { matchType: "wind" })], TZ);
-    expect(ics).toContain("Wind 15-20kn NW");
+    expect(ics).toContain(`${WIND_ICON} Wind 15-20kn NW`);
     expect(ics).not.toContain("waves");
     expect(ics).not.toContain("Waves");
+  });
+
+  it("both matchType title uses formatWaveCore — no duplicate 'Waves' prefix", () => {
+    const ics = generateIcsEvents(
+      [
+        makeSession(0, 3, 12, 17, 22, "NW", {
+          matchType: "both",
+          waveAvg: 1.2,
+          wavePeriodAvg: 10,
+          waveDominantDirection: "SW",
+        }),
+      ],
+      TZ,
+    );
+    // Should end with "waves" (lowercase suffix), not "Waves 1.2m... waves"
+    expect(ics).toContain("| 1.2m 10s SW waves");
+    expect(ics).not.toMatch(/Waves.*waves/);
   });
 
   it("description contains hourly breakdown", () => {
