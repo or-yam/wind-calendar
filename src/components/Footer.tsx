@@ -1,4 +1,4 @@
-import { Github } from "lucide-react";
+import { GithubIcon } from "@/components/icons/github";
 
 export function Footer() {
   return (
@@ -13,7 +13,7 @@ export function Footer() {
             className="hover:text-slate-300 transition-colors"
             aria-label="GitHub repository"
           >
-            <Github size={18} />
+            <GithubIcon size={18} />
           </a>
         </div>
         <div className="text-xs text-slate-600 text-center">
@@ -25,14 +25,15 @@ export function Footer() {
             className="underline hover:text-slate-400 transition-colors"
           >
             Open-Meteo.com
-          </a>{" "}
+          </a>
+          and{" "}
           <a
             href="https://www.windguru.cz/"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-slate-400 transition-colors"
           >
-            and Windguru
+            Windguru
           </a>
         </div>
       </div>

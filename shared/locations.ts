@@ -99,7 +99,7 @@ export const LOCATIONS = {
   "sea-of-galilee": {
     spotId: "583",
     tz: "Asia/Jerusalem",
-    label: "Kinnert",
+    label: "Kinneret",
     models: [3, 45, 59, 117],
     coordinates: { lat: 32.8, lon: 35.58 },
   },

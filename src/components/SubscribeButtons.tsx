@@ -48,7 +48,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
           <a href={webcalUrl} className="block h-full">
             <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
               <img
-                alt="mac-os calendar logo"
+                alt="macOS Calendar logo"
                 src="/macos-calendar_logo.png"
                 className="w-5 h-5 object-contain shrink-0"
               />
@@ -70,7 +70,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
           <a href={outlookUrl} target="_blank" rel="noopener noreferrer" className="block h-full">
             <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
               <img
-                alt="Microsoft outlook calendar logo"
+                alt="Microsoft Outlook calendar logo"
                 src="/outlook-calendar_logo.svg"
                 className="w-5 h-5 object-contain shrink-0"
               />
