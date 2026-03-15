@@ -15,7 +15,6 @@
     "fmt:check": "oxfmt --check .",
     "test": "vitest run",
     "check": "pnpm run fmt:check && pnpm run lint && tsc -b && vitest run",
-    "start": "vite",
     "preview": "vite preview",
     "prepare": "husky"
   },

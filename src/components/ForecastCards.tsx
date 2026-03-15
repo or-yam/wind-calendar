@@ -2,11 +2,13 @@ import type { IcsEvent } from "@/lib/ics-parser";
 import { windColor } from "@/lib/wind-colors";
 import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
+import { WIND_ICON, WAVE_ICON } from "@shared/constants";
 
-const RANGE_RE = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
-const SINGLE_RE = /(\d+)\s*kn/i;
-const WAVE_RE = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
-const WAVE_ONLY_RE = /^Waves\s+([\d.]+)m\s*(?:(\d+)s)?\s*(\w+)/i;
+const RANGE_RGX = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
+const SINGLE_RGX = /(\d+)\s*kn/i;
+const WAVE_RGX = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
+const WAVE_ONLY_RGX = /Waves\s+([\d.]+)m\s*(?:(\d+)s)?/i;
+const WAVE_COLOR = "#2563EB";
 
 // Cached Intl.DateTimeFormat instances
 const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
@@ -49,13 +51,13 @@ function groupByDay(events: IcsEvent[]): DayGroup[] {
 
 function parseWindKnots(summary: string): { lo: number; hi: number; mid: number } | null {
   // Match range "15-20kn" or single value "15kn"
-  const rangeMatch = summary.match(RANGE_RE);
+  const rangeMatch = summary.match(RANGE_RGX);
   if (rangeMatch) {
     const lo = parseInt(rangeMatch[1], 10);
     const hi = parseInt(rangeMatch[2], 10);
     return { lo, hi, mid: (lo + hi) / 2 };
   }
-  const singleMatch = summary.match(SINGLE_RE);
+  const singleMatch = summary.match(SINGLE_RGX);
   if (singleMatch) {
     const val = parseInt(singleMatch[1], 10);
     return { lo: val, hi: val, mid: val };
@@ -68,21 +70,26 @@ function windTextColor(knots: number): string {
 }
 
 function parseWaveInfo(summary: string): { height: string; period?: string } | null {
-  // "| 1.5m 12s waves" (both match type)
-  const bothMatch = summary.match(WAVE_RE);
+  const bothMatch = summary.match(WAVE_RGX);
   if (bothMatch) {
     return { height: `${bothMatch[1]}m`, period: bothMatch[2] ? `${bothMatch[2]}s` : undefined };
   }
-  // "Waves 1.5m 12s SW" (wave-only match type)
-  const waveOnly = summary.match(WAVE_ONLY_RE);
+  const waveOnly = summary.match(WAVE_ONLY_RGX);
   if (waveOnly) {
     return { height: `${waveOnly[1]}m`, period: waveOnly[2] ? `${waveOnly[2]}s` : undefined };
   }
   return null;
 }
 
-function isWaveOnlyEvent(summary: string): boolean {
-  return WAVE_ONLY_RE.test(summary);
+function getEventType(summary: string): "wind" | "wave" | "both" {
+  if (summary.startsWith(WIND_ICON)) {
+    return summary.startsWith(`${WIND_ICON}${WAVE_ICON}`) ? "both" : "wind";
+  }
+  if (summary.startsWith(WAVE_ICON)) {
+    return "wave";
+  }
+  console.warn(`Event missing icon prefix: ${summary}`);
+  return "wind";
 }
 
 export function ForecastCards({
@@ -148,10 +155,10 @@ export function ForecastCards({
               }
 
               return dayGroup.events.map((event) => {
+                const eventType = getEventType(event.summary);
                 const wind = parseWindKnots(event.summary);
-                const waveOnly = isWaveOnlyEvent(event.summary);
                 const midKnots = wind ? wind.mid : 15;
-                const borderColor = waveOnly ? "#2563EB" : windColor(midKnots);
+                const borderColor = eventType === "wave" ? WAVE_COLOR : windColor(midKnots);
                 const start = event.dtstart.date;
                 const end = event.dtend?.date ?? null;
                 const timeRange = end
@@ -164,6 +171,13 @@ export function ForecastCards({
                   : null;
                 const waveInfo = parseWaveInfo(event.summary);
 
+                const eventIcon =
+                  eventType === "both"
+                    ? `${WIND_ICON}${WAVE_ICON}`
+                    : eventType === "wave"
+                      ? WAVE_ICON
+                      : WIND_ICON;
+
                 return (
                   <div
                     key={`${dayKey}-${event.dtstart.date.getTime()}`}
@@ -172,6 +186,9 @@ export function ForecastCards({
                   >
                     <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">
                       {formatDayLabel(start)}
+                    </p>
+                    <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
+                      {eventIcon}
                     </p>
                     <p className="text-xs font-medium text-slate-200">{timeRange}</p>
                     <div className="flex gap-1 mt-1 flex-wrap">
@@ -187,7 +204,10 @@ export function ForecastCards({
                         </span>
                       )}
                       {waveInfo && (
-                        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-600 text-white tabular-nums">
+                        <span
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold text-white tabular-nums"
+                          style={{ backgroundColor: WAVE_COLOR }}
+                        >
                           {waveInfo.height}
                           {waveInfo.period && ` ${waveInfo.period}`}
                         </span>
