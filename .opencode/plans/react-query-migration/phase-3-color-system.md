@@ -59,7 +59,7 @@ export function windTextColor(knots: number): string {
 
 **Verify:**
 
-- [ ] `pnpm check` passes
+- [x] `pnpm check` passes (completed 2026-03-19)
 - [ ] Visual comparison with Windguru — use `agent-browser`:
 
   ```bash
@@ -111,4 +111,4 @@ export function wavePeriodColor(seconds: number): string {
 
 **Verify:**
 
-- [ ] `pnpm check` passes
+- [x] `pnpm check` passes (completed 2026-03-19)

@@ -33,13 +33,13 @@ using TanStack React Query. Subscribe buttons continue using the ICS `/api/calen
   - [x] 1.4 Update api/forecast.ts to use shared types
   - [x] 1.5 Set up QueryClientProvider
 
-- [ ] **Phase 2** — Data Fetching Layer
-  - [ ] 2.1 Create fetch-forecast.ts
-  - [ ] 2.2 Create forecast-query.ts
+- [x] **Phase 2** — Data Fetching Layer
+  - [x] 2.1 Create fetch-forecast.ts
+  - [x] 2.2 Create forecast-query.ts
 
-- [ ] **Phase 3** — Color System
-  - [ ] 3.1 Update wind color stops (0-70)
-  - [ ] 3.2 Add wave color functions
+- [x] **Phase 3** — Color System
+  - [x] 3.1 Update wind color stops (0-70)
+  - [x] 3.2 Add wave color functions
 
 - [ ] **Phase 4** — Adapt Navigation
   - [ ] 4.1 Refactor useWeekNavigation
