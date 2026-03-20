@@ -1,23 +1,18 @@
-import type { IcsEvent } from "@/lib/ics-parser";
-import { windColor } from "@/lib/wind-colors";
+import type { ForecastSession } from "@shared/forecast-types";
+import { windColor, windTextColor } from "@/lib/wind-colors";
+import { waveHeightColor, waveHeightTextColor } from "@/lib/wave-colors";
 import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { WIND_ICON, WAVE_ICON } from "@shared/constants";
 
-const RANGE_RGX = /(\d+)\s*[–-]\s*(\d+)\s*kn/i;
-const SINGLE_RGX = /(\d+)\s*kn/i;
-const WAVE_RGX = /\|\s*([\d.]+)m\s*(?:(\d+)s\s*)?waves/i;
-const WAVE_ONLY_RGX = /Waves\s+([\d.]+)m\s*(?:(\d+)s)?/i;
-const WAVE_COLOR = "#2563EB";
-
-// Cached Intl.DateTimeFormat instances
 const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
 const MON_FMT = new Intl.DateTimeFormat("en-US", { month: "short" });
 
 interface ForecastCardsProps {
-  events: IcsEvent[];
-  loading: boolean;
-  error: string | null;
+  sessions: ForecastSession[];
+  isPending: boolean;
+  error: Error | null;
   weekStart: Date;
   onPrev: () => void;
   onNext: () => void;
@@ -34,77 +29,46 @@ function formatDayLabel(date: Date): string {
 interface DayGroup {
   key: string;
   date: Date;
-  events: IcsEvent[];
+  sessions: ForecastSession[];
 }
 
-function groupByDay(events: IcsEvent[]): DayGroup[] {
+function groupByDay(sessions: ForecastSession[]): DayGroup[] {
   const map = new Map<string, DayGroup>();
-  for (const event of events) {
-    const key = event.dtstart.date.toDateString();
+  for (const session of sessions) {
+    const date = new Date(session.start);
+    const key = date.toDateString();
     if (!map.has(key)) {
-      map.set(key, { key, date: event.dtstart.date, events: [] });
+      map.set(key, { key, date, sessions: [] });
     }
-    map.get(key)!.events.push(event);
+    map.get(key)!.sessions.push(session);
   }
   return Array.from(map.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
-function parseWindKnots(summary: string): { lo: number; hi: number; mid: number } | null {
-  // Match range "15-20kn" or single value "15kn"
-  const rangeMatch = summary.match(RANGE_RGX);
-  if (rangeMatch) {
-    const lo = parseInt(rangeMatch[1], 10);
-    const hi = parseInt(rangeMatch[2], 10);
-    return { lo, hi, mid: (lo + hi) / 2 };
-  }
-  const singleMatch = summary.match(SINGLE_RGX);
-  if (singleMatch) {
-    const val = parseInt(singleMatch[1], 10);
-    return { lo: val, hi: val, mid: val };
-  }
-  return null;
-}
-
-function windTextColor(knots: number): string {
-  return knots <= 20 ? "#0B1220" : "#E5E7EB";
-}
-
-function parseWaveInfo(summary: string): { height: string; period?: string } | null {
-  const bothMatch = summary.match(WAVE_RGX);
-  if (bothMatch) {
-    return { height: `${bothMatch[1]}m`, period: bothMatch[2] ? `${bothMatch[2]}s` : undefined };
-  }
-  const waveOnly = summary.match(WAVE_ONLY_RGX);
-  if (waveOnly) {
-    return { height: `${waveOnly[1]}m`, period: waveOnly[2] ? `${waveOnly[2]}s` : undefined };
-  }
-  return null;
-}
-
-function getEventType(summary: string): "wind" | "wave" | "both" {
-  if (summary.startsWith(WIND_ICON)) {
-    return summary.startsWith(`${WIND_ICON}${WAVE_ICON}`) ? "both" : "wind";
-  }
-  if (summary.startsWith(WAVE_ICON)) {
-    return "wave";
-  }
-  console.warn(`Event missing icon prefix: ${summary}`);
-  return "wind";
+function ForecastCardSkeleton() {
+  return (
+    <div className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 border-l-4 border-l-slate-700 aspect-[3/2] flex flex-col">
+      <Skeleton className="h-3 w-16 mb-1" />
+      <Skeleton className="h-4 w-6 mb-1" />
+      <Skeleton className="h-3 w-20 mb-1" />
+      <Skeleton className="h-4 w-12 mt-auto" />
+    </div>
+  );
 }
 
 export function ForecastCards({
-  events,
-  loading,
+  sessions,
+  isPending,
   error,
   weekStart,
   onPrev,
   onNext,
   onToday,
 }: ForecastCardsProps) {
-  const weekEvents = events.filter(
-    (e) => e.dtstart.date >= weekStart && e.dtstart.date < addDays(weekStart, 7),
+  const weekSessions = sessions.filter(
+    (s) => new Date(s.start) >= weekStart && new Date(s.start) < addDays(weekStart, 7),
   );
-  const groups = groupByDay(weekEvents);
+  const groups = groupByDay(weekSessions);
 
   return (
     <section className="py-12 px-5 bg-[#0B1220]">
@@ -123,17 +87,19 @@ export function ForecastCards({
           </Button>
         </div>
 
-        {loading && (
-          <div
-            className="w-8 h-8 rounded-full border-2 border-[#1F2937] border-t-sky-500 animate-spin mx-auto"
-            role="status"
-            aria-label="Loading"
-          />
-        )}
+        {isPending ? (
+          <div className="flex flex-row gap-2">
+            {Array.from({ length: 7 }, (_, i) => (
+              <ForecastCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : null}
 
-        {!loading && error && <p className="text-red-400 text-sm text-center py-8">{error}</p>}
+        {!isPending && error ? (
+          <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
+        ) : null}
 
-        {!loading && !error && (
+        {!isPending && !error && (
           <div className="flex flex-row gap-2">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
@@ -154,33 +120,32 @@ export function ForecastCards({
                 );
               }
 
-              return dayGroup.events.map((event) => {
-                const eventType = getEventType(event.summary);
-                const wind = parseWindKnots(event.summary);
-                const midKnots = wind ? wind.mid : 15;
-                const borderColor = eventType === "wave" ? WAVE_COLOR : windColor(midKnots);
-                const start = event.dtstart.date;
-                const end = event.dtend?.date ?? null;
-                const timeRange = end
-                  ? `${formatTimeFromDate(start)} – ${formatTimeFromDate(end)}`
-                  : formatTimeFromDate(start);
-                const windLabel = wind
-                  ? wind.lo === wind.hi
-                    ? `${wind.lo} kn`
-                    : `${wind.lo}–${wind.hi} kn`
-                  : null;
-                const waveInfo = parseWaveInfo(event.summary);
+              return dayGroup.sessions.map((session) => {
+                const midKnots = (session.wind.min + session.wind.max) / 2;
+                const borderColor =
+                  session.matchType === "wave"
+                    ? waveHeightColor(session.wave.avgHeight)
+                    : windColor(midKnots);
 
-                const eventIcon =
-                  eventType === "both"
+                const windLabel =
+                  session.wind.min === session.wind.max
+                    ? `${session.wind.min} kn`
+                    : `${session.wind.min}–${session.wind.max} kn`;
+
+                const icon =
+                  session.matchType === "both"
                     ? `${WIND_ICON}${WAVE_ICON}`
-                    : eventType === "wave"
+                    : session.matchType === "wave"
                       ? WAVE_ICON
                       : WIND_ICON;
 
+                const start = new Date(session.start);
+                const end = new Date(session.end);
+                const timeRange = `${formatTimeFromDate(start)} – ${formatTimeFromDate(end)}`;
+
                 return (
                   <div
-                    key={`${dayKey}-${event.dtstart.date.getTime()}`}
+                    key={`${dayKey}-${session.start}`}
                     className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 border-l-4 aspect-[3/2]"
                     style={{ borderLeftColor: borderColor }}
                   >
@@ -188,11 +153,23 @@ export function ForecastCards({
                       {formatDayLabel(start)}
                     </p>
                     <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
-                      {eventIcon}
+                      {icon}
                     </p>
                     <p className="text-xs font-medium text-slate-200">{timeRange}</p>
                     <div className="flex gap-1 mt-1 flex-wrap">
-                      {windLabel && (
+                      {session.matchType !== "wind" ? (
+                        <span
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
+                          style={{
+                            backgroundColor: waveHeightColor(session.wave.avgHeight),
+                            color: waveHeightTextColor(session.wave.avgHeight),
+                          }}
+                        >
+                          {session.wave.avgHeight.toFixed(1)}m
+                          {session.wave.avgPeriod > 0 ? ` ${session.wave.avgPeriod}s` : ""}
+                        </span>
+                      ) : null}
+                      {session.matchType !== "wave" ? (
                         <span
                           className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
                           style={{
@@ -202,16 +179,7 @@ export function ForecastCards({
                         >
                           {windLabel}
                         </span>
-                      )}
-                      {waveInfo && (
-                        <span
-                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold text-white tabular-nums"
-                          style={{ backgroundColor: WAVE_COLOR }}
-                        >
-                          {waveInfo.height}
-                          {waveInfo.period && ` ${waveInfo.period}`}
-                        </span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 );

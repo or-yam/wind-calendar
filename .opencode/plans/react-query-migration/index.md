@@ -44,13 +44,13 @@ using TanStack React Query. Subscribe buttons continue using the ICS `/api/calen
 - [x] **Phase 4** — Adapt Navigation
   - [x] 4.1 Refactor useWeekNavigation
 
-- [ ] **Phase 5** — Refactor ForecastCards
-  - [ ] 5.1 Update props interface
-  - [ ] 5.2 Remove ICS parsing logic
-  - [ ] 5.3 Update groupByDay
-  - [ ] 5.4 Update session card rendering
-  - [ ] 5.5 Add skeleton loading
-  - [ ] 5.6 Update error display
+- [x] **Phase 5** — Refactor ForecastCards
+  - [x] 5.1 Update props interface
+  - [x] 5.2 Remove ICS parsing logic
+  - [x] 5.3 Update groupByDay
+  - [x] 5.4 Update session card rendering
+  - [x] 5.5 Add skeleton loading
+  - [x] 5.6 Update error display
 
 - [ ] **Phase 6** — Wire Up App.tsx
   - [ ] 6.1 Update imports
