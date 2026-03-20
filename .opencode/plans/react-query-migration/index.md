@@ -41,8 +41,8 @@ using TanStack React Query. Subscribe buttons continue using the ICS `/api/calen
   - [x] 3.1 Update wind color stops (0-70)
   - [x] 3.2 Add wave color functions
 
-- [ ] **Phase 4** — Adapt Navigation
-  - [ ] 4.1 Refactor useWeekNavigation
+- [x] **Phase 4** — Adapt Navigation
+  - [x] 4.1 Refactor useWeekNavigation
 
 - [ ] **Phase 5** — Refactor ForecastCards
   - [ ] 5.1 Update props interface

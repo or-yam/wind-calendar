@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { getWeekStart, addDays } from "../lib/date-utils";
-import type { IcsEvent } from "../lib/ics-parser";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
@@ -8,7 +7,7 @@ interface UseWeekNavigationResult {
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
-  goToFirstEvent: () => void;
+  goToFirstItem: () => void;
   toggleWeekStart: (startOnSunday: boolean) => void;
 }
 
@@ -33,7 +32,7 @@ function getDefaultWeekStart(): boolean {
   return lang.startsWith("en-us") || lang.startsWith("he");
 }
 
-export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
+export function useWeekNavigation(items: { start: string }[]): UseWeekNavigationResult {
   const [startOnSunday, setStartOnSunday] = useState(() => {
     try {
       const saved = localStorage.getItem(WEEK_START_KEY);
@@ -68,19 +67,19 @@ export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
     setWeekStart((prev) => addDays(prev, 7));
   }, []);
 
-  const goToFirstEvent = useCallback(() => {
-    if (events.length === 0) {
+  const goToFirstItem = useCallback(() => {
+    if (items.length === 0) {
       goToToday();
       return;
     }
-    let earliest = events[0];
-    for (let i = 1; i < events.length; i++) {
-      if (events[i].dtstart.date < earliest.dtstart.date) {
-        earliest = events[i];
+    let earliestStart = items[0].start;
+    for (let i = 1; i < items.length; i++) {
+      if (items[i].start < earliestStart) {
+        earliestStart = items[i].start;
       }
     }
-    goToWeek(earliest.dtstart.date);
-  }, [events, goToToday, goToWeek]);
+    goToWeek(new Date(earliestStart));
+  }, [items, goToToday, goToWeek]);
 
   const toggleWeekStart = useCallback(
     (startOnSunday: boolean) => {
@@ -106,7 +105,7 @@ export function useWeekNavigation(events: IcsEvent[]): UseWeekNavigationResult {
     goToToday,
     goToPrev,
     goToNext,
-    goToFirstEvent,
+    goToFirstItem,
     toggleWeekStart,
   };
 }
