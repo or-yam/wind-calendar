@@ -61,7 +61,7 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 - [x] **ForecastCards** — horizontal scroll with `overflow-x-auto`, min card width (~120px), snap points. Cards are unusable at ~40px on mobile
   - Current: `<div className="flex flex-row gap-2">` no overflow/min-width/snap
-  - Done: Added `overflow-x-auto snap-x snap-mandatory -mx-5 px-5` to card containers; `min-w-[120px] shrink-0 snap-center` to each card
+  - Done: Added `overflow-x-auto snap-x snap-mandatory -mx-5 px-5` to card containers; `min-w-[120px] shrink-0 snap-center` to each card; responsive `sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0` to avoid desktop scrollbar regression
 - [x] **Hero heading** — `text-[42px]` → responsive (e.g. `text-2xl sm:text-4xl md:text-[42px]`)
   - Current: `text-[42px]` hardcoded, no responsive breakpoints
   - Done: `text-[42px]` → `text-3xl sm:text-4xl md:text-[42px]`
