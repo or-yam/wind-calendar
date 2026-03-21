@@ -105,15 +105,15 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 ### Must-fix
 
 - [x] Add `<main>` landmark in `App.tsx`
-- [ ] Add `aria-label` to all sliders in `ConfigForm.tsx` (wind range, wave height, wave period, min session)
-- [ ] Add `aria-live="polite"` region for forecast loading/error/empty state changes
+- [x] Add `aria-label` to all sliders in `ConfigForm.tsx` (wind range, wave height, wave period, min session)
+- [x] Add `aria-live="polite"` region for forecast loading/error/empty state changes
 
 ### Should-fix
 
-- [ ] Wrap Prev/Today/Next in `<nav aria-label="Week navigation">`
-- [ ] Add `aria-label` to each forecast day card (e.g. "Wednesday Mar 15: Wind 18-22 kn")
-- [ ] Audit & fix color contrast — `text-slate-400`/`text-slate-500` on `bg-[#0B1220]` vs WCAG AA 4.5:1
-- [ ] Link `Min Period` and `Min Session` labels to sliders via `htmlFor`/`id`
+- [x] Wrap Prev/Today/Next in `<nav aria-label="Week navigation">`
+- [x] Add `aria-label` to each forecast day card (e.g. "Wednesday Mar 15: Wind 18-22 kn")
+- [x] Audit & fix color contrast — `text-slate-400`/`text-slate-500` on `bg-[#0B1220]` vs WCAG AA 4.5:1
+- [x] Link `Min Period` and `Min Session` labels to sliders via `htmlFor`/`id`
 
 ---
 

@@ -75,7 +75,7 @@ export function ForecastCards({
       <div className="max-w-3xl mx-auto">
         <h2 className="text-2xl font-semibold text-slate-200 mb-6">Upcoming Sessions</h2>
 
-        <div className="flex gap-2 mb-2 justify-center items-center">
+        <nav aria-label="Week navigation" className="flex gap-2 mb-2 justify-center items-center">
           <Button variant="ghost" onClick={onPrev}>
             ← Prev
           </Button>
@@ -85,7 +85,7 @@ export function ForecastCards({
           <Button variant="ghost" onClick={onNext}>
             Next →
           </Button>
-        </div>
+        </nav>
         <div className="flex gap-2 mb-6 justify-center">
           <Button variant="ghost" onClick={onToday}>
             Today
@@ -93,19 +93,27 @@ export function ForecastCards({
         </div>
 
         {isPending ? (
-          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll">
+          <div
+            aria-live="polite"
+            className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll"
+          >
             {Array.from({ length: 7 }, (_, i) => (
               <ForecastCardSkeleton key={i} />
             ))}
           </div>
         ) : error ? (
-          <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
+          <p aria-live="polite" className="text-red-400 text-sm text-center py-8">
+            {error.message}
+          </p>
         ) : weekSessions.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center py-8">
+          <p aria-live="polite" className="text-slate-400 text-sm text-center py-8">
             No sessions match your filters this week
           </p>
         ) : (
-          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll">
+          <div
+            aria-live="polite"
+            className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll"
+          >
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
@@ -114,6 +122,7 @@ export function ForecastCards({
                 return (
                   <div
                     key={dayKey}
+                    aria-label={`${formatDayLabel(day)}: No sessions`}
                     className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 opacity-60 border-l-4 aspect-[3/2] flex flex-col items-center justify-center snap-center"
                     style={{ borderLeftColor: "#FFFFFF" }}
                   >
@@ -151,6 +160,7 @@ export function ForecastCards({
                 return (
                   <div
                     key={`${dayKey}-${session.start}`}
+                    aria-label={`${formatDayLabel(start)}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windLabel}` : session.matchType === "wave" ? `Wave ${session.wave.avgHeight.toFixed(1)}m` : `Wind ${windLabel}, Wave ${session.wave.avgHeight.toFixed(1)}m`}`}
                     className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 aspect-[3/2] snap-center"
                     style={{ borderLeftColor: borderColor }}
                   >
