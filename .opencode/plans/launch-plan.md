@@ -56,7 +56,7 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 > **Goal:** Make the app usable on mobile. Minimum viable — fix layout breaks, not a redesign.
 > **Branch:** `feat/ui-updates`
 > **Depends on:** Phase 1
-> **Status:** Mostly done — see remaining items below
+> **Status:** ✅ COMPLETE
 
 ### Responsive Fixes
 
@@ -68,10 +68,13 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
   - Done: `text-[42px]` → `text-3xl sm:text-4xl md:text-[42px]`
 - [x] **SubscribeButtons** — `grid-cols-1 sm:grid-cols-3` for provider buttons, `grid-cols-1 sm:grid-cols-2` for action buttons
   - Current: `grid-cols-3` / `grid-cols-2` hardcoded
-- [ ] **ConfigForm** — verify touch usability of sliders/selects at current sizes. Increase if needed
-  - SelectTrigger: `h-10` (40px) — below 44px threshold
-  - Switch: `h-5` (20px) — below 44px threshold
-  - Nav buttons (← Prev/Today/Next): `h-10` (40px) — below 44px threshold
+- [x] **ConfigForm** — verify touch usability of sliders/selects at current sizes. Increase if needed
+  - Done: Increased all touch targets to meet 44px minimum
+  - SelectTrigger: `h-10` → `h-11` (44px)
+  - Switch: `h-5 w-9` → `h-11 w-[88px]`, thumb `h-4 w-4` → `h-9 w-9`, translate adjusted
+  - Slider: thumb `h-5 w-5` → `h-11 w-11` (44px), track `h-2` → `h-3` for visual balance
+  - Nav buttons: `h-10` → `h-11` (44px) via button default size
+  - Verified: All interactive elements tested on 390px viewport, no layout breaks
 
 ### UX Fixes
 
@@ -91,9 +94,9 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 - [x] ForecastCards horizontal scroll verified at 375px (cards scroll with snap)
 - [x] Empty state message verified via browser screenshot (app running at localhost:3000)
-- [ ] Test on 390px (iPhone 14), 412px (Pixel)
-- [ ] No horizontal page overflow on any viewport
-- [ ] Touch targets >= 44px on interactive elements
+- [x] Test on 390px (iPhone 14), 412px (Pixel) — verified via agent-browser screenshots
+- [x] No horizontal page overflow on any viewport — verified 390px and 412px (scrollWidth === clientWidth)
+- [x] Touch targets >= 44px on interactive elements — all buttons/selects/switches at 44px, sliders at 44px
 
 ---
 
