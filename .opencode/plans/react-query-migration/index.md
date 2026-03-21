@@ -52,12 +52,12 @@ using TanStack React Query. Subscribe buttons continue using the ICS `/api/calen
   - [x] 5.5 Add skeleton loading
   - [x] 5.6 Update error display
 
-- [ ] **Phase 6** — Wire Up App.tsx
-  - [ ] 6.1 Update imports
-  - [ ] 6.2 Replace data fetching (remove debounce)
-  - [ ] 6.3 Update navigation tracking
-  - [ ] 6.4 Update ForecastCards props
-  - [ ] 6.5 Clean up unused code
+- [x] **Phase 6** — Wire Up App.tsx
+  - [x] 6.1 Update imports
+  - [x] 6.2 Replace data fetching (remove debounce)
+  - [x] 6.3 Update navigation tracking
+  - [x] 6.4 Update ForecastCards props
+  - [x] 6.5 Clean up unused code
 
 - [ ] **Phase 7** — Verification
   - [ ] 7.1 All checks passing (pnpm check)

@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { forecastQueryOptions } from "./lib/forecast-query";
 
 const Analytics = lazy(() =>
   import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
@@ -9,9 +11,7 @@ import { ForecastCards } from "./components/ForecastCards";
 import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
-import { useCalendarFeed } from "./hooks/useCalendarFeed";
 import { useWeekNavigation } from "./hooks/useWeekNavigation";
-import { buildApiUrl } from "./lib/subscribe-urls";
 import type { CalendarConfig } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
 import { LOCATIONS } from "@shared/locations";
@@ -56,57 +56,44 @@ function parseUrlParams(): CalendarConfig {
 
 function App() {
   const [config, setConfig] = useState<CalendarConfig>(() => parseUrlParams());
-  const [debouncedConfig, setDebouncedConfig] = useState<CalendarConfig>(config);
 
-  // Sync URL params when config changes (debounced)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedConfig(config);
-
-      // Update URL without navigation — only include non-default values
-      const params = new URLSearchParams({
-        location: config.location,
-        model: config.model.toString(),
-        minSessionHours: config.minSessionHours.toString(),
-        windEnabled: config.windEnabled.toString(),
-        windMin: config.windMin.toString(),
-        windMax: config.windMax.toString(),
-        waveEnabled: config.waveEnabled.toString(),
-        ...(config.waveEnabled && {
-          waveSource: config.waveSource,
-          waveHeightMin: config.waveHeightMin.toString(),
-          waveHeightMax: config.waveHeightMax.toString(),
-          wavePeriodMin: config.wavePeriodMin.toString(),
-        }),
-      });
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
-      window.history.replaceState(null, "", newUrl);
-    }, 300);
-
-    return () => clearTimeout(timer);
+    const params = new URLSearchParams({
+      location: config.location,
+      model: config.model.toString(),
+      minSessionHours: config.minSessionHours.toString(),
+      windEnabled: config.windEnabled.toString(),
+      windMin: config.windMin.toString(),
+      windMax: config.windMax.toString(),
+      waveEnabled: config.waveEnabled.toString(),
+      ...(config.waveEnabled && {
+        waveSource: config.waveSource,
+        waveHeightMin: config.waveHeightMin.toString(),
+        waveHeightMax: config.waveHeightMax.toString(),
+        wavePeriodMin: config.wavePeriodMin.toString(),
+      }),
+    });
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", newUrl);
   }, [config]);
 
-  // Build calendar URL from debounced config
-  const calendarUrl = useMemo(() => buildApiUrl(debouncedConfig), [debouncedConfig]);
-
-  const { events, loading, error } = useCalendarFeed(calendarUrl);
-  const { weekStart, goToToday, goToPrev, goToNext, goToFirstEvent } = useWeekNavigation(events);
+  const { data, isPending, error } = useQuery(forecastQueryOptions(config));
+  const sessions = data?.sessions ?? [];
+  const { weekStart, goToToday, goToPrev, goToNext, goToFirstItem } = useWeekNavigation(sessions);
 
   // Track if we've already navigated to first event for this calendar config
   const hasNavigatedRef = useRef(false);
 
-  // Reset navigation tracking when calendar URL changes (new config)
   useEffect(() => {
     hasNavigatedRef.current = false;
-  }, [calendarUrl]);
+  }, [config.location, config.model]);
 
-  // Go to first event only once when events first load
   useEffect(() => {
-    if (events.length > 0 && !hasNavigatedRef.current) {
-      goToFirstEvent();
+    if (sessions.length > 0 && !hasNavigatedRef.current) {
+      goToFirstItem();
       hasNavigatedRef.current = true;
     }
-  }, [events.length, goToFirstEvent]);
+  }, [sessions.length, goToFirstItem]);
 
   // Handler for location change - check if model is available in new location
   const handleLocationChange = (location: string) => {
@@ -161,7 +148,7 @@ function App() {
           </div>
         }
       >
-        <SubscribeButtons config={debouncedConfig} />
+        <SubscribeButtons config={config} />
       </ErrorBoundary>
       <ErrorBoundary
         fallback={
@@ -173,8 +160,8 @@ function App() {
         }
       >
         <ForecastCards
-          events={events}
-          loading={loading}
+          sessions={sessions}
+          isPending={isPending}
           error={error}
           weekStart={weekStart}
           onPrev={goToPrev}

@@ -130,7 +130,7 @@ After all changes, verify these are no longer used:
 
 **Verify:**
 
-- [ ] `pnpm check` passes (all checks green for the first time since Phase 4)
+- [x] `pnpm check` passes (all checks green for the first time since Phase 4)
 - [ ] UI smoke test — run `agent-browser` (requires `pnpm dev` + `pnpm dev:api` running):
 
   ```bash
