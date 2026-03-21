@@ -4,7 +4,7 @@ Migrate the UI preview from ICS calendar feed parsing to the `/api/forecast` JSO
 using TanStack React Query. Subscribe buttons continue using the ICS `/api/calendar` endpoint.
 
 **Created:** 2026-03-16
-**Status:** Draft
+**Status:** Complete
 **Branch:** `feat/ui-updates` (current working branch — all work committed here)
 
 > **Note:** Phases are logical groupings, not strict execution order. Some phases depend on others, but you may interleave work as needed.
