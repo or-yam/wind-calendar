@@ -51,6 +51,33 @@
   background: hsl(215, 28%, 32%);
 }
 
+.forecast-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(215, 28%, 30%) transparent;
+}
+
+.forecast-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.forecast-scroll::-webkit-scrollbar-track {
+  background: hsl(215, 28%, 10%);
+  border-radius: 9999px;
+  margin: 0 40px;
+}
+
+.forecast-scroll::-webkit-scrollbar-thumb {
+  background: hsl(215, 28%, 30%);
+  border-radius: 9999px;
+  border: 2px solid hsl(215, 28%, 10%);
+  background-clip: padding-box;
+}
+
+.forecast-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(199, 89%, 48%);
+  background-clip: padding-box;
+}
+
 @layer base {
   :root {
     --background: hsl(221, 47%, 9%);

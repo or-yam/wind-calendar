@@ -93,7 +93,7 @@ export function ForecastCards({
         </div>
 
         {isPending ? (
-          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0">
+          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll">
             {Array.from({ length: 7 }, (_, i) => (
               <ForecastCardSkeleton key={i} />
             ))}
@@ -101,7 +101,7 @@ export function ForecastCards({
         ) : error ? (
           <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
         ) : (
-          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0">
+          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
