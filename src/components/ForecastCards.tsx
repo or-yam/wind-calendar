@@ -93,13 +93,9 @@ export function ForecastCards({
               <ForecastCardSkeleton key={i} />
             ))}
           </div>
-        ) : null}
-
-        {!isPending && error ? (
+        ) : error ? (
           <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
-        ) : null}
-
-        {!isPending && !error && (
+        ) : (
           <div className="flex flex-row gap-2">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
