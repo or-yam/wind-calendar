@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { checkRateLimit } from "../../../server/utils/rate-limit.js";
+import {
+  checkRateLimit,
+  __resetForTesting,
+  __getMapSizeForTesting,
+} from "../../../server/utils/rate-limit.js";
+
+const BASE_TIME = 1_000_000;
 
 describe("checkRateLimit", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Reset module state by clearing the hits map indirectly
-    // We can't import and clear it directly, so we rely on time-based cleanup
+    __resetForTesting();
   });
 
   afterEach(() => {
@@ -13,12 +18,12 @@ describe("checkRateLimit", () => {
   });
 
   it("allows first request from new IP", () => {
-    const result = checkRateLimit("192.168.1.1");
+    const result = checkRateLimit("1.1.1.1");
     expect(result).toEqual({ limited: false });
   });
 
   it("allows requests under the limit (30 per minute)", () => {
-    const ip = "192.168.1.2";
+    const ip = "2.2.2.2";
 
     // Send 29 requests (under limit)
     for (let i = 0; i < 29; i++) {
@@ -32,7 +37,7 @@ describe("checkRateLimit", () => {
   });
 
   it("blocks request when limit exceeded", () => {
-    const ip = "192.168.1.3";
+    const ip = "3.3.3.3";
 
     // Send exactly 30 requests (at limit)
     for (let i = 0; i < 30; i++) {
@@ -42,17 +47,14 @@ describe("checkRateLimit", () => {
     // 31st request should be blocked
     const result = checkRateLimit(ip);
     expect(result.limited).toBe(true);
-    expect(result).toHaveProperty("retryAfter");
-    if (result.limited) {
-      expect(result.retryAfter).toBeGreaterThan(0);
-      expect(result.retryAfter).toBeLessThanOrEqual(60);
-    }
+    const { retryAfter } = result as { limited: true; retryAfter: number };
+    expect(retryAfter).toBeGreaterThan(0);
+    expect(retryAfter).toBeLessThanOrEqual(60);
   });
 
   it("calculates correct retryAfter in seconds", () => {
-    const ip = "192.168.1.4";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "4.4.4.4";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 30 requests at time T
     for (let i = 0; i < 30; i++) {
@@ -60,23 +62,21 @@ describe("checkRateLimit", () => {
     }
 
     // Advance 30 seconds
-    vi.setSystemTime(startTime + 30_000);
+    vi.setSystemTime(BASE_TIME + 30_000);
 
     // Try 31st request
     const result = checkRateLimit(ip);
     expect(result.limited).toBe(true);
-    if (result.limited) {
-      // Oldest request was at T, expires at T+60s
-      // Current time is T+30s, so retryAfter should be ~30s
-      expect(result.retryAfter).toBeGreaterThanOrEqual(29);
-      expect(result.retryAfter).toBeLessThanOrEqual(31);
-    }
+    const { retryAfter } = result as { limited: true; retryAfter: number };
+    // Oldest request was at T, expires at T+60s
+    // Current time is T+30s, so retryAfter should be ~30s
+    expect(retryAfter).toBeGreaterThanOrEqual(29);
+    expect(retryAfter).toBeLessThanOrEqual(31);
   });
 
   it("allows requests after sliding window expires", () => {
-    const ip = "192.168.1.5";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "5.5.5.5";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 30 requests (hit limit)
     for (let i = 0; i < 30; i++) {
@@ -88,7 +88,7 @@ describe("checkRateLimit", () => {
     expect(result.limited).toBe(true);
 
     // Advance past the 60-second window
-    vi.setSystemTime(startTime + 61_000);
+    vi.setSystemTime(BASE_TIME + 61_000);
 
     // Should now be allowed (all previous requests expired)
     result = checkRateLimit(ip);
@@ -96,9 +96,8 @@ describe("checkRateLimit", () => {
   });
 
   it("implements sliding window correctly", () => {
-    const ip = "192.168.1.6";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "6.6.6.6";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 20 requests at T
     for (let i = 0; i < 20; i++) {
@@ -106,7 +105,7 @@ describe("checkRateLimit", () => {
     }
 
     // Advance 40 seconds
-    vi.setSystemTime(startTime + 40_000);
+    vi.setSystemTime(BASE_TIME + 40_000);
 
     // Send 10 more requests at T+40s (total 30, but in window)
     for (let i = 0; i < 10; i++) {
@@ -119,7 +118,7 @@ describe("checkRateLimit", () => {
     expect(result.limited).toBe(true);
 
     // Advance to T+61s (first 20 requests have expired)
-    vi.setSystemTime(startTime + 61_000);
+    vi.setSystemTime(BASE_TIME + 61_000);
 
     // Should be allowed now (only 10 requests in the current 60s window)
     result = checkRateLimit(ip);
@@ -127,8 +126,8 @@ describe("checkRateLimit", () => {
   });
 
   it("tracks different IPs independently", () => {
-    const ip1 = "192.168.1.7";
-    const ip2 = "192.168.1.8";
+    const ip1 = "7.7.7.7";
+    const ip2 = "8.8.8.8";
 
     // Send 30 requests from ip1
     for (let i = 0; i < 30; i++) {
@@ -145,9 +144,8 @@ describe("checkRateLimit", () => {
   });
 
   it("ensures retryAfter is at least 1 second", () => {
-    const ip = "192.168.1.9";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "9.9.9.9";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 30 requests
     for (let i = 0; i < 30; i++) {
@@ -155,84 +153,86 @@ describe("checkRateLimit", () => {
     }
 
     // Advance to just before window expiry (59.5 seconds)
-    vi.setSystemTime(startTime + 59_500);
+    vi.setSystemTime(BASE_TIME + 59_500);
 
     // Try blocked request
     const result = checkRateLimit(ip);
     expect(result.limited).toBe(true);
-    if (result.limited) {
-      // Even if calculated retryAfter rounds to 0, it should be at least 1
-      expect(result.retryAfter).toBeGreaterThanOrEqual(1);
-    }
+    const { retryAfter } = result as { limited: true; retryAfter: number };
+    // Even if calculated retryAfter rounds to 0, it should be at least 1
+    expect(retryAfter).toBeGreaterThanOrEqual(1);
   });
 
   it("runs cleanup when map exceeds threshold (1000 entries)", () => {
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    vi.setSystemTime(BASE_TIME);
 
     // Add 1001 different IPs to exceed cleanup threshold
     for (let i = 0; i < 1001; i++) {
-      checkRateLimit(`192.168.${Math.floor(i / 256)}.${i % 256}`);
+      checkRateLimit(`10.0.${Math.floor(i / 256)}.${i % 256}`);
     }
 
+    expect(__getMapSizeForTesting()).toBe(1001);
+
     // Advance time so early entries expire
-    vi.setSystemTime(startTime + 61_000);
+    vi.setSystemTime(BASE_TIME + 61_000);
 
     // Trigger cleanup by checking a new IP
-    const result = checkRateLimit("10.0.0.1");
+    const result = checkRateLimit("11.11.11.11");
     expect(result.limited).toBe(false);
 
-    // Verify old entries were cleaned (indirect test - no errors, function works)
-    // We can't access the internal Map directly, but the lack of errors
-    // and continued correct behavior indicates cleanup worked
+    // Verify old entries were cleaned (only recent IP remains)
+    expect(__getMapSizeForTesting()).toBe(1);
   });
 
   it("preserves valid entries during cleanup", () => {
-    const oldIp = "192.168.1.10";
-    const recentIp = "192.168.1.11";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const oldIp = "12.12.12.12";
+    const recentIp = "13.13.13.13";
+    vi.setSystemTime(BASE_TIME);
 
     // Create an old entry
     checkRateLimit(oldIp);
 
     // Advance time and create many new entries to trigger cleanup
-    vi.setSystemTime(startTime + 61_000);
+    vi.setSystemTime(BASE_TIME + 61_000);
 
     for (let i = 0; i < 1001; i++) {
-      checkRateLimit(`10.0.${Math.floor(i / 256)}.${i % 256}`);
+      checkRateLimit(`20.0.${Math.floor(i / 256)}.${i % 256}`);
     }
 
-    // Recent IP should still work (not cleaned)
+    // Recent IPs should still work (not cleaned)
     checkRateLimit(recentIp);
     const result = checkRateLimit(recentIp);
     expect(result.limited).toBe(false);
 
-    // Old IP should start fresh (cleaned)
+    // Old IP should start fresh (was cleaned, so starts with count of 1)
     const oldResult = checkRateLimit(oldIp);
     expect(oldResult.limited).toBe(false);
   });
 
   it("removes IP from map when all timestamps expire", () => {
-    const ip = "192.168.1.12";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "14.14.14.14";
+    vi.setSystemTime(BASE_TIME);
 
     // Single request
     checkRateLimit(ip);
 
     // Create 1001 other IPs to trigger cleanup
     for (let i = 0; i < 1001; i++) {
-      checkRateLimit(`172.16.${Math.floor(i / 256)}.${i % 256}`);
+      checkRateLimit(`30.0.${Math.floor(i / 256)}.${i % 256}`);
     }
 
+    const sizeBefore = __getMapSizeForTesting();
+
     // Advance past window
-    vi.setSystemTime(startTime + 61_000);
+    vi.setSystemTime(BASE_TIME + 61_000);
 
     // Create more entries to trigger cleanup again
     for (let i = 0; i < 1001; i++) {
-      checkRateLimit(`10.1.${Math.floor(i / 256)}.${i % 256}`);
+      checkRateLimit(`40.0.${Math.floor(i / 256)}.${i % 256}`);
     }
+
+    // Map should be smaller (old entries removed)
+    expect(__getMapSizeForTesting()).toBeLessThan(sizeBefore);
 
     // Original IP should be fresh (entry was deleted, not just filtered)
     const result = checkRateLimit(ip);
@@ -240,9 +240,8 @@ describe("checkRateLimit", () => {
   });
 
   it("handles rapid sequential requests correctly", () => {
-    const ip = "192.168.1.13";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "15.15.15.15";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 30 requests in same millisecond
     for (let i = 0; i < 30; i++) {
@@ -256,9 +255,8 @@ describe("checkRateLimit", () => {
   });
 
   it("handles edge case of exactly 30 requests at window boundary", () => {
-    const ip = "192.168.1.14";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "16.16.16.16";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 15 requests at T
     for (let i = 0; i < 15; i++) {
@@ -266,7 +264,7 @@ describe("checkRateLimit", () => {
     }
 
     // Send 15 requests at T+59999ms (just before window expiry)
-    vi.setSystemTime(startTime + 59_999);
+    vi.setSystemTime(BASE_TIME + 59_999);
     for (let i = 0; i < 15; i++) {
       checkRateLimit(ip);
     }
@@ -277,9 +275,8 @@ describe("checkRateLimit", () => {
   });
 
   it("correctly filters stale timestamps in sliding window", () => {
-    const ip = "192.168.1.15";
-    const startTime = 1000000;
-    vi.setSystemTime(startTime);
+    const ip = "17.17.17.17";
+    vi.setSystemTime(BASE_TIME);
 
     // Send 25 requests at T
     for (let i = 0; i < 25; i++) {
@@ -287,7 +284,7 @@ describe("checkRateLimit", () => {
     }
 
     // Advance 30 seconds
-    vi.setSystemTime(startTime + 30_000);
+    vi.setSystemTime(BASE_TIME + 30_000);
 
     // Send 5 more requests (still under 30 total in window)
     for (let i = 0; i < 5; i++) {
@@ -296,10 +293,30 @@ describe("checkRateLimit", () => {
 
     // Advance another 31 seconds (total 61s from start)
     // First 25 requests have expired
-    vi.setSystemTime(startTime + 61_000);
+    vi.setSystemTime(BASE_TIME + 61_000);
 
     // Should only have 5 requests in window, so plenty of room
     const result = checkRateLimit(ip);
     expect(result.limited).toBe(false);
+  });
+
+  it("does not trigger cleanup when exactly at threshold (1000 entries)", () => {
+    vi.setSystemTime(BASE_TIME);
+
+    // Add exactly 1000 IPs (at threshold, not exceeding)
+    for (let i = 0; i < 1000; i++) {
+      checkRateLimit(`50.0.${Math.floor(i / 256)}.${i % 256}`);
+    }
+
+    expect(__getMapSizeForTesting()).toBe(1000);
+
+    // Advance time
+    vi.setSystemTime(BASE_TIME + 61_000);
+
+    // Add one more IP (now 1001, cleanup should NOT trigger yet because check is <=)
+    checkRateLimit("51.51.51.51");
+
+    // Map should still have entries (cleanup only triggers when size > 1000)
+    expect(__getMapSizeForTesting()).toBeGreaterThan(1);
   });
 });
