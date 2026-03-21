@@ -183,6 +183,7 @@ export function ConfigForm({
         </div>
         {windEnabled && (
           <Slider
+            aria-label="Wind speed range in knots"
             value={localWind}
             onValueChange={setLocalWind}
             onValueCommit={([min, max]) => {
@@ -238,6 +239,7 @@ export function ConfigForm({
             </RadioGroup>
 
             <Slider
+              aria-label="Wave height range in meters"
               value={localWaveHeight}
               onValueChange={setLocalWaveHeight}
               onValueCommit={([min, max]) => {
@@ -250,10 +252,14 @@ export function ConfigForm({
             />
 
             <div className="flex items-center justify-between">
-              <Label className="text-slate-300 text-sm">Min Period</Label>
+              <Label htmlFor="min-period" className="text-slate-300 text-sm">
+                Min Period
+              </Label>
               <span className="text-slate-200 text-sm tabular-nums">{localWavePeriod} s</span>
             </div>
             <Slider
+              id="min-period"
+              aria-label="Minimum wave period in seconds"
               value={[localWavePeriod]}
               onValueChange={([v]) => setLocalWavePeriod(v)}
               onValueCommit={([v]) => onWavePeriodMinChange(v)}
@@ -267,10 +273,14 @@ export function ConfigForm({
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <Label className="text-slate-200">Min Session</Label>
+          <Label htmlFor="min-session" className="text-slate-200">
+            Min Session
+          </Label>
           <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
         </div>
         <Slider
+          id="min-session"
+          aria-label="Minimum session duration in hours"
           value={[localSession]}
           onValueChange={([v]) => setLocalSession(v)}
           onValueCommit={([v]) => onMinSessionHoursChange(v)}

@@ -52,3 +52,19 @@ export function checkRateLimit(
   hits.set(ip, recent);
   return { limited: false };
 }
+
+/**
+ * Reset internal state. For testing only.
+ * @internal
+ */
+export function __resetForTesting(): void {
+  hits.clear();
+}
+
+/**
+ * Get internal state size. For testing only.
+ * @internal
+ */
+export function __getMapSizeForTesting(): number {
+  return hits.size;
+}

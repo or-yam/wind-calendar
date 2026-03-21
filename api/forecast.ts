@@ -1,6 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 import type { CalendarConfig } from "../shared/types.js";
+import type {
+  HourlyCondition,
+  ForecastSession,
+  ForecastResponse,
+} from "../shared/forecast-types.js";
 import { parseQueryParams, resolveLocation } from "../server/config.js";
 import { filterEvents } from "../server/utils/filterEvents.js";
 import { groupSessions, degreesToCardinal, type Session } from "../server/utils/groupSessions.js";
@@ -12,51 +17,6 @@ import {
   resolveForecastData,
 } from "../server/utils/api-handler.js";
 import type { WindConditionRaw } from "../server/types/wind-conditions.js";
-
-interface HourlyCondition {
-  time: string;
-  windSpeed: number | null;
-  windGusts: number | null;
-  windDirection: string | null;
-  windDirectionDeg: number | null;
-  waveHeight: number | null;
-  wavePeriod: number | null;
-  waveDirection: string | null;
-  swellHeight: number | null;
-  swellPeriod: number | null;
-}
-
-interface ForecastSession {
-  start: string;
-  end: string;
-  matchType: "wind" | "wave" | "both";
-  wind: {
-    min: number;
-    max: number;
-    gustMax: number;
-    direction: string;
-  };
-  wave: {
-    avgHeight: number;
-    avgPeriod: number;
-    direction: string;
-  };
-  swell: {
-    avgHeight: number;
-    avgPeriod: number;
-  };
-  hourly: HourlyCondition[];
-}
-
-interface ForecastResponse {
-  meta: {
-    location: string;
-    model: string | number;
-    dataSource: string;
-    generatedAt: string;
-  };
-  sessions: ForecastSession[];
-}
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
   return {

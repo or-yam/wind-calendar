@@ -1,9 +1,9 @@
 import type { CalendarConfig } from "@shared/types";
 
 /**
- * Build the API URL with query params from config
+ * Build URLSearchParams from config (shared by calendar and forecast endpoints)
  */
-export function buildApiUrl(config: CalendarConfig): string {
+export function buildConfigParams(config: CalendarConfig): URLSearchParams {
   const params = new URLSearchParams({
     location: config.location,
     model: config.model.toString(),
@@ -19,7 +19,14 @@ export function buildApiUrl(config: CalendarConfig): string {
     params.set("waveHeightMax", config.waveHeightMax.toString());
     params.set("wavePeriodMin", config.wavePeriodMin.toString());
   }
-  return `/api/calendar?${params.toString()}`;
+  return params;
+}
+
+/**
+ * Build the API URL with query params from config
+ */
+export function buildApiUrl(config: CalendarConfig): string {
+  return `/api/calendar?${buildConfigParams(config)}`;
 }
 
 /**

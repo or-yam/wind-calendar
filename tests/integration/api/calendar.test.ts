@@ -1,287 +1,16 @@
 import { describe, it, expect } from "vitest";
 import handler from "../../../api/calendar";
-import type { SpotInfo } from "../../../server/types/forecast";
-import type { APIRoot } from "../../../server/types/api-response";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-
-// --- Mock Windguru data ---
-
-const mockSpotInfo: SpotInfo = {
-  tabs: [
-    {
-      id_spot: "771",
-      lat: 32.38,
-      lon: 34.87,
-      id_model: 3,
-      model_period: 3,
-      options: {
-        wj: "",
-        tj: "",
-        waj: "",
-        tij: "",
-        odh: 0,
-        doh: 0,
-        fhours: 0,
-        limit1: 0,
-        limit2: 0,
-        limit3: 0,
-        tlimit: 0,
-        vt: "",
-        wrapnew: undefined,
-        show_flhgt_opt: 0,
-        map_open_fn: "",
-        params: [],
-        var_map: undefined,
-        tide: { style: "", min: 0 },
-      },
-      id_model_arr: [
-        {
-          id_model: 3,
-          rundef: "run1",
-          period: 3,
-          initstr: "",
-          cachefix: "cachefix1",
-        },
-      ],
-      share: false,
-    },
-  ],
-  spots: {
-    "771": {
-      id_spot: "771",
-      id_user: "1",
-      spotname: "Beit Yanai",
-      country: "Israel",
-      id_country: 1,
-      lat: 32.38,
-      lon: 34.87,
-      alt: 0,
-      tz: "Asia/Jerusalem",
-      tzid: "Asia/Jerusalem",
-      gmt_hour_offset: 2,
-      sunrise: "06:00",
-      sunset: "19:00",
-      sst: 20,
-      models: [3],
-      tides: "",
-      tide: {
-        "2N2": [],
-        EPS2: [],
-        J1: [],
-        K1: [],
-      } as any,
-    },
-  },
-  tabs_hidden: [],
-  message: "",
-};
-
-// initstamp in 2030, starting at midnight UTC on June 15, 2030
-// That's a date where daylight hours (7-18 Asia/Jerusalem = 4-15 UTC) will work.
-const FUTURE_INITSTAMP = Math.floor(new Date("2030-06-15T00:00:00Z").getTime() / 1000);
-
-function buildMockAPIRoot(windSpeeds: number[], hours?: number[]): APIRoot {
-  const len = windSpeeds.length;
-  return {
-    id_spot: 771,
-    lat: 32.38,
-    lon: 34.87,
-    alt: 0,
-    id_model: 3,
-    model: "GFS",
-    model_alt: 0,
-    levels: 1,
-    sunrise: "06:00",
-    sunset: "19:00",
-    md5chk: "",
-    coast: false,
-    wgmodel: {
-      id_model: 3,
-      model: "gfs",
-      model_name: "GFS 13km",
-      model_longname: "GFS 13km",
-      lat: [32],
-      lon: [34],
-      pro: false,
-      priority: 1,
-      resolution: 13,
-      resolution_real: 13,
-      initdate: "2030-06-15 00:00:00",
-      initstamp: FUTURE_INITSTAMP,
-      period: 1,
-      hr_start: 0,
-      hr_end: len - 1,
-      hr_step: 1,
-      wave: false,
-      maps: false,
-      dynamic_updates: false,
-      rundef: "run1",
-      runs: [],
-    },
-    fcst: {
-      initstamp: FUTURE_INITSTAMP,
-      hours: hours ?? Array.from({ length: len }, (_, i) => i),
-      WINDSPD: windSpeeds,
-      WINDDIR: Array(len).fill(270),
-      GUST: windSpeeds.map((s) => s + 5),
-      TMP: Array(len).fill(25),
-      TCDC: Array(len).fill(0),
-      APCP1: Array(len).fill(0),
-      FLHGT: Array(len).fill(0),
-      SLP: Array(len).fill(1013),
-      HCDC: Array(len).fill(0),
-      MCDC: Array(len).fill(0),
-      LCDC: Array(len).fill(0),
-      RH: Array(len).fill(50),
-      SLHGT: Array(len).fill(0),
-      PCPT: Array(len).fill(0),
-      TMPE: Array(len).fill(25),
-      vars: ["WINDSPD", "WINDDIR", "GUST"],
-      initdate: "2030-06-15 00:00:00",
-      init_d: "15",
-      init_dm: "15.06.",
-      init_h: "00",
-      initstr: "",
-      model_name: "GFS 13km",
-      model_longname: "GFS 13km",
-      id_model: 3,
-      update_last: "",
-      update_next: "",
-      img_var_map: [],
-    },
-    fcst_sea: {
-      GUST: windSpeeds.map((s) => s + 5),
-      WINDSPD: windSpeeds,
-      WINDDIR: Array(len).fill(270),
-    },
-    fcst_land: {
-      TMP: Array(len).fill(25),
-      TMPE: Array(len).fill(25),
-    },
-    default_vars: { "43": ["WINDSPD"] },
-  } as APIRoot;
-}
-
-// Realistic Windguru-style offsets: hourly 3..23, then 3-hourly 24,27,30,...
-// 21 hourly points (hours 3-23) + 6 three-hourly points (24,27,30,33,36,39) = 27 points.
-const realisticHours = [
-  ...Array.from({ length: 21 }, (_, i) => i + 3), // 3,4,5,...,23
-  24,
-  27,
-  30,
-  33,
-  36,
-  39,
-];
-
-// Asia/Jerusalem is UTC+3 in June, so UTC hour 4 = local 7, UTC hour 15 = local 18.
-// Put 15kn wind at hour offsets 4-14 (local 7-17), rest 5kn.
-const goodWindSpeeds = realisticHours.map((h) => (h >= 4 && h <= 14 ? 15 : 5));
-
-const mockAPIRoot = buildMockAPIRoot(goodWindSpeeds, realisticHours);
-
-// --- Helpers ---
-
-let originalFetch: typeof globalThis.fetch;
-
-function installFetchMock(responder?: (url: URL) => Response | null) {
-  originalFetch = globalThis.fetch;
-  globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
-    const url = new URL(input.toString());
-    const params = Object.fromEntries(url.searchParams);
-
-    if (responder) {
-      const custom = responder(url);
-      if (custom) return custom;
-    }
-
-    if (params.q === "forecast_spot") {
-      return new Response(JSON.stringify(mockSpotInfo));
-    }
-    if (params.q === "forecast") {
-      return new Response(JSON.stringify(mockAPIRoot));
-    }
-    throw new Error(`Unexpected fetch: ${url}`);
-  };
-}
-
-function restoreFetch() {
-  globalThis.fetch = originalFetch;
-}
-
-/** Build a minimal VercelRequest-like object. */
-function mockReq(path: string): VercelRequest {
-  return {
-    url: path,
-    headers: { host: "localhost:3000" },
-  } as unknown as VercelRequest;
-}
-
-/** Build a minimal VercelResponse-like object that captures the response. */
-function mockRes() {
-  const result: {
-    statusCode: number;
-    headers: Record<string, string>;
-    body: string;
-    json: unknown;
-  } = {
-    statusCode: 200,
-    headers: {},
-    body: "",
-    json: undefined,
-  };
-
-  const res = {
-    setHeader(name: string, value: string) {
-      result.headers[name.toLowerCase()] = value;
-      return res;
-    },
-    status(code: number) {
-      result.statusCode = code;
-      return res;
-    },
-    send(body: string) {
-      result.body = body;
-      return res;
-    },
-    json(data: unknown) {
-      result.json = data;
-      result.body = JSON.stringify(data);
-      result.headers["content-type"] = "application/json";
-      return res;
-    },
-  } as unknown as VercelResponse;
-
-  return { res, result };
-}
+import { installWindguruMock } from "../../helpers/windguru-mocks";
+import { mockVercelRequest, mockVercelResponse } from "../../helpers/vercel-mocks";
 
 // --- Tests ---
 
 describe("calendar API handler", () => {
   it("full pipeline: returns ICS with events", async () => {
-    installFetchMock();
+    const cleanup = installWindguruMock();
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
-
-      await handler(req, res);
-
-      expect(result.statusCode).toBe(200);
-      expect(result.headers["content-type"]).toBe("text/calendar; charset=utf-8");
-      expect(result.headers["cache-control"]).toBe(
-        "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
-      );
-      expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
-    } finally {
-      restoreFetch();
-    }
-  });
-
-  it("unknown location returns 400", async () => {
-    installFetchMock();
-    try {
-      const req = mockReq("/api/calendar?location=unknown");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar?location=unknown");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -289,18 +18,18 @@ describe("calendar API handler", () => {
       const body = JSON.parse(result.body);
       expect(body.error).toContain("Unknown location");
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("Windguru failure returns 502 with structured error", async () => {
-    installFetchMock(() => {
+    const cleanup = installWindguruMock(() => {
       // All fetches fail
       return new Response("Internal Server Error", { status: 500 });
     });
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -312,17 +41,17 @@ describe("calendar API handler", () => {
       expect(body.debug?.locationInfo).toBeTruthy();
       expect(body.debug.upstreamStatus).toBe(500);
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("query param overrides work", async () => {
     // Use windMin=20 — our mock wind is 15kn, so nothing passes the filter.
     // Result: valid ICS but no VEVENT blocks.
-    installFetchMock();
+    const cleanup = installWindguruMock();
     try {
-      const req = mockReq("/api/calendar?windMin=20");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar?windMin=20");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -330,15 +59,15 @@ describe("calendar API handler", () => {
       expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
       expect(result.body.includes("BEGIN:VEVENT")).toBe(false);
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("ICS contains calendar events for valid wind data", async () => {
-    installFetchMock();
+    const cleanup = installWindguruMock();
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -347,17 +76,17 @@ describe("calendar API handler", () => {
       expect(result.body.includes("END:VEVENT")).toBe(true);
       expect(result.body.includes("END:VCALENDAR")).toBe(true);
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   // --- Error path tests ---
 
   it("Windguru 429 returns 429 with rate limit info", async () => {
-    installFetchMock(() => new Response("Rate limited", { status: 429 }));
+    const cleanup = installWindguruMock(() => new Response("Rate limited", { status: 429 }));
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -366,15 +95,15 @@ describe("calendar API handler", () => {
       expect(body.code).toBe("WINDGURU_RATE_LIMIT");
       expect(body.suggestion).toContain("5 minutes");
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("Windguru 403 returns 502 with forbidden info", async () => {
-    installFetchMock(() => new Response("Forbidden", { status: 403 }));
+    const cleanup = installWindguruMock(() => new Response("Forbidden", { status: 403 }));
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -382,15 +111,15 @@ describe("calendar API handler", () => {
       const body = JSON.parse(result.body);
       expect(body.code).toBe("WINDGURU_FORBIDDEN");
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("Windguru 404 returns 502 with not found info", async () => {
-    installFetchMock(() => new Response("Not Found", { status: 404 }));
+    const cleanup = installWindguruMock(() => new Response("Not Found", { status: 404 }));
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -399,17 +128,17 @@ describe("calendar API handler", () => {
       expect(body.code).toBe("WINDGURU_NOT_FOUND");
       expect(body.suggestion).toContain("spot ID");
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("network failure returns 504 with unreachable info", async () => {
-    installFetchMock(() => {
+    const cleanup = installWindguruMock(() => {
       throw new TypeError("fetch failed");
     });
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -418,15 +147,15 @@ describe("calendar API handler", () => {
       expect(body.code).toBe("WINDGURU_UNREACHABLE");
       expect(body.debug?.locationInfo).toBeTruthy();
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("malformed JSON response returns 502 with bad response info", async () => {
-    installFetchMock(() => new Response("not json {{{", { status: 200 }));
+    const cleanup = installWindguruMock(() => new Response("not json {{{", { status: 200 }));
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
@@ -435,12 +164,12 @@ describe("calendar API handler", () => {
       expect(body.code).toBe("WINDGURU_BAD_RESPONSE");
       expect(body.debug?.upstreamStatus).toBe(200);
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
   it("wave model failure is non-fatal — still returns ICS", async () => {
-    installFetchMock((url) => {
+    const cleanup = installWindguruMock((url) => {
       const params = Object.fromEntries(url.searchParams);
       // Wave model (84) fails, wind model (3) succeeds
       if (params.q === "forecast" && params.id_model === "84") {
@@ -449,15 +178,15 @@ describe("calendar API handler", () => {
       return null; // fall through to default mock
     });
     try {
-      const req = mockReq("/api/calendar");
-      const { res, result } = mockRes();
+      const req = mockVercelRequest("/api/calendar");
+      const { res, result } = mockVercelResponse();
 
       await handler(req, res);
 
       expect(result.statusCode).toBe(200);
       expect(result.body.includes("BEGIN:VCALENDAR")).toBe(true);
     } finally {
-      restoreFetch();
+      cleanup();
     }
   });
 
@@ -470,10 +199,10 @@ describe("calendar API handler", () => {
     ];
 
     for (const { responder } of errorResponders) {
-      installFetchMock(() => responder());
+      const cleanup = installWindguruMock(() => responder());
       try {
-        const req = mockReq("/api/calendar");
-        const { res, result } = mockRes();
+        const req = mockVercelRequest("/api/calendar");
+        const { res, result } = mockVercelResponse();
 
         await handler(req, res);
 
@@ -481,7 +210,7 @@ describe("calendar API handler", () => {
         expect(body.debug?.locationInfo).toBeTruthy();
         expect(body.code).toBeTruthy();
       } finally {
-        restoreFetch();
+        cleanup();
       }
     }
   });
