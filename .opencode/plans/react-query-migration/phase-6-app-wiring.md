@@ -131,6 +131,12 @@ After all changes, verify these are no longer used:
 **Verify:**
 
 - [x] `pnpm check` passes (all checks green for the first time since Phase 4)
+- [x] Cleanup fixes (2026-03-21):
+  - Added `DEFAULTS.location` constant ("beit-yanai") to shared/constants.ts
+  - Added `VALID_LOCATIONS` Set for O(1) location validation
+  - Added URL popstate listener to sync manual URL edits back to state
+  - Removed redundant ErrorBoundary around SubscribeButtons (no data fetching)
+  - Fixed unsafe `LOCATIONS[location as keyof typeof LOCATIONS]` access with guard clause
 - [ ] UI smoke test — run `agent-browser` (requires `pnpm dev` + `pnpm dev:api` running):
 
   ```bash

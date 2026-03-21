@@ -36,11 +36,16 @@ function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean)
   return raw === "true";
 }
 
+const VALID_LOCATIONS = new Set(Object.keys(LOCATIONS));
+
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
+  const rawLocation = params.get("location");
+  const location =
+    rawLocation && VALID_LOCATIONS.has(rawLocation) ? rawLocation : DEFAULTS.location;
   const waveSource = params.get("waveSource");
   return {
-    location: params.get("location") || "beit-yanai",
+    location,
     minSessionHours: parseNumParam(params, "minSessionHours", DEFAULTS.minSessionHours),
     model: parseModelParam(params, DEFAULTS.model),
     windEnabled: parseBoolParam(params, "windEnabled", DEFAULTS.windEnabled),
@@ -77,12 +82,18 @@ function App() {
     window.history.replaceState(null, "", newUrl);
   }, [config]);
 
+  useEffect(() => {
+    const handler = () => setConfig(parseUrlParams());
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
   const { data, isPending, error } = useQuery(forecastQueryOptions(config));
   const sessions = data?.sessions ?? [];
   const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(sessions);
 
-  // Handler for location change - check if model is available in new location
   const handleLocationChange = (location: string) => {
+    if (!VALID_LOCATIONS.has(location)) return;
     const newLocation = LOCATIONS[location as keyof typeof LOCATIONS];
     const newModel =
       typeof config.model === "number" &&
@@ -125,17 +136,7 @@ function App() {
         onWavePeriodMinChange={(wavePeriodMin) => setConfig((c) => ({ ...c, wavePeriodMin }))}
         onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}
       />
-      <ErrorBoundary
-        fallback={
-          <div className="py-12 px-5 text-center">
-            <p className="text-red-400 text-sm">
-              Something went wrong. Please try refreshing the page.
-            </p>
-          </div>
-        }
-      >
-        <SubscribeButtons config={config} />
-      </ErrorBoundary>
+      <SubscribeButtons config={config} />
       <ErrorBoundary
         fallback={
           <div className="py-12 px-5 text-center">
