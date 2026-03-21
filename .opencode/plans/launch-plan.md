@@ -83,8 +83,9 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
   - Done: Added to ForecastCards.tsx between Prev/Next buttons
 - [x] **Loading flash** — init `loading: true` in `useCalendarFeed.ts` to avoid 1-frame empty grid
   - N/A: React Query's `isPending` handles this (hook was removed, now uses `useQuery`)
-- [ ] **Copy failure** — show user feedback when `navigator.clipboard.writeText` fails
+- [x] **Copy failure** — show user feedback when `navigator.clipboard.writeText` fails
   - Current: only `console.error` in catch block, no user-facing feedback
+  - Done: Added error state to copy button — shows "Copy failed" in red when clipboard write fails. Fixed timeout cleanup, race condition, and added aria-live for screen readers (src/components/SubscribeButtons.tsx:86-93)
 
 ### Verification
 
