@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { forecastQueryOptions } from "./lib/forecast-query";
 
@@ -79,21 +79,7 @@ function App() {
 
   const { data, isPending, error } = useQuery(forecastQueryOptions(config));
   const sessions = data?.sessions ?? [];
-  const { weekStart, goToToday, goToPrev, goToNext, goToFirstItem } = useWeekNavigation(sessions);
-
-  // Track if we've already navigated to first event for this calendar config
-  const hasNavigatedRef = useRef(false);
-
-  useEffect(() => {
-    hasNavigatedRef.current = false;
-  }, [config.location, config.model]);
-
-  useEffect(() => {
-    if (sessions.length > 0 && !hasNavigatedRef.current) {
-      goToFirstItem();
-      hasNavigatedRef.current = true;
-    }
-  }, [sessions.length, goToFirstItem]);
+  const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(sessions);
 
   // Handler for location change - check if model is available in new location
   const handleLocationChange = (location: string) => {
