@@ -59,10 +59,15 @@ using TanStack React Query. Subscribe buttons continue using the ICS `/api/calen
   - [x] 6.4 Update ForecastCards props
   - [x] 6.5 Clean up unused code
 
-- [ ] **Phase 7** — Verification
-  - [ ] 7.1 All checks passing (pnpm check)
-  - [ ] 7.2 Build succeeds
-  - [ ] 7.3 UI verification
+- [x] **Phase 7** — Verification
+  - [x] 7.1 All checks passing (pnpm check)
+  - [x] 7.2 Build succeeds
+  - [x] 7.3 UI verification (agent-browser: sessions load, auto-nav works, no JS errors)
+
+> **Also fixed during verification:**
+>
+> - `isPending` ternary chain in ForecastCards (was showing stale errors over cached data)
+> - Vite proxy missing for `/api/*` (caused "API returned non-JSON" error in dev)
 
 ---
 
