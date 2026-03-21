@@ -44,9 +44,9 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
       <h2 className="text-2xl font-semibold text-slate-200 mb-6">Subscribe to Calendar</h2>
 
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-3 gap-4">
-          <a href={webcalUrl} className="block h-full">
-            <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <a href={webcalUrl} className="block">
+            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
               <img
                 alt="macOS Calendar logo"
                 src="/macos-calendar_logo.png"
@@ -56,8 +56,8 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
             </div>
           </a>
 
-          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="block h-full">
-            <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
+          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="block">
+            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
               <img
                 alt="google calendar logo"
                 src="/google_calendar_logo.svg"
@@ -67,8 +67,8 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
             </div>
           </a>
 
-          <a href={outlookUrl} target="_blank" rel="noopener noreferrer" className="block h-full">
-            <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
+          <a href={outlookUrl} target="_blank" rel="noopener noreferrer" className="block">
+            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
               <img
                 alt="Microsoft Outlook calendar logo"
                 src="/outlook-calendar_logo.svg"
@@ -79,9 +79,9 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
           </a>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <button type="button" onClick={handleCopyUrl} className="w-full h-full text-left">
-            <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button type="button" onClick={handleCopyUrl} className="w-full text-left">
+            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
               <Copy className="text-sky-400 w-5 h-5 shrink-0" />
               <strong className="font-semibold text-sm text-slate-200">
                 {copied ? "Copied!" : "Copy URL"}
@@ -89,8 +89,8 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
             </div>
           </button>
 
-          <button type="button" onClick={handleDownloadIcs} className="w-full h-full text-left">
-            <div className="h-full bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 cursor-pointer flex items-center gap-3">
+          <button type="button" onClick={handleDownloadIcs} className="w-full text-left">
+            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
               <Download className="text-sky-400 w-5 h-5 shrink-0" />
               <strong className="font-semibold text-sm text-slate-200">Download .ics</strong>
             </div>

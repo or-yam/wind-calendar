@@ -66,7 +66,7 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 - [x] **Hero heading** — `text-[42px]` → responsive (e.g. `text-2xl sm:text-4xl md:text-[42px]`)
   - Current: `text-[42px]` hardcoded, no responsive breakpoints
   - Done: `text-[42px]` → `text-3xl sm:text-4xl md:text-[42px]`
-- [ ] **SubscribeButtons** — `grid-cols-1 sm:grid-cols-3` for provider buttons, `grid-cols-1 sm:grid-cols-2` for action buttons
+- [x] **SubscribeButtons** — `grid-cols-1 sm:grid-cols-3` for provider buttons, `grid-cols-1 sm:grid-cols-2` for action buttons
   - Current: `grid-cols-3` / `grid-cols-2` hardcoded
 - [ ] **ConfigForm** — verify touch usability of sliders/selects at current sizes. Increase if needed
   - SelectTrigger: `h-10` (40px) — below 44px threshold
