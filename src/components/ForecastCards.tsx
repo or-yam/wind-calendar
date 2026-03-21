@@ -1,7 +1,7 @@
 import type { ForecastSession } from "@shared/forecast-types";
 import { windColor, windTextColor } from "@/lib/wind-colors";
 import { waveHeightColor, waveHeightTextColor } from "@/lib/wave-colors";
-import { addDays, formatTimeFromDate } from "@/lib/date-utils";
+import { addDays, formatTimeFromDate, formatWeekRange } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WIND_ICON, WAVE_ICON } from "@shared/constants";
@@ -75,15 +75,20 @@ export function ForecastCards({
       <div className="max-w-3xl mx-auto">
         <h2 className="text-2xl font-semibold text-slate-200 mb-6">Upcoming Sessions</h2>
 
-        <div className="flex gap-2 mb-6 justify-center">
+        <div className="flex gap-2 mb-2 justify-center items-center">
           <Button variant="ghost" onClick={onPrev}>
             ← Prev
           </Button>
-          <Button variant="ghost" onClick={onToday}>
-            Today
-          </Button>
+          <span className="text-sm text-slate-400 font-medium min-w-[140px] text-center">
+            {formatWeekRange(weekStart)}
+          </span>
           <Button variant="ghost" onClick={onNext}>
             Next →
+          </Button>
+        </div>
+        <div className="flex gap-2 mb-6 justify-center">
+          <Button variant="ghost" onClick={onToday}>
+            Today
           </Button>
         </div>
 
