@@ -59,10 +59,12 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 ### Responsive Fixes
 
-- [ ] **ForecastCards** — horizontal scroll with `overflow-x-auto`, min card width (~120px), snap points. Cards are unusable at ~40px on mobile
+- [x] **ForecastCards** — horizontal scroll with `overflow-x-auto`, min card width (~120px), snap points. Cards are unusable at ~40px on mobile
   - Current: `<div className="flex flex-row gap-2">` no overflow/min-width/snap
-- [ ] **Hero heading** — `text-[42px]` → responsive (e.g. `text-2xl sm:text-4xl md:text-[42px]`)
+  - Done: Added `overflow-x-auto snap-x snap-mandatory -mx-5 px-5` to card containers; `min-w-[120px] shrink-0 snap-center` to each card
+- [x] **Hero heading** — `text-[42px]` → responsive (e.g. `text-2xl sm:text-4xl md:text-[42px]`)
   - Current: `text-[42px]` hardcoded, no responsive breakpoints
+  - Done: `text-[42px]` → `text-3xl sm:text-4xl md:text-[42px]`
 - [ ] **SubscribeButtons** — `grid-cols-1 sm:grid-cols-3` for provider buttons, `grid-cols-1 sm:grid-cols-2` for action buttons
   - Current: `grid-cols-3` / `grid-cols-2` hardcoded
 - [ ] **ConfigForm** — verify touch usability of sliders/selects at current sizes. Increase if needed
@@ -84,7 +86,8 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 ### Verification
 
-- [ ] Test on 375px (iPhone SE), 390px (iPhone 14), 412px (Pixel)
+- [x] ForecastCards horizontal scroll verified at 375px (cards scroll with snap)
+- [ ] Test on 390px (iPhone 14), 412px (Pixel)
 - [ ] No horizontal page overflow on any viewport
 - [ ] Touch targets >= 44px on interactive elements
 

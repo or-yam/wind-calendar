@@ -47,7 +47,7 @@ function groupByDay(sessions: ForecastSession[]): DayGroup[] {
 
 function ForecastCardSkeleton() {
   return (
-    <div className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 border-l-4 border-l-slate-700 aspect-[3/2] flex flex-col">
+    <div className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 border-l-slate-700 aspect-[3/2] flex flex-col snap-center">
       <Skeleton className="h-3 w-16 mb-1" />
       <Skeleton className="h-4 w-6 mb-1" />
       <Skeleton className="h-3 w-20 mb-1" />
@@ -93,7 +93,7 @@ export function ForecastCards({
         </div>
 
         {isPending ? (
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5">
             {Array.from({ length: 7 }, (_, i) => (
               <ForecastCardSkeleton key={i} />
             ))}
@@ -101,7 +101,7 @@ export function ForecastCards({
         ) : error ? (
           <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
         ) : (
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
@@ -110,7 +110,7 @@ export function ForecastCards({
                 return (
                   <div
                     key={dayKey}
-                    className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 opacity-60 border-l-4 aspect-[3/2] flex flex-col items-center justify-center"
+                    className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 opacity-60 border-l-4 aspect-[3/2] flex flex-col items-center justify-center snap-center"
                     style={{ borderLeftColor: "#FFFFFF" }}
                   >
                     <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
@@ -147,7 +147,7 @@ export function ForecastCards({
                 return (
                   <div
                     key={`${dayKey}-${session.start}`}
-                    className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 flex-1 min-w-0 border-l-4 aspect-[3/2]"
+                    className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 aspect-[3/2] snap-center"
                     style={{ borderLeftColor: borderColor }}
                   >
                     <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">
