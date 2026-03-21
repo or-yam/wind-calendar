@@ -136,38 +136,40 @@ function App() {
         onWavePeriodMinChange={(wavePeriodMin) => setConfig((c) => ({ ...c, wavePeriodMin }))}
         onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}
       />
-      <SubscribeButtons config={config} />
-      <ErrorBoundary
-        fallback={
-          <div className="py-12 px-5 text-center">
-            <p className="text-red-400 text-sm">
-              Something went wrong. Please try refreshing the page.
+      <main>
+        <SubscribeButtons config={config} />
+        <ErrorBoundary
+          fallback={
+            <div className="py-12 px-5 text-center">
+              <p className="text-red-400 text-sm">
+                Something went wrong. Please try refreshing the page.
+              </p>
+            </div>
+          }
+        >
+          <ForecastCards
+            sessions={sessions}
+            isPending={isPending}
+            error={error}
+            weekStart={weekStart}
+            onPrev={goToPrev}
+            onNext={goToNext}
+            onToday={goToToday}
+          />
+        </ErrorBoundary>
+        <section className="py-12 px-5">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-slate-200 font-semibold text-lg mb-3">About</h2>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Wind Calendar exists to give surfers a rough sense of when conditions might be worth
+              checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
+              view into your regular calendar so promising days are visible alongside everything
+              else in your life.
             </p>
           </div>
-        }
-      >
-        <ForecastCards
-          sessions={sessions}
-          isPending={isPending}
-          error={error}
-          weekStart={weekStart}
-          onPrev={goToPrev}
-          onNext={goToNext}
-          onToday={goToToday}
-        />
-      </ErrorBoundary>
-      <section className="py-12 px-5">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-slate-200 font-semibold text-lg mb-3">About</h2>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Wind Calendar exists to give surfers a rough sense of when conditions might be worth
-            checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
-            view into your regular calendar so promising days are visible alongside everything else
-            in your life.
-          </p>
-        </div>
-      </section>
-      <Caveats />
+        </section>
+        <Caveats />
+      </main>
       <Footer />
       <Suspense fallback={null}>
         <Analytics />

@@ -104,7 +104,7 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 ### Must-fix
 
-- [ ] Add `<main>` landmark in `App.tsx`
+- [x] Add `<main>` landmark in `App.tsx`
 - [ ] Add `aria-label` to all sliders in `ConfigForm.tsx` (wind range, wave height, wave period, min session)
 - [ ] Add `aria-live="polite"` region for forecast loading/error/empty state changes
 
