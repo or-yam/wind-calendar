@@ -133,7 +133,10 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
   - File: `tests/integration/api/forecast.test.ts` (14 tests, all passing)
   - Covers: success path, error responses (400/429/502/504), query params, headers, JSON structure
   - Note: Shares mock setup with calendar tests (could be DRYed via helper in future)
-- [ ] Unit tests for `server/utils/rate-limit.ts` — sliding window, cleanup, edge cases
+- [x] Unit tests for `server/utils/rate-limit.ts` — sliding window, cleanup, edge cases
+  - File: `tests/unit/utils/rate-limit.test.ts` (14 tests, all passing)
+  - Covers: basic rate limiting, sliding window, cleanup threshold, retryAfter calculation, IP isolation
+  - Note: State reset relies on time-based cleanup (Map not directly accessible). Could add `__resetForTesting()` for better isolation
 - [ ] Unit tests for `server/utils/timezone.ts` — daylight filtering, UTC offsets
 
 ### Medium priority
