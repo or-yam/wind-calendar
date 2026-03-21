@@ -54,8 +54,9 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 ## Phase 2 — Responsive & UX
 
 > **Goal:** Make the app usable on mobile. Minimum viable — fix layout breaks, not a redesign.
-> **Branch:** `launch/responsive`
+> **Branch:** `feat/ui-updates`
 > **Depends on:** Phase 1
+> **Status:** Mostly done — see remaining items below
 
 ### Responsive Fixes
 
@@ -74,12 +75,13 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 ### UX Fixes
 
-- [ ] **Empty state** — when all 7 days show dashes, display "No sessions match your filters this week"
+- [x] **Empty state** — when all 7 days show dashes, display "No sessions match your filters this week"
   - Current: renders empty card with `―` but no message when all 7 days are empty
+  - Done: Added `weekSessions.length === 0` check in ForecastCards.tsx ternary, renders message instead of 7 empty cards
 - [x] **Week range** — render `formatWeekRange` near Prev/Today/Next (the function exists but is never called)
   - Current: `formatWeekRange` in `date-utils.ts:70` is imported nowhere
   - Done: Added to ForecastCards.tsx between Prev/Next buttons
-- [ ] **Loading flash** — init `loading: true` in `useCalendarFeed.ts` to avoid 1-frame empty grid
+- [x] **Loading flash** — init `loading: true` in `useCalendarFeed.ts` to avoid 1-frame empty grid
   - N/A: React Query's `isPending` handles this (hook was removed, now uses `useQuery`)
 - [ ] **Copy failure** — show user feedback when `navigator.clipboard.writeText` fails
   - Current: only `console.error` in catch block, no user-facing feedback
@@ -87,6 +89,7 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 ### Verification
 
 - [x] ForecastCards horizontal scroll verified at 375px (cards scroll with snap)
+- [x] Empty state message verified via browser screenshot (app running at localhost:3000)
 - [ ] Test on 390px (iPhone 14), 412px (Pixel)
 - [ ] No horizontal page overflow on any viewport
 - [ ] Touch targets >= 44px on interactive elements
@@ -96,7 +99,7 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 ## Phase 3 — Accessibility
 
 > **Goal:** Meet baseline a11y. Landmarks, labels, contrast.
-> **Branch:** `launch/accessibility`
+> **Branch:** `feat/ui-updates` (continuing from Phase 2)
 > **Depends on:** Phase 2 (responsive changes affect DOM structure)
 
 ### Must-fix

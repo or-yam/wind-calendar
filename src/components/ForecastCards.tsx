@@ -100,6 +100,10 @@ export function ForecastCards({
           </div>
         ) : error ? (
           <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
+        ) : weekSessions.length === 0 ? (
+          <p className="text-slate-400 text-sm text-center py-8">
+            No sessions match your filters this week
+          </p>
         ) : (
           <div className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
