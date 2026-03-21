@@ -129,7 +129,10 @@ Each phase = its own PR. Phases must be completed in order (later phases depend 
 
 ### High priority
 
-- [ ] Integration tests for `/api/forecast` — mirrors existing `/api/calendar` test structure
+- [x] Integration tests for `/api/forecast` — mirrors existing `/api/calendar` test structure
+  - File: `tests/integration/api/forecast.test.ts` (14 tests, all passing)
+  - Covers: success path, error responses (400/429/502/504), query params, headers, JSON structure
+  - Note: Shares mock setup with calendar tests (could be DRYed via helper in future)
 - [ ] Unit tests for `server/utils/rate-limit.ts` — sliding window, cleanup, edge cases
 - [ ] Unit tests for `server/utils/timezone.ts` — daylight filtering, UTC offsets
 
