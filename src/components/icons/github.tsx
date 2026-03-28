@@ -10,6 +10,7 @@ export const GithubIcon = ({ size, width, height, ...props }: IconProps) => {
       xmlns="http://www.w3.org/2000/svg"
       width={size ?? width ?? 24}
       height={size ?? height ?? 24}
+      fill="currentColor"
       {...props}
     >
       <title>GitHub</title>

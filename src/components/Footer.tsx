@@ -10,7 +10,7 @@ export function Footer() {
             href="https://github.com/or-yam/wind-calendar"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-slate-300 transition-colors"
+            className="text-white hover:text-gray-300 transition-colors"
             aria-label="GitHub repository"
           >
             <GithubIcon size={18} />
