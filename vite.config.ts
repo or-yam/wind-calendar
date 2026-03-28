@@ -1,8 +1,12 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Inject Content-Security-Policy meta tag based on build mode.
