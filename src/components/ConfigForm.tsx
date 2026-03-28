@@ -280,16 +280,17 @@ export function ConfigForm({
           </Label>
           <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
         </div>
-        <Slider
-          id="min-session"
-          aria-label="Minimum session duration in hours"
-          value={[localSession]}
-          onValueChange={([v]) => setLocalSession(v)}
-          onValueCommit={([v]) => onMinSessionHoursChange(v)}
-          min={0.5}
-          max={8}
-          step={0.5}
-        />
+        <div aria-label="Minimum session duration in hours">
+          <Slider
+            id="min-session"
+            value={[localSession]}
+            onValueChange={([v]) => setLocalSession(v)}
+            onValueCommit={([v]) => onMinSessionHoursChange(v)}
+            min={0.5}
+            max={8}
+            step={0.5}
+          />
+        </div>
       </div>
     </form>
   );
