@@ -79,7 +79,7 @@ export function ForecastCards({
           <Button variant="ghost" onClick={onPrev}>
             ← Prev
           </Button>
-          <span className="text-sm text-slate-400 font-medium min-w-[140px] text-center">
+          <span className="text-sm text-slate-300 font-medium min-w-[140px] text-center">
             {formatWeekRange(weekStart)}
           </span>
           <Button variant="ghost" onClick={onNext}>
@@ -106,7 +106,7 @@ export function ForecastCards({
             {error.message}
           </p>
         ) : weekSessions.length === 0 ? (
-          <p aria-live="polite" className="text-slate-400 text-sm text-center py-8">
+          <p aria-live="polite" className="text-slate-300 text-sm text-center py-8">
             No sessions match your filters this week
           </p>
         ) : (
@@ -126,10 +126,10 @@ export function ForecastCards({
                     className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 opacity-60 border-l-4 aspect-[3/2] flex flex-col items-center justify-center snap-center"
                     style={{ borderLeftColor: "#FFFFFF" }}
                   >
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
+                    <p className="text-[10px] font-semibold text-slate-300 uppercase mb-1">
                       {formatDayLabel(day)}
                     </p>
-                    <p className="text-2xl text-slate-500">―</p>
+                    <p className="text-2xl text-slate-400">―</p>
                   </div>
                 );
               }
@@ -164,7 +164,7 @@ export function ForecastCards({
                     className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 aspect-[3/2] snap-center"
                     style={{ borderLeftColor: borderColor }}
                   >
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase mb-0.5">
+                    <p className="text-[10px] font-semibold text-slate-300 uppercase mb-0.5">
                       {formatDayLabel(start)}
                     </p>
                     <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>

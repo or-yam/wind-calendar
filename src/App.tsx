@@ -160,7 +160,7 @@ function App() {
         <section className="py-12 px-5">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-slate-200 font-semibold text-lg mb-3">About</h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-slate-300 text-sm leading-relaxed">
               Wind Calendar exists to give surfers a rough sense of when conditions might be worth
               checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
               view into your regular calendar so promising days are visible alongside everything

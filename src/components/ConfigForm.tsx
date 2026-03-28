@@ -167,6 +167,7 @@ export function ConfigForm({
           <div className="flex items-center gap-2">
             <Switch
               id="wind-toggle"
+              aria-label="Toggle wind forecast"
               checked={windEnabled}
               onCheckedChange={onWindEnabledChange}
               disabled={isOnlyActive("wind")}
@@ -203,6 +204,7 @@ export function ConfigForm({
           <div className="flex items-center gap-2">
             <Switch
               id="wave-toggle"
+              aria-label="Toggle wave forecast"
               checked={waveEnabled}
               onCheckedChange={onWaveEnabledChange}
               disabled={isOnlyActive("wave")}
