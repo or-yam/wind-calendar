@@ -183,18 +183,19 @@ export function ConfigForm({
           )}
         </div>
         {windEnabled && (
-          <Slider
-            aria-label="Wind speed range in knots"
-            value={localWind}
-            onValueChange={setLocalWind}
-            onValueCommit={([min, max]) => {
-              onWindMinChange(min);
-              onWindMaxChange(max);
-            }}
-            min={5}
-            max={50}
-            step={1}
-          />
+          <div aria-label="Wind speed range in knots">
+            <Slider
+              value={localWind}
+              onValueChange={setLocalWind}
+              onValueCommit={([min, max]) => {
+                onWindMinChange(min);
+                onWindMaxChange(max);
+              }}
+              min={5}
+              max={50}
+              step={1}
+            />
+          </div>
         )}
       </div>
 
@@ -240,18 +241,19 @@ export function ConfigForm({
               </div>
             </RadioGroup>
 
-            <Slider
-              aria-label="Wave height range in meters"
-              value={localWaveHeight}
-              onValueChange={setLocalWaveHeight}
-              onValueCommit={([min, max]) => {
-                onWaveHeightMinChange(min);
-                onWaveHeightMaxChange(max);
-              }}
-              min={0}
-              max={8}
-              step={0.1}
-            />
+            <div aria-label="Wave height range in meters">
+              <Slider
+                value={localWaveHeight}
+                onValueChange={setLocalWaveHeight}
+                onValueCommit={([min, max]) => {
+                  onWaveHeightMinChange(min);
+                  onWaveHeightMaxChange(max);
+                }}
+                min={0}
+                max={8}
+                step={0.1}
+              />
+            </div>
 
             <div className="flex items-center justify-between">
               <Label htmlFor="min-period" className="text-slate-300 text-sm">
@@ -259,16 +261,17 @@ export function ConfigForm({
               </Label>
               <span className="text-slate-200 text-sm tabular-nums">{localWavePeriod} s</span>
             </div>
-            <Slider
-              id="min-period"
-              aria-label="Minimum wave period in seconds"
-              value={[localWavePeriod]}
-              onValueChange={([v]) => setLocalWavePeriod(v)}
-              onValueCommit={([v]) => onWavePeriodMinChange(v)}
-              min={0}
-              max={20}
-              step={1}
-            />
+            <div aria-label="Minimum wave period in seconds">
+              <Slider
+                id="min-period"
+                value={[localWavePeriod]}
+                onValueChange={([v]) => setLocalWavePeriod(v)}
+                onValueCommit={([v]) => onWavePeriodMinChange(v)}
+                min={0}
+                max={20}
+                step={1}
+              />
+            </div>
           </div>
         )}
       </div>
