@@ -16,7 +16,7 @@ export function Footer() {
             <GithubIcon size={18} />
           </a>
         </div>
-        <div className="text-xs text-slate-600 text-center">
+        <div className="text-xs text-slate-400 text-center">
           Weather data by{" "}
           <a
             href="https://open-meteo.com/"

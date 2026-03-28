@@ -63,7 +63,7 @@ export function windColor(knots: number): string {
 
 import { TEXT_DARK, TEXT_LIGHT } from "./theme-colors";
 
-const WIND_TEXT_THRESHOLD_KN = 20; // knots - below this, use dark text
+const WIND_TEXT_THRESHOLD_KN = 18; // knots - below this, use dark text
 
 export function windTextColor(knots: number): string {
   return knots <= WIND_TEXT_THRESHOLD_KN ? TEXT_DARK : TEXT_LIGHT;
