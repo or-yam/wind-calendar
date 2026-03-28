@@ -14,6 +14,7 @@
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "check": "pnpm run fmt:check && pnpm run lint && tsc -b && vitest run",
     "preview": "vite preview",
     "prepare": "husky"
@@ -47,6 +48,7 @@
     "@vercel/config": "^0.1.0",
     "@vercel/node": "^5.6.22",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.42.0",
