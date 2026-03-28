@@ -278,22 +278,21 @@ export function ConfigForm({
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <Label htmlFor="min-session" className="text-slate-200">
+          <Label id="min-session-label" htmlFor="min-session" className="text-slate-200">
             Min Session
           </Label>
           <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
         </div>
-        <div aria-label="Minimum session duration in hours">
-          <Slider
-            id="min-session"
-            value={[localSession]}
-            onValueChange={([v]) => setLocalSession(v)}
-            onValueCommit={([v]) => onMinSessionHoursChange(v)}
-            min={0.5}
-            max={8}
-            step={0.5}
-          />
-        </div>
+        <Slider
+          id="min-session"
+          aria-labelledby="min-session-label"
+          value={[localSession]}
+          onValueChange={([v]) => setLocalSession(v)}
+          onValueCommit={([v]) => onMinSessionHoursChange(v)}
+          min={0.5}
+          max={8}
+          step={0.5}
+        />
       </div>
     </form>
   );
