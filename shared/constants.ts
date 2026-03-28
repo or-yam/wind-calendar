@@ -1,4 +1,5 @@
 export const DEFAULTS = {
+  location: "beit-yanai",
   minSessionHours: 2,
   model: 3,
 

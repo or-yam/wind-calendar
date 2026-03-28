@@ -18,7 +18,7 @@ export function Caveats() {
             <AccordionTrigger className="text-slate-200 font-medium">
               Sync Frequency
             </AccordionTrigger>
-            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+            <AccordionContent className="text-slate-300 text-sm leading-relaxed">
               Calendar refresh rates vary by provider: Apple Calendar ~15 minutes (configurable),
               Google Calendar ~12–24 hours (can't be changed), Outlook ~12 hours. Changes to your
               wind settings won't appear instantly.
@@ -32,7 +32,7 @@ export function Caveats() {
             <AccordionTrigger className="text-slate-200 font-medium">
               Forecast Accuracy
             </AccordionTrigger>
-            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+            <AccordionContent className="text-slate-300 text-sm leading-relaxed">
               Wind predictions are forecasts, not guarantees. Always check current conditions before
               heading out. Data is sourced from third-party weather APIs and may differ from
               reality.
@@ -46,7 +46,7 @@ export function Caveats() {
             <AccordionTrigger className="text-slate-200 font-medium">
               Where does the forecast data come from?
             </AccordionTrigger>
-            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+            <AccordionContent className="text-slate-300 text-sm leading-relaxed">
               Forecast data is sourced from Open-Meteo (primary) or Windguru (fallback) using public
               weather model data (GFS, ICON, GDPS, IFS-HRES) from NOAA, DWD, CMC, and ECMWF. Wind
               predictions beyond 2–3 days are inherently uncertain. Treat them as rough guidance,
@@ -61,7 +61,7 @@ export function Caveats() {
             <AccordionTrigger className="text-slate-200 font-medium">
               Session Definition
             </AccordionTrigger>
-            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+            <AccordionContent className="text-slate-300 text-sm leading-relaxed">
               A "session" is any consecutive block of hours where wind speed stays within your
               configured range. Events shorter than your minimum session hours are filtered out.
             </AccordionContent>
@@ -74,7 +74,7 @@ export function Caveats() {
             <AccordionTrigger className="text-slate-200 font-medium">
               Daylight Hours
             </AccordionTrigger>
-            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+            <AccordionContent className="text-slate-300 text-sm leading-relaxed">
               Only daylight hours (sunrise to sunset) are shown. Sessions starting before sunrise or
               after sunset are filtered out.
             </AccordionContent>
@@ -85,7 +85,7 @@ export function Caveats() {
             className="bg-[#111827] border border-[#1F2937] rounded-lg px-4"
           >
             <AccordionTrigger className="text-slate-200 font-medium">Timezone</AccordionTrigger>
-            <AccordionContent className="text-slate-400 text-sm leading-relaxed">
+            <AccordionContent className="text-slate-300 text-sm leading-relaxed">
               All times are displayed in your local timezone. Events are stored in UTC and converted
               for display.
             </AccordionContent>

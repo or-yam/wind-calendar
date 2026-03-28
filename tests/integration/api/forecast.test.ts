@@ -1,195 +1,283 @@
 import { describe, it, expect } from "vitest";
-import { getForecast } from "../../../server/windguru/forecast";
-import type { SpotInfo, ModelForecast } from "../../../server/types/forecast";
+import handler from "../../../api/forecast";
+import type { ForecastResponse } from "../../../shared/forecast-types";
+import { installWindguruMock } from "../../helpers/windguru-mocks";
+import { mockVercelRequest, mockVercelResponse } from "../../helpers/vercel-mocks";
 
-const mockSpotInfo: SpotInfo = {
-  tabs: [
-    {
-      id_spot: "771",
-      lat: 32.38,
-      lon: 34.87,
-      id_model: 1,
-      model_period: 3,
-      options: {
-        wj: "",
-        tj: "",
-        waj: "",
-        tij: "",
-        odh: 0,
-        doh: 0,
-        fhours: 0,
-        limit1: 0,
-        limit2: 0,
-        limit3: 0,
-        tlimit: 0,
-        vt: "",
-        wrapnew: undefined,
-        show_flhgt_opt: 0,
-        map_open_fn: "",
-        params: [],
-        var_map: undefined,
-        tide: {
-          style: "",
-          min: 0,
-        },
-      },
-      id_model_arr: [
-        {
-          id_model: 1,
-          rundef: "run1",
-          period: 3,
-          initstr: "",
-          cachefix: "cachefix1",
-        },
-      ],
-      share: false,
-    },
-  ],
-  spots: {
-    "771": {
-      id_spot: "771",
-      id_user: "1",
-      spotname: "Tel Aviv",
-      country: "Israel",
-      id_country: 1,
-      lat: 32.38,
-      lon: 34.87,
-      alt: 0,
-      tz: "Asia/Jerusalem",
-      tzid: "Asia/Jerusalem",
-      gmt_hour_offset: 2,
-      sunrise: "06:00",
-      sunset: "19:00",
-      sst: 20,
-      models: [1, 2],
-      tides: "",
-      tide: {
-        "2N2": [],
-        EPS2: [],
-        J1: [],
-        K1: [],
-      } as any,
-    },
-  },
-  tabs_hidden: [],
-  message: "",
-};
-
-const createMockForecast = (id: number): ModelForecast => ({
-  id_model: id,
-  model_name: `Model ${id}`,
-  resolution: id === 1 ? 27 : 13,
-  initdate: new Date().toISOString(),
-  forecast: {
-    initstamp: Date.now() / 1000,
-    hours: [0, 3, 6],
-    WINDSPD: [10, 12, 14],
-    WINDDIR: [180, 185, 190],
-    GUST: [15, 17, 19],
-    initdate: new Date().toISOString(),
-    model_name: `Model ${id}`,
-    id_model: id,
-  },
-});
-
-describe("getForecast", () => {
-  it("should return single model forecast when modelId is provided", async () => {
-    const originalFetch = globalThis.fetch;
+describe("forecast API handler", () => {
+  it("full pipeline: returns JSON forecast with sessions", async () => {
+    const cleanup = installWindguruMock();
     try {
-      globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
-        const url = input.toString();
-        const urlObj = new URL(url);
-        const params = Object.fromEntries(urlObj.searchParams);
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
 
-        if (params.q === "forecast_spot") {
-          return new Response(JSON.stringify(mockSpotInfo));
-        }
+      await handler(req, res);
 
-        if (params.q === "forecast") {
-          const modelId = parseInt(params.id_model);
-          return new Response(JSON.stringify(createMockForecast(modelId)));
-        }
+      expect(result.statusCode).toBe(200);
+      expect(result.headers["content-type"]).toBe("application/json; charset=utf-8");
+      expect(result.headers["cache-control"]).toBe(
+        "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
+      );
 
-        throw new Error(`Unexpected URL: ${url}`);
-      };
-
-      const result = await getForecast("771", 1);
-      expect(result.id_model).toBe(1);
-      expect("source_models" in result).toBe(false);
+      const body = result.json as ForecastResponse;
+      expect(body.meta).toBeDefined();
+      expect(body.meta.location).toBe("beit-yanai");
+      expect(body.meta.dataSource).toBe("windguru");
+      expect(body.sessions).toBeInstanceOf(Array);
     } finally {
-      globalThis.fetch = originalFetch;
+      cleanup();
     }
   });
 
-  it("should throw if requested model is not available", async () => {
-    const originalFetch = globalThis.fetch;
+  it("unknown location returns 400", async () => {
+    const cleanup = installWindguruMock();
     try {
-      globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
-        const url = input.toString();
-        const urlObj = new URL(url);
-        const params = Object.fromEntries(urlObj.searchParams);
+      const req = mockVercelRequest("/api/forecast?location=unknown");
+      const { res, result } = mockVercelResponse();
 
-        if (params.q === "forecast_spot") {
-          return new Response(JSON.stringify(mockSpotInfo));
-        }
+      await handler(req, res);
 
-        throw new Error(`Unexpected URL: ${url}`);
-      };
-
-      await expect(() => getForecast("771", 999)).rejects.toThrow(/Model 999 not available/);
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error).toContain("Unknown location");
     } finally {
-      globalThis.fetch = originalFetch;
+      cleanup();
     }
   });
 
-  /* it("should handle failed model fetches gracefully", async () => {
-    const originalFetch = globalThis.fetch;
+  it("Windguru failure returns 502 with structured error", async () => {
+    const cleanup = installWindguruMock(
+      () => new Response("Internal Server Error", { status: 500 }),
+    );
     try {
-      globalThis.fetch = async (
-        input: string | URL | Request,
-        init?: RequestInit,
-      ) => {
-        const url = input.toString();
-        const urlObj = new URL(url);
-        const params = Object.fromEntries(urlObj.searchParams);
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
 
-        if (params.q === "forecast_spot") {
-          return new Response(JSON.stringify(mockSpotInfo));
-        }
+      await handler(req, res);
 
-        if (params.q === "forecast" && params.id_model === "1") {
-          return new Response("Error", { status: 500 });
-        }
-
-        const modelId = parseInt(params.id_model);
-        return new Response(JSON.stringify(createMockForecast(modelId)));
-      };
-
-      const result = await getForecast("771");
-      expect("source_models" in result).toBe(true);
+      expect(result.statusCode).toBe(502);
+      const body = JSON.parse(result.body);
+      expect(body.code).toBe("WINDGURU_DOWN");
+      expect(body.error).toBe("Windguru is temporarily unavailable");
+      expect(body.suggestion).toBeTruthy();
+      expect(body.debug?.locationInfo).toBeTruthy();
+      expect(body.debug.upstreamStatus).toBe(500);
     } finally {
-      globalThis.fetch = originalFetch;
+      cleanup();
     }
-  }); */
+  });
 
-  it("should throw if model fetch fails", async () => {
-    const originalFetch = globalThis.fetch;
+  it("query param overrides work", async () => {
+    // windMin=20 — mock wind is 15kn, so no sessions match
+    const cleanup = installWindguruMock();
     try {
-      globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
-        const url = input.toString();
-        const urlObj = new URL(url);
-        const params = Object.fromEntries(urlObj.searchParams);
+      const req = mockVercelRequest("/api/forecast?windMin=20");
+      const { res, result } = mockVercelResponse();
 
-        if (params.q === "forecast_spot") {
-          return new Response(JSON.stringify(mockSpotInfo));
-        }
+      await handler(req, res);
 
-        return new Response("Error", { status: 500 });
-      };
-
-      await expect(() => getForecast("771", 1)).rejects.toThrow(/Failed to fetch model 1/);
+      expect(result.statusCode).toBe(200);
+      const body = result.json as ForecastResponse;
+      expect(body.sessions).toHaveLength(0);
     } finally {
-      globalThis.fetch = originalFetch;
+      cleanup();
+    }
+  });
+
+  it("sessions contain wind and wave data", async () => {
+    const cleanup = installWindguruMock();
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(200);
+      const body = result.json as ForecastResponse;
+      expect(body.sessions.length).toBeGreaterThan(0);
+
+      const session = body.sessions[0];
+      expect(session.start).toBeDefined();
+      expect(session.end).toBeDefined();
+      expect(session.wind).toBeDefined();
+      expect(session.wind.min).toBeGreaterThan(0);
+      expect(session.wind.max).toBeGreaterThanOrEqual(session.wind.min);
+      expect(session.hourly).toBeInstanceOf(Array);
+      expect(session.hourly.length).toBeGreaterThan(0);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("Windguru 429 returns 429 with rate limit info", async () => {
+    const cleanup = installWindguruMock(() => new Response("Rate limited", { status: 429 }));
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(429);
+      const body = JSON.parse(result.body);
+      expect(body.code).toBe("WINDGURU_RATE_LIMIT");
+      expect(body.suggestion).toContain("5 minutes");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("Windguru 403 returns 502 with forbidden info", async () => {
+    const cleanup = installWindguruMock(() => new Response("Forbidden", { status: 403 }));
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(502);
+      const body = JSON.parse(result.body);
+      expect(body.code).toBe("WINDGURU_FORBIDDEN");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("Windguru 404 returns 502 with not found info", async () => {
+    const cleanup = installWindguruMock(() => new Response("Not Found", { status: 404 }));
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(502);
+      const body = JSON.parse(result.body);
+      expect(body.code).toBe("WINDGURU_NOT_FOUND");
+      expect(body.suggestion).toContain("spot ID");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("network failure returns 504 with unreachable info", async () => {
+    const cleanup = installWindguruMock(() => {
+      throw new TypeError("fetch failed");
+    });
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(504);
+      const body = JSON.parse(result.body);
+      expect(body.code).toBe("WINDGURU_UNREACHABLE");
+      expect(body.debug?.locationInfo).toBeTruthy();
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("malformed JSON response returns 502 with bad response info", async () => {
+    const cleanup = installWindguruMock(() => new Response("not json {{{", { status: 200 }));
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(502);
+      const body = JSON.parse(result.body);
+      expect(body.code).toBe("WINDGURU_BAD_RESPONSE");
+      expect(body.debug?.upstreamStatus).toBe(200);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("wave model failure is non-fatal — still returns forecast", async () => {
+    const cleanup = installWindguruMock((url) => {
+      const params = Object.fromEntries(url.searchParams);
+      // Wave model (84) fails, wind model (3) succeeds
+      if (params.q === "forecast" && params.id_model === "84") {
+        return new Response("Wave model error", { status: 500 });
+      }
+      return null;
+    });
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(200);
+      const body = result.json as ForecastResponse;
+      expect(body.sessions).toBeDefined();
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("all error responses include debug.locationInfo", async () => {
+    const errorResponders: Array<{ name: string; responder: () => Response }> = [
+      { name: "500", responder: () => new Response("error", { status: 500 }) },
+      { name: "429", responder: () => new Response("error", { status: 429 }) },
+      { name: "403", responder: () => new Response("error", { status: 403 }) },
+      { name: "404", responder: () => new Response("error", { status: 404 }) },
+    ];
+
+    for (const { responder } of errorResponders) {
+      const cleanup = installWindguruMock(() => responder());
+      try {
+        const req = mockVercelRequest("/api/forecast");
+        const { res, result } = mockVercelResponse();
+
+        await handler(req, res);
+
+        const body = JSON.parse(result.body);
+        expect(body.debug?.locationInfo).toBeTruthy();
+        expect(body.code).toBeTruthy();
+      } finally {
+        cleanup();
+      }
+    }
+  });
+
+  it("X-Data-Source header is set", async () => {
+    const cleanup = installWindguruMock();
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(200);
+      expect(result.headers["x-data-source"]).toBe("windguru");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("hourly conditions include all expected fields", async () => {
+    const cleanup = installWindguruMock();
+    try {
+      const req = mockVercelRequest("/api/forecast");
+      const { res, result } = mockVercelResponse();
+
+      await handler(req, res);
+
+      expect(result.statusCode).toBe(200);
+      const body = result.json as ForecastResponse;
+      const session = body.sessions[0];
+      const condition = session.hourly[0];
+
+      expect(condition.time).toBeDefined();
+      expect(condition.windSpeed).toBeDefined();
+      expect(condition.windGusts).toBeDefined();
+      expect(condition.windDirection).toBeDefined();
+      expect(condition.windDirectionDeg).toBeDefined();
+    } finally {
+      cleanup();
     }
   });
 });
