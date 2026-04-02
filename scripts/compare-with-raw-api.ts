@@ -4,9 +4,9 @@
  * to ensure data integrity through the pipeline
  */
 
-import { fetchForecast, fetchMarine } from "../server/open-meteo/fetch.js";
-import { fetchOpenMeteoData } from "../server/open-meteo/forecast.js";
-import { LOCATIONS } from "../shared/locations.js";
+import { fetchForecast, fetchMarine } from "../server/open-meteo/fetch";
+import { fetchOpenMeteoData } from "../server/open-meteo/forecast";
+import { LOCATIONS } from "../shared/locations";
 
 async function main() {
   const location = LOCATIONS["tel-aviv"];

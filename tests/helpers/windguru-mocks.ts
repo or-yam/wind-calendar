@@ -1,8 +1,6 @@
-import type { SpotInfo } from "../../server/types/forecast.js";
-import type { APIRoot } from "../../server/types/api-response.js";
+import type { SpotInfo } from "../../server/types/forecast";
+import type { APIRoot } from "../../server/types/api-response";
 
-// initstamp in 2030, starting at midnight UTC on June 15, 2030
-// That's a date where daylight hours (7-18 Asia/Jerusalem = 4-15 UTC) will work.
 export const FUTURE_INITSTAMP = Math.floor(new Date("2030-06-15T00:00:00Z").getTime() / 1000);
 
 export const mockSpotInfo: SpotInfo = {
@@ -157,10 +155,8 @@ export function buildMockAPIRoot(windSpeeds: number[], hours?: number[]): APIRoo
   } as APIRoot;
 }
 
-// Realistic Windguru-style offsets: hourly 3..23, then 3-hourly 24,27,30,...
-// 21 hourly points (hours 3-23) + 6 three-hourly points (24,27,30,33,36,39) = 27 points.
 export const realisticHours = [
-  ...Array.from({ length: 21 }, (_, i) => i + 3), // 3,4,5,...,23
+  ...Array.from({ length: 21 }, (_, i) => i + 3),
   24,
   27,
   30,
@@ -169,41 +165,36 @@ export const realisticHours = [
   39,
 ];
 
-// Asia/Jerusalem is UTC+3 in June, so UTC hour 4 = local 7, UTC hour 15 = local 18.
-// Put 15kn wind at hour offsets 4-14 (local 7-17), rest 5kn.
 export const goodWindSpeeds = realisticHours.map((h) => (h >= 4 && h <= 14 ? 15 : 5));
 
 export const mockAPIRoot = buildMockAPIRoot(goodWindSpeeds, realisticHours);
 
-/**
- * Install a global fetch mock for Windguru API requests.
- * Returns cleanup function to restore original fetch.
- *
- * @param responder - Optional custom responder for specific test cases.
- *                    Return null to fall through to default mock.
- */
-export function installWindguruMock(responder?: (url: URL) => Response | null): () => void {
-  const originalFetch = globalThis.fetch;
+export const mockWindData = buildMockAPIRoot(goodWindSpeeds, realisticHours);
 
-  globalThis.fetch = async (input: string | URL | Request, _init?: RequestInit) => {
-    const url = new URL(input.toString());
-    const params = Object.fromEntries(url.searchParams);
-
-    if (responder) {
-      const custom = responder(url);
-      if (custom) return custom;
-    }
-
-    if (params.q === "forecast_spot") {
-      return new Response(JSON.stringify(mockSpotInfo));
-    }
-    if (params.q === "forecast") {
-      return new Response(JSON.stringify(mockAPIRoot));
-    }
-    throw new Error(`Unexpected fetch: ${url}`);
-  };
-
-  return () => {
-    globalThis.fetch = originalFetch;
+export function createWindguruMockModule() {
+  return {
+    fetchWindData: vi.fn().mockImplementation(async (locationCode: string, _modelId: number) => {
+      if (locationCode === "unknown") {
+        const error = new Error("Unknown location");
+        (error as any).status = 404;
+        throw error;
+      }
+      return {
+        windData: mockWindData.fcst.WINDSPD.map((windSpeed, i) => ({
+          date: new Date((mockWindData.fcst.initstamp + mockWindData.fcst.hours[i] * 3600) * 1000),
+          windSpeed,
+          windGusts: mockWindData.fcst.GUST?.[i] ?? null,
+          windDirection: mockWindData.fcst.WINDDIR?.[i] ?? null,
+          waveHeight: null,
+          wavePeriod: null,
+          waveDirection: null,
+          swellHeight: null,
+          swellPeriod: null,
+          swellDirection: null,
+        })),
+        sunrise: mockWindData.sunrise,
+        sunset: mockWindData.sunset,
+      };
+    }),
   };
 }

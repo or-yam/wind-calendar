@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getLocalHour, toLocalTimeString } from "../../../server/utils/timezone.js";
+import { getLocalHour, toLocalTimeString } from "../../../server/utils/timezone";
 
 describe("getLocalHour", () => {
   describe("happy path", () => {

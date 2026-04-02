@@ -7,7 +7,7 @@ import {
   getProvider,
   getOpenMeteoSlug,
   getWindguruFallback,
-} from "../../../shared/models.js";
+} from "../../../shared/models";
 
 describe("MODELS constant", () => {
   it("contains expected Windguru models", () => {

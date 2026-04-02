@@ -8,7 +8,7 @@ import {
   formatTime,
   formatTimeFromDate,
   getDayNames,
-} from "../../../src/lib/date-utils.js";
+} from "../../../src/lib/date-utils";
 
 describe("getWeekStart", () => {
   describe("happy path", () => {

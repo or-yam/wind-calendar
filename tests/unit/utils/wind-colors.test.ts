@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { windColor, windTextColor } from "../../../src/lib/wind-colors.js";
+import { windColor, windTextColor } from "../../../src/lib/wind-colors";
 
 describe("windColor", () => {
   describe("happy path - Beaufort-like scale stops", () => {

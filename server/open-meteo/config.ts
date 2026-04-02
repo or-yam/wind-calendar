@@ -3,8 +3,8 @@
  * Isolated from Windguru flow.
  */
 
-import { LOCATIONS } from "../../shared/locations.js";
-import { OPEN_METEO_MODELS, isValidOpenMeteoModelId, type OpenMeteoModelId } from "./models.js";
+import { LOCATIONS } from "../../shared/locations";
+import { OPEN_METEO_MODELS, isValidOpenMeteoModelId, type OpenMeteoModelId } from "./models";
 
 export interface OpenMeteoCalendarConfig {
   location: string;

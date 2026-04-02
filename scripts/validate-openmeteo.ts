@@ -6,9 +6,9 @@
  * 3. Verify data integrity (timestamps, wind, waves)
  */
 
-import { fetchOpenMeteoData } from "../server/open-meteo/forecast.js";
-import { LOCATIONS } from "../shared/locations.js";
-import { OPEN_METEO_MODELS } from "../server/open-meteo/models.js";
+import { fetchOpenMeteoData } from "../server/open-meteo/forecast";
+import { LOCATIONS } from "../shared/locations";
+import { OPEN_METEO_MODELS } from "../server/open-meteo/models";
 
 async function validateModel(modelId: string, modelSlug: string) {
   const location = LOCATIONS["tel-aviv"];

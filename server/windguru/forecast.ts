@@ -1,5 +1,5 @@
-import { fetchSpotInfo, fetchModelForecast, ApiError } from "./fetch.js";
-import { tryCatch } from "../utils/try-catch.js";
+import { fetchSpotInfo, fetchModelForecast, ApiError } from "./fetch";
+import { tryCatch } from "../utils/try-catch";
 
 export async function getForecast(spotId: string, modelId: number) {
   const { data: spotInfo, error: spotError } = await tryCatch(fetchSpotInfo(spotId));

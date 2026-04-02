@@ -3,7 +3,7 @@ import {
   checkRateLimit,
   __resetForTesting,
   __getMapSizeForTesting,
-} from "../../../server/utils/rate-limit.js";
+} from "../../../server/utils/rate-limit";
 
 const BASE_TIME = 1_000_000;
 

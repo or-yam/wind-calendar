@@ -3,8 +3,8 @@
  * Test Open-Meteo fetch directly
  */
 
-import { fetchOpenMeteoData } from "../server/open-meteo/forecast.js";
-import { LOCATIONS } from "../shared/locations.js";
+import { fetchOpenMeteoData } from "../server/open-meteo/forecast";
+import { LOCATIONS } from "../shared/locations";
 
 async function main() {
   const location = LOCATIONS["tel-aviv"];

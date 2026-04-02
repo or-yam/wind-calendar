@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseOpenMeteoQueryParams,
   resolveOpenMeteoLocation,
-} from "../../../server/open-meteo/config.js";
+} from "../../../server/open-meteo/config";
 
 describe("parseOpenMeteoQueryParams", () => {
   describe("happy path", () => {

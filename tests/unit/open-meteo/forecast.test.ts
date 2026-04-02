@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { fetchOpenMeteoData } from "../../../server/open-meteo/forecast.js";
+import { fetchOpenMeteoData } from "../../../server/open-meteo/forecast";
 import type {
   OpenMeteoForecastResponse,
   OpenMeteoMarineResponse,
-} from "../../../server/open-meteo/types.js";
+} from "../../../server/open-meteo/types";
 
 // --- Mock Data ---
 
