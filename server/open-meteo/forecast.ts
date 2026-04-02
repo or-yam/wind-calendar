@@ -1,7 +1,7 @@
-import type { WindConditionRaw } from "../types/wind-conditions.js";
-import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types.js";
-import { fetchForecast, fetchMarine } from "./fetch.js";
-import { tryCatch } from "../utils/try-catch.js";
+import type { WindConditionRaw } from "../types/wind-conditions";
+import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
+import { fetchForecast, fetchMarine } from "./fetch";
+import { tryCatch } from "../utils/try-catch";
 
 /**
  * Parse ISO 8601 timestamp to "HH:MM" string.

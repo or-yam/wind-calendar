@@ -1,4 +1,4 @@
-import { MODELS } from "../../shared/models.js";
+import { MODELS } from "../../shared/models";
 
 // Derive Open-Meteo model slugs from shared model definitions
 export const OPEN_METEO_MODELS = Object.fromEntries(

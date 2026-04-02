@@ -1,22 +1,18 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { defineHandler } from "nitro";
+import { getQuery, setHeader, createError } from "nitro/h3";
 
-import type { CalendarConfig } from "../shared/types.js";
+import type { CalendarConfig } from "../../shared/types";
 import type {
   HourlyCondition,
   ForecastSession,
   ForecastResponse,
-} from "../shared/forecast-types.js";
-import { parseQueryParams, resolveLocation } from "../server/config.js";
-import { filterEvents } from "../server/utils/filterEvents.js";
-import { groupSessions, degreesToCardinal, type Session } from "../server/utils/groupSessions.js";
-import { checkRateLimit } from "../server/utils/rate-limit.js";
-import {
-  isDev,
-  getClientIp,
-  setDevCors,
-  resolveForecastData,
-} from "../server/utils/api-handler.js";
-import type { WindConditionRaw } from "../server/types/wind-conditions.js";
+} from "../../shared/forecast-types";
+import { parseQueryParams, resolveLocation } from "../config";
+import { filterEvents } from "../utils/filterEvents";
+import { groupSessions, degreesToCardinal, type Session } from "../utils/groupSessions";
+import { checkRateLimit } from "../utils/rate-limit";
+import { isDev, getClientIp, resolveForecastData } from "../utils/api-handler";
+import type { WindConditionRaw } from "../types/wind-conditions";
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
   return {
@@ -57,43 +53,62 @@ function serializeSession(session: Session): ForecastSession {
   };
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!req.url) {
-    return res.status(400).json({ error: "Missing request URL" });
-  }
-  const url = new URL(req.url, `http://${req.headers.host}`);
-
+export default defineHandler(async (event) => {
   const dev = isDev();
-  if (dev) {
-    setDevCors(res);
-    if (req.method === "OPTIONS") {
-      return res.status(200).end();
-    }
-  }
 
-  const rateCheck = checkRateLimit(getClientIp(req));
+  const rateCheck = checkRateLimit(getClientIp(event));
   if (rateCheck.limited) {
-    res.setHeader("Retry-After", rateCheck.retryAfter.toString());
-    return res.status(429).json({
-      error: "Too many requests",
-      code: "RATE_LIMITED",
-      suggestion: `Try again in ${rateCheck.retryAfter} seconds`,
+    setHeader(event, "Retry-After", rateCheck.retryAfter.toString());
+    throw createError({
+      statusCode: 429,
+      statusMessage: "Too Many Requests",
+      data: {
+        error: "Too many requests",
+        code: "RATE_LIMITED",
+        suggestion: `Try again in ${rateCheck.retryAfter} seconds`,
+      },
     });
   }
 
   let config: CalendarConfig;
   try {
-    config = parseQueryParams(url.searchParams);
+    const query = getQuery(event);
+    const searchParams = new URLSearchParams(
+      Object.fromEntries(Object.entries(query).filter(([, v]) => typeof v === "string")) as Record<
+        string,
+        string
+      >,
+    );
+    config = parseQueryParams(searchParams);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return res.status(400).json({ error: message });
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Bad Request",
+      data: { error: message },
+    });
   }
 
-  const location = resolveLocation(config.location);
+  let location: ReturnType<typeof resolveLocation>;
+  try {
+    location = resolveLocation(config.location);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Bad Request",
+      data: { error: message },
+    });
+  }
+
   const result = await resolveForecastData(config, location, dev);
 
   if (result.success === false) {
-    return res.status(result.status).json(result.body);
+    throw createError({
+      statusCode: result.status,
+      statusMessage: result.body.error,
+      data: result.body,
+    });
   }
 
   const { fetchResult, dataSource, fallbackUsed } = result;
@@ -117,16 +132,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return res.status(500).json({
-      error: "Failed to process forecast data",
-      code: "PIPELINE_ERROR",
-      ...(dev && {
-        debug: {
-          message,
-          spotId: location.spotId,
-          location: config.location,
-        },
-      }),
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Internal Server Error",
+      data: {
+        error: "Failed to process forecast data",
+        code: "PIPELINE_ERROR",
+        ...(dev && {
+          debug: {
+            message,
+            spotId: location.spotId,
+            location: config.location,
+          },
+        }),
+      },
     });
   }
 
@@ -140,14 +159,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sessions: sessions.map(serializeSession),
   };
 
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("X-Data-Source", dataSource);
+  setHeader(event, "Content-Type", "application/json; charset=utf-8");
+  setHeader(event, "X-Data-Source", dataSource);
   if (fallbackUsed) {
-    res.setHeader("X-Fallback-Used", "true");
+    setHeader(event, "X-Fallback-Used", "true");
   }
-  res.setHeader(
+  setHeader(
+    event,
     "Cache-Control",
     "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
   );
-  return res.status(200).json(body);
-}
+  return body;
+});

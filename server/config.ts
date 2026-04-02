@@ -1,7 +1,7 @@
-import type { CalendarConfig, WaveSource } from "../shared/types.js";
-import { DEFAULTS } from "../shared/constants.js";
-import { LOCATIONS } from "../shared/locations.js";
-import { MODELS, isValidModelId } from "../shared/models.js";
+import type { CalendarConfig, WaveSource } from "../shared/types";
+import { DEFAULTS } from "../shared/constants";
+import { LOCATIONS } from "../shared/locations";
+import { MODELS, isValidModelId } from "../shared/models";
 
 function parseFloatParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);

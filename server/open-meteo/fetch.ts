@@ -1,5 +1,5 @@
-import { ApiError } from "../windguru/fetch.js";
-import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types.js";
+import { ApiError } from "../windguru/fetch";
+import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
 
 const FORECAST_BASE_URL = "https://api.open-meteo.com/v1/forecast";
 const MARINE_BASE_URL = "https://marine-api.open-meteo.com/v1/marine";

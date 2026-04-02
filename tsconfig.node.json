@@ -24,5 +24,5 @@
       "@shared/*": ["./shared/*"]
     }
   },
-  "include": ["vite.config.ts", "api/**/*", "server/**/*", "tests/**/*", "shared/**/*"]
+  "include": ["vite.config.ts", "nitro.config.ts", "server/**/*", "tests/**/*", "shared/**/*"]
 }

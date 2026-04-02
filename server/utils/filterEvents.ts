@@ -1,6 +1,6 @@
-import type { WindConditionRaw } from "../types/wind-conditions.js";
-import type { WaveSource } from "../../shared/types.js";
-import { getLocalHour } from "./timezone.js";
+import type { WindConditionRaw } from "../types/wind-conditions";
+import type { WaveSource } from "../../shared/types";
+import { getLocalHour } from "./timezone";
 
 export type MatchReason = "wind" | "wave" | "both";
 

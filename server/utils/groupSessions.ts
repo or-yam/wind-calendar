@@ -1,5 +1,5 @@
-import type { WindConditionRaw } from "../types/wind-conditions.js";
-import type { MatchReason } from "./filterEvents.js";
+import type { WindConditionRaw } from "../types/wind-conditions";
+import type { MatchReason } from "./filterEvents";
 
 export type Session = {
   start: Date;

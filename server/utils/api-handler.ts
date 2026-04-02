@@ -1,8 +1,9 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { ApiError } from "../windguru/fetch.js";
-import { fetchWindData } from "../windguru/api.js";
-import { fetchOpenMeteoData } from "../open-meteo/forecast.js";
-import { tryCatch } from "./try-catch.js";
+import type { H3Event } from "nitro/h3";
+import { getRequestHeader } from "nitro/h3";
+import { ApiError } from "../windguru/fetch";
+import { fetchWindData } from "../windguru/api";
+import { fetchOpenMeteoData } from "../open-meteo/forecast";
+import { tryCatch } from "./try-catch";
 import {
   getProvider,
   getWindguruFallback,
@@ -11,7 +12,7 @@ import {
   type Provider,
   type ModelId,
   type WindguruModelId,
-} from "../../shared/models.js";
+} from "../../shared/models";
 
 export interface ErrorResponse {
   error: string;
@@ -21,23 +22,17 @@ export interface ErrorResponse {
 }
 
 export function isDev(): boolean {
-  return !process.env.VERCEL_ENV || process.env.VERCEL_ENV === "development";
+  return process.env.NODE_ENV !== "production";
 }
 
-export function getClientIp(req: VercelRequest): string {
-  return (
-    (Array.isArray(req.headers["x-forwarded-for"])
-      ? req.headers["x-forwarded-for"][0]
-      : req.headers["x-forwarded-for"]?.split(",")[0]?.trim()) ??
-    req.socket?.remoteAddress ??
-    "unknown"
-  );
-}
+export function getClientIp(event: H3Event): string {
+  const xForwardedFor = getRequestHeader(event, "x-forwarded-for");
+  if (xForwardedFor) {
+    return xForwardedFor.split(",")[0]?.trim() ?? "unknown";
+  }
 
-export function setDevCors(res: VercelResponse): void {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  const remoteAddress = event.node?.req?.socket?.remoteAddress;
+  return remoteAddress ?? "unknown";
 }
 
 export function classifyFetchError(
