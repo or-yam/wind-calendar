@@ -29,12 +29,12 @@ export interface HeroProps {
 
 export function Hero(props: HeroProps) {
   return (
-    <section className="bg-[#0B1220] py-16 px-5">
+    <section className="bg-background py-16 px-5">
       <div className="text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-[42px] font-bold mb-4 tracking-tight bg-linear-to-r from-sky-400 to-cyan-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl md:text-[42px] font-bold mb-4 tracking-tight bg-linear-to-r from-primary to-primary-light bg-clip-text text-transparent">
           Wind Calendar
         </h1>
-        <p className="text-lg text-slate-300 max-w-xl mx-auto leading-relaxed">
+        <p className="text-lg text-secondary-text max-w-xl mx-auto leading-relaxed">
           Auto-sync wind sessions to your calendar. Only see the days worth surfing.
         </p>
       </div>

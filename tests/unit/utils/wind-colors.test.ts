@@ -124,14 +124,14 @@ describe("windTextColor", () => {
 
     it("returns light text above 20kn threshold", () => {
       const textColor = windTextColor(25);
-      expect(textColor).toBe("#E5E7EB"); // TEXT_LIGHT
+      expect(textColor).toBe("#0B1220"); // TEXT_LIGHT
     });
   });
 
   describe("edge cases", () => {
     it("returns dark text at exactly 20kn threshold", () => {
       const textColor = windTextColor(20);
-      expect(textColor).toBe("#E5E7EB"); // at or below uses dark
+      expect(textColor).toBe("#0B1220"); // at or below uses dark
     });
 
     it("returns dark text for 0 knots", () => {

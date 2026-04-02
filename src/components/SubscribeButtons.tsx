@@ -52,62 +52,62 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
   }
 
   const copyIconColor = {
-    idle: "text-sky-400",
-    success: "text-green-400",
-    error: "text-red-400",
+    idle: "text-primary",
+    success: "text-success",
+    error: "text-destructive",
   }[copyState];
 
   const copyText = {
     idle: "Copy URL",
-    success: "Copied!",
+    success: "Copied",
     error: "Copy failed",
   }[copyState];
 
   return (
     <section className="py-12 px-5 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-slate-200 mb-6">Subscribe to Calendar</h2>
+      <h2 className="text-2xl font-semibold text-foreground mb-6">Subscribe to Calendar</h2>
 
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <a href={webcalUrl} className="block">
-            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
+            <div className="bg-card border border-border hover:border-primary transition-colors rounded-lg p-4 flex items-center gap-3">
               <img
                 alt="macOS Calendar logo"
                 src="/macos-calendar_logo.png"
                 className="w-5 h-5 object-contain shrink-0"
               />
-              <strong className="font-semibold text-sm text-slate-200">Apple Calendar</strong>
+              <strong className="font-semibold text-sm text-foreground">Apple Calendar</strong>
             </div>
           </a>
 
           <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="block">
-            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
+            <div className="bg-card border border-border hover:border-primary transition-colors rounded-lg p-4 flex items-center gap-3">
               <img
                 alt="google calendar logo"
                 src="/google_calendar_logo.svg"
                 className="w-5 h-5 object-contain shrink-0"
               />
-              <strong className="font-semibold text-sm text-slate-200">Google Calendar</strong>
+              <strong className="font-semibold text-sm text-foreground">Google Calendar</strong>
             </div>
           </a>
 
           <a href={outlookUrl} target="_blank" rel="noopener noreferrer" className="block">
-            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
+            <div className="bg-card border border-border hover:border-primary transition-colors rounded-lg p-4 flex items-center gap-3">
               <img
                 alt="Microsoft Outlook calendar logo"
                 src="/outlook-calendar_logo.svg"
                 className="w-5 h-5 object-contain shrink-0"
               />
-              <strong className="font-semibold text-sm text-slate-200">Outlook</strong>
+              <strong className="font-semibold text-sm text-foreground">Outlook</strong>
             </div>
           </a>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button type="button" onClick={handleCopyUrl} className="w-full text-left">
-            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
+            <div className="bg-card border border-border hover:border-primary transition-colors rounded-lg p-4 flex items-center gap-3">
               <Copy className={cn("w-5 h-5 shrink-0", copyIconColor)} />
-              <strong className="font-semibold text-sm text-slate-200">{copyText}</strong>
+              <strong className="font-semibold text-sm text-foreground">{copyText}</strong>
               <span className="sr-only" role="status" aria-live="polite">
                 {copyState !== "idle" && copyText}
               </span>
@@ -115,9 +115,9 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
           </button>
 
           <button type="button" onClick={handleDownloadIcs} className="w-full text-left">
-            <div className="bg-[#111827] border border-[#1F2937] hover:border-sky-500 transition-all rounded-lg p-4 flex items-center gap-3">
-              <Download className="text-sky-400 w-5 h-5 shrink-0" />
-              <strong className="font-semibold text-sm text-slate-200">Download .ics</strong>
+            <div className="bg-card border border-border hover:border-primary transition-colors rounded-lg p-4 flex items-center gap-3">
+              <Download className="text-primary w-5 h-5 shrink-0" />
+              <strong className="font-semibold text-sm text-foreground">Download .ics</strong>
             </div>
           </button>
         </div>

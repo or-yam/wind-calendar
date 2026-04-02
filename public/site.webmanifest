@@ -1,6 +1,6 @@
 {
-  "name": "Wind-calendar",
-  "short_name": "Wind-cal",
+  "name": "Wind Calendar",
+  "short_name": "WindCal",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#0a6bc8",
-  "background_color": "#80b3e2",
+  "theme_color": "#0C1322",
+  "background_color": "#0C1322",
   "display": "standalone"
 }

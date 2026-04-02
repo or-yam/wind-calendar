@@ -43,10 +43,29 @@ interface ConfigFormProps {
   onMinSessionHoursChange: (value: number) => void;
 }
 
+const toNum = (v: number | readonly number[]): number => (Array.isArray(v) ? v[0] : v) as number;
+
 const LOCATIONS_ARRAY = Object.entries(LOCATIONS).map(([key, { label }]) => ({
   key,
   label,
 }));
+
+const locationSelectItems = LOCATIONS_ARRAY.map((loc) => ({ value: loc.key, label: loc.label }));
+
+const modelSelectItems = [
+  {
+    label: "Open-Meteo (Recommended)",
+    items: Object.values(MODELS)
+      .filter((m) => m.provider === "openmeteo")
+      .map((m) => ({ value: m.id.toString(), label: m.name })),
+  },
+  {
+    label: "Windguru",
+    items: Object.values(MODELS)
+      .filter((m) => m.provider === "windguru")
+      .map((m) => ({ value: m.id.toString(), label: m.name })),
+  },
+];
 
 export function ConfigForm({
   location,
@@ -97,12 +116,16 @@ export function ConfigForm({
     (which === "wave" && waveEnabled && !windEnabled);
 
   return (
-    <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">
+    <form className="flex flex-col gap-6 max-w-xl mx-auto py-8 px-5">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="spot" className="text-slate-200">
+        <Label htmlFor="spot" className="text-foreground">
           Spot
         </Label>
-        <Select value={location} onValueChange={onLocationChange}>
+        <Select
+          value={location}
+          items={locationSelectItems}
+          onValueChange={(v) => v != null && onLocationChange(v)}
+        >
           <SelectTrigger id="spot">
             <SelectValue />
           </SelectTrigger>
@@ -117,12 +140,14 @@ export function ConfigForm({
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label htmlFor="model" className="text-slate-200">
+        <Label htmlFor="model" className="text-foreground">
           Forecast Model
         </Label>
         <Select
           value={model.toString()}
+          items={modelSelectItems}
           onValueChange={(v) => {
+            if (v == null) return;
             const num = Number(v);
             onModelChange(Number.isNaN(num) ? v : num);
           }}
@@ -162,7 +187,7 @@ export function ConfigForm({
       </div>
 
       {/* Wind Section */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Switch
@@ -172,12 +197,12 @@ export function ConfigForm({
               onCheckedChange={onWindEnabledChange}
               disabled={isOnlyActive("wind")}
             />
-            <Label htmlFor="wind-toggle" className="text-slate-200">
-              Wind
+            <Label htmlFor="wind-toggle" className="text-foreground">
+              ► Wind
             </Label>
           </div>
           {windEnabled && (
-            <span className="text-slate-200 text-sm tabular-nums">
+            <span className="text-foreground text-sm tabular-nums">
               {localWind[0]} – {localWind[1]} kn
             </span>
           )}
@@ -186,8 +211,9 @@ export function ConfigForm({
           <div aria-label="Wind speed range in knots">
             <Slider
               value={localWind}
-              onValueChange={setLocalWind}
-              onValueCommit={([min, max]) => {
+              onValueChange={(v) => setLocalWind(v as number[])}
+              onValueCommitted={(v) => {
+                const [min, max] = v as number[];
                 onWindMinChange(min);
                 onWindMaxChange(max);
               }}
@@ -210,12 +236,12 @@ export function ConfigForm({
               onCheckedChange={onWaveEnabledChange}
               disabled={isOnlyActive("wave")}
             />
-            <Label htmlFor="wave-toggle" className="text-slate-200">
-              Waves
+            <Label htmlFor="wave-toggle" className="text-foreground">
+              ≈ Waves
             </Label>
           </div>
           {waveEnabled && (
-            <span className="text-slate-200 text-sm tabular-nums">
+            <span className="text-foreground text-sm tabular-nums">
               {localWaveHeight[0]} – {localWaveHeight[1]} m
             </span>
           )}
@@ -229,13 +255,13 @@ export function ConfigForm({
             >
               <div className="flex items-center gap-1.5">
                 <RadioGroupItem value="total" id="wave-total" />
-                <Label htmlFor="wave-total" className="text-sm text-slate-300">
+                <Label htmlFor="wave-total" className="text-sm text-secondary-text">
                   Total
                 </Label>
               </div>
               <div className="flex items-center gap-1.5">
                 <RadioGroupItem value="swell" id="wave-swell" />
-                <Label htmlFor="wave-swell" className="text-sm text-slate-300">
+                <Label htmlFor="wave-swell" className="text-sm text-secondary-text">
                   Swell
                 </Label>
               </div>
@@ -244,8 +270,9 @@ export function ConfigForm({
             <div aria-label="Wave height range in meters">
               <Slider
                 value={localWaveHeight}
-                onValueChange={setLocalWaveHeight}
-                onValueCommit={([min, max]) => {
+                onValueChange={(v) => setLocalWaveHeight(v as number[])}
+                onValueCommitted={(v) => {
+                  const [min, max] = v as number[];
                   onWaveHeightMinChange(min);
                   onWaveHeightMaxChange(max);
                 }}
@@ -256,17 +283,17 @@ export function ConfigForm({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="min-period" className="text-slate-300 text-sm">
+              <Label htmlFor="min-period" className="text-secondary-text text-sm">
                 Min Period
               </Label>
-              <span className="text-slate-200 text-sm tabular-nums">{localWavePeriod} s</span>
+              <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
             </div>
             <div aria-label="Minimum wave period in seconds">
               <Slider
                 id="min-period"
                 value={[localWavePeriod]}
-                onValueChange={([v]) => setLocalWavePeriod(v)}
-                onValueCommit={([v]) => onWavePeriodMinChange(v)}
+                onValueChange={(v) => setLocalWavePeriod(toNum(v))}
+                onValueCommitted={(v) => onWavePeriodMinChange(toNum(v))}
                 min={0}
                 max={20}
                 step={1}
@@ -278,17 +305,17 @@ export function ConfigForm({
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <Label id="min-session-label" htmlFor="min-session" className="text-slate-200">
+          <Label id="min-session-label" htmlFor="min-session" className="text-foreground">
             Min Session
           </Label>
-          <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
+          <span className="text-foreground text-sm tabular-nums">{localSession} hrs</span>
         </div>
         <Slider
           id="min-session"
           aria-labelledby="min-session-label"
           value={[localSession]}
-          onValueChange={([v]) => setLocalSession(v)}
-          onValueCommit={([v]) => onMinSessionHoursChange(v)}
+          onValueChange={(v) => setLocalSession(toNum(v))}
+          onValueCommitted={(v) => onMinSessionHoursChange(toNum(v))}
           min={0.5}
           max={8}
           step={0.5}
