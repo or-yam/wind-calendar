@@ -1,5 +1,4 @@
-import type { H3Event } from "nitro/h3";
-import { getRequestHeader } from "nitro/h3";
+import type { H3Event } from "nitro";
 import { ApiError } from "../windguru/fetch";
 import { fetchWindData } from "../windguru/api";
 import { fetchOpenMeteoData } from "../open-meteo/forecast";
@@ -26,7 +25,7 @@ export function isDev(): boolean {
 }
 
 export function getClientIp(event: H3Event): string {
-  const xForwardedFor = getRequestHeader(event, "x-forwarded-for");
+  const xForwardedFor = event.req.headers.get("x-forwarded-for");
   if (xForwardedFor) {
     return xForwardedFor.split(",")[0]?.trim() ?? "unknown";
   }

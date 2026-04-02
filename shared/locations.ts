@@ -1,4 +1,4 @@
-import type { LocationConfig } from "./types.js";
+import type { LocationConfig } from "./types";
 
 export const LOCATIONS = {
   ashkelon: {

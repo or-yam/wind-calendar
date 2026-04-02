@@ -1,5 +1,5 @@
-import { defineHandler } from "nitro";
-import { getQuery, setHeader, createError } from "nitro/h3";
+import { defineHandler, HTTPError } from "nitro";
+import { getQuery } from "nitro/h3";
 
 import type { CalendarConfig } from "../../shared/types";
 import { parseQueryParams, resolveLocation } from "../config";
@@ -38,8 +38,8 @@ export default defineHandler(async (event) => {
 
   const rateCheck = checkRateLimit(getClientIp(event));
   if (rateCheck.limited) {
-    setHeader(event, "Retry-After", rateCheck.retryAfter.toString());
-    throw createError({
+    event.res.headers.set("Retry-After", rateCheck.retryAfter.toString());
+    throw new HTTPError({
       statusCode: 429,
       statusMessage: "Too Many Requests",
       data: {
@@ -62,7 +62,7 @@ export default defineHandler(async (event) => {
     config = parseQueryParams(searchParams);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw createError({
+    throw new HTTPError({
       statusCode: 400,
       statusMessage: "Bad Request",
       data: { error: message },
@@ -74,7 +74,7 @@ export default defineHandler(async (event) => {
     location = resolveLocation(config.location);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw createError({
+    throw new HTTPError({
       statusCode: 400,
       statusMessage: "Bad Request",
       data: { error: message },
@@ -84,7 +84,7 @@ export default defineHandler(async (event) => {
   const result = await resolveForecastData(config, location, dev);
 
   if (result.success === false) {
-    throw createError({
+    throw new HTTPError({
       statusCode: result.status,
       statusMessage: result.body.error,
       data: result.body,
@@ -98,7 +98,7 @@ export default defineHandler(async (event) => {
     icsString = buildCalendar(fetchResult, config, location.tz);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw createError({
+    throw new HTTPError({
       statusCode: 500,
       statusMessage: "Internal Server Error",
       data: {
@@ -115,18 +115,16 @@ export default defineHandler(async (event) => {
     });
   }
 
-  setHeader(event, "Content-Type", "text/calendar; charset=utf-8");
-  setHeader(event, "X-Data-Source", dataSource);
+  event.res.headers.set("Content-Type", "text/calendar; charset=utf-8");
+  event.res.headers.set("X-Data-Source", dataSource);
   if (fallbackUsed) {
-    setHeader(event, "X-Fallback-Used", "true");
+    event.res.headers.set("X-Fallback-Used", "true");
   }
-  setHeader(
-    event,
+  event.res.headers.set(
     "Cache-Control",
     "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
   );
-  setHeader(
-    event,
+  event.res.headers.set(
     "Content-Disposition",
     `inline; filename="wind-forecast-${config.location}.ics"`,
   );

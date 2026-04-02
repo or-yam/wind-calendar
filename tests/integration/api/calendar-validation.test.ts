@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseQueryParams } from "../../../server/config.js";
+import { parseQueryParams } from "../../../server/config";
 
 describe("Wave parameter validation", () => {
   it("rejects waveHeightMin >= waveHeightMax", () => {

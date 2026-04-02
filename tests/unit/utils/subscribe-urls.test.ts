@@ -6,8 +6,8 @@ import {
   buildWebcalUrl,
   buildGoogleCalendarUrl,
   buildOutlookUrl,
-} from "../../../src/lib/subscribe-urls.js";
-import type { CalendarConfig } from "../../../shared/types.js";
+} from "../../../src/lib/subscribe-urls";
+import type { CalendarConfig } from "../../../shared/types";
 
 const baseConfig: CalendarConfig = {
   location: "tel-aviv",

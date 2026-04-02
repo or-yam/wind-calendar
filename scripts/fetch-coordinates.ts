@@ -4,8 +4,8 @@
  * Run: npx tsx scripts/fetch-coordinates.ts
  */
 
-import { LOCATIONS } from "../shared/locations.js";
-import { fetchSpotInfo } from "../server/windguru/fetch.js";
+import { LOCATIONS } from "../shared/locations";
+import { fetchSpotInfo } from "../server/windguru/fetch";
 
 async function fetchCoordinates(spotId: string): Promise<{ lat: number; lon: number } | null> {
   try {
