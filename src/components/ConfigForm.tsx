@@ -242,7 +242,7 @@ export function ConfigForm({
           </div>
           {waveEnabled && (
             <span className="text-foreground text-sm tabular-nums">
-              {localWaveHeight[0]} – {localWaveHeight[1]} m
+              {localWaveHeight[0].toFixed(1)} – {localWaveHeight[1].toFixed(1)} m
             </span>
           )}
         </div>
@@ -308,7 +308,9 @@ export function ConfigForm({
           <Label id="min-session-label" htmlFor="min-session" className="text-foreground">
             Min Session
           </Label>
-          <span className="text-foreground text-sm tabular-nums">{localSession} hrs</span>
+          <span className="text-foreground text-sm tabular-nums">
+            {localSession.toFixed(1)} hrs
+          </span>
         </div>
         <Slider
           id="min-session"
