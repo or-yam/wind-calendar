@@ -13,7 +13,7 @@ export const DEFAULTS = {
   waveSource: "total" as const,
   waveHeightMin: 0.5,
   waveHeightMax: 5.0,
-  wavePeriodMin: 8,
+  wavePeriodMin: 0,
 } as const;
 
 export const WIND_ICON = "►";

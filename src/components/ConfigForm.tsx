@@ -296,7 +296,7 @@ export function ConfigForm({
                 onValueCommitted={(v) => onWavePeriodMinChange(toNum(v))}
                 min={0}
                 max={20}
-                step={1}
+                step={0.5}
               />
             </div>
           </div>
