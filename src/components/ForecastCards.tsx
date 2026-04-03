@@ -14,6 +14,8 @@ interface ForecastCardsProps {
   isPending: boolean;
   error: Error | null;
   weekStart: Date;
+  canGoPrev: boolean;
+  canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -61,6 +63,8 @@ export function ForecastCards({
   isPending,
   error,
   weekStart,
+  canGoPrev,
+  canGoNext,
   onPrev,
   onNext,
   onToday,
@@ -76,13 +80,13 @@ export function ForecastCards({
         <h2 className="text-2xl font-semibold text-foreground mb-6">Upcoming Sessions</h2>
 
         <nav aria-label="Week navigation" className="flex gap-2 mb-2 justify-center items-center">
-          <Button variant="ghost" onClick={onPrev}>
+          <Button variant="ghost" onClick={onPrev} disabled={!canGoPrev}>
             ← Prev
           </Button>
           <span className="text-sm text-secondary-text font-medium min-w-[140px] text-center">
             {formatWeekRange(weekStart)}
           </span>
-          <Button variant="ghost" onClick={onNext}>
+          <Button variant="ghost" onClick={onNext} disabled={!canGoNext}>
             Next →
           </Button>
         </nav>
