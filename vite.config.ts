@@ -22,9 +22,9 @@ function injectCSP(): Plugin {
 
       const csp = isDev
         ? // Development: Allow inline scripts for Vite HMR
-          "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://va.vercel-scripts.com http://localhost:* ws://localhost:*; img-src 'self' data:; frame-ancestors 'none'"
+          "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.tolin.ski; connect-src 'self' https://va.vercel-scripts.com http://localhost:* ws://localhost:*; img-src 'self' data:; frame-ancestors 'none'"
         : // Production: Strict CSP, no 'unsafe-inline' for scripts
-          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'";
+          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.tolin.ski; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'";
 
       return [
         {
