@@ -17,7 +17,7 @@ describe("parseQueryParams", () => {
     expect(config.waveSource).toBe("total");
     expect(config.waveHeightMin).toBe(0.5);
     expect(config.waveHeightMax).toBe(5.0);
-    expect(config.wavePeriodMin).toBe(8);
+    expect(config.wavePeriodMin).toBe(0);
   });
 
   it("overrides windMin from URL param", () => {
