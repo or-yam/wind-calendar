@@ -68,7 +68,7 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #111111;
+  background: #f5df24;
 }
 
 .forecast-scroll {
@@ -81,7 +81,7 @@
 }
 
 .forecast-scroll::-webkit-scrollbar-track {
-  background: #111111;
+  background: #282313;
   border-radius: 9999px;
   margin: 0 40px;
 }
@@ -89,7 +89,7 @@
 .forecast-scroll::-webkit-scrollbar-thumb {
   background: #ff247f;
   border-radius: 9999px;
-  border: 2px solid #111111;
+  border: 2px solid #282313;
   background-clip: padding-box;
 }
 
@@ -100,23 +100,23 @@
 
 @layer base {
   :root {
-    --background: #f5df24;
-    --foreground: #111111;
-    --card: #111111;
+    --background: #080808;
+    --foreground: #f6e79a;
+    --card: #15130e;
     --card-foreground: #f6e79a;
-    --popover: #111111;
+    --popover: #15130e;
     --popover-foreground: #f6e79a;
     --primary: #ff247f;
-    --primary-foreground: #111111;
-    --secondary: #f6e79a;
-    --secondary-foreground: #111111;
-    --muted: #d3bf1f;
-    --muted-foreground: #574f12;
-    --accent: #ff247f;
-    --accent-foreground: #111111;
+    --primary-foreground: #080808;
+    --secondary: #f5df24;
+    --secondary-foreground: #080808;
+    --muted: #3a351c;
+    --muted-foreground: #beb36a;
+    --accent: #f5df24;
+    --accent-foreground: #080808;
     --destructive: hsl(0, 84%, 60%);
-    --border: #ff247f;
-    --input: #111111;
+    --border: #4a3d19;
+    --input: #6f6010;
     --ring: #ff247f;
     --radius: 0.5rem;
   }
