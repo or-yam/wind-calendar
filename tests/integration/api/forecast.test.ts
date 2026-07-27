@@ -123,6 +123,14 @@ describe("forecast API handler", () => {
     );
   });
 
+  it("accepts repeated locations parameters", async () => {
+    const res = await callHandler(handler, "/api/forecast?locations=beit-yanai&locations=tel-aviv");
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body) as ForecastResponse;
+    expect(body.meta.locations).toEqual(["beit-yanai", "tel-aviv"]);
+  });
+
   it("sessions contain wind and wave data", async () => {
     const res = await callHandler(handler, "/api/forecast");
 

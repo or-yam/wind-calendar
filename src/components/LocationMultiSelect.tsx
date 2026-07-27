@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { LOCATIONS } from "@shared/locations";
 import { cn } from "@/lib/utils";
@@ -13,7 +14,18 @@ const OPTIONS = Object.entries(LOCATIONS).map(([id, location]) => ({
 }));
 
 export function LocationMultiSelect({ locations, onLocationsChange }: LocationMultiSelectProps) {
+  const pickerRef = useRef<HTMLDetailsElement>(null);
   const labels = locations.map((id) => LOCATIONS[id as keyof typeof LOCATIONS].label);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        pickerRef.current.open = false;
+      }
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, []);
 
   function toggle(id: string) {
     if (locations.includes(id)) {
@@ -24,7 +36,7 @@ export function LocationMultiSelect({ locations, onLocationsChange }: LocationMu
   }
 
   return (
-    <details className="group relative">
+    <details ref={pickerRef} className="group relative">
       <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
         <span className="truncate">{labels.join(", ")}</span>
         <ChevronDown className="h-4 w-4 shrink-0 opacity-50 transition-transform group-open:rotate-180" />

@@ -97,7 +97,7 @@ function App() {
       return;
     const availableModels = getAvailableModels(locations);
     const newModel =
-      typeof config.model === "number" && availableModels.includes(config.model)
+      typeof config.model === "string" || availableModels.includes(config.model)
         ? config.model
         : DEFAULTS.model;
 

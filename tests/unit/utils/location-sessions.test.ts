@@ -50,8 +50,33 @@ function session(id: string, windMax: number, waveHeight: number, startHour = 10
   };
 }
 
+function hourlySession(id: string, startHour: number, windSpeeds: number[]): LocationSession {
+  const start = new Date(`2030-06-15T${startHour}:00:00Z`);
+  const conditions = windSpeeds.map((windSpeed, index) => ({
+    date: new Date(start.getTime() + index * 3_600_000),
+    windSpeed,
+    windGusts: windSpeed + 3,
+    windDirection: 270,
+    waveHeight: 1,
+    wavePeriod: 10,
+    waveDirection: 270,
+    swellHeight: 1,
+    swellPeriod: 10,
+    swellDirection: 270,
+  }));
+
+  return {
+    ...session(id, Math.max(...windSpeeds), 1, startHour),
+    start,
+    end: new Date(start.getTime() + windSpeeds.length * 3_600_000),
+    windMin: Math.min(...windSpeeds),
+    windMax: Math.max(...windSpeeds),
+    conditions,
+  };
+}
+
 describe("selectBestLocationSessions", () => {
-  it("uses peak wind when wind and wave rankings conflict", () => {
+  it("uses wind when wind and wave rankings conflict", () => {
     const result = selectBestLocationSessions(
       [session("tel-aviv", 20, 1), session("herzliya", 18, 2)],
       config,
@@ -59,11 +84,22 @@ describe("selectBestLocationSessions", () => {
     expect(result.map(({ location }) => location.id)).toEqual(["tel-aviv"]);
   });
 
-  it("uses peak wave for wave-only matching", () => {
+  it("uses wave height for wave-only matching", () => {
     const result = selectBestLocationSessions(
       [session("tel-aviv", 20, 1), session("herzliya", 18, 2)],
       { ...config, windEnabled: false },
     );
+    expect(result.map(({ location }) => location.id)).toEqual(["herzliya"]);
+  });
+
+  it("uses wave height when overlapping intervals both qualify only by waves", () => {
+    const telAviv = session("tel-aviv", 20, 1);
+    const herzliya = session("herzliya", 18, 2);
+    telAviv.matchType = "wave";
+    herzliya.matchType = "wave";
+
+    const result = selectBestLocationSessions([telAviv, herzliya], config);
+
     expect(result.map(({ location }) => location.id)).toEqual(["herzliya"]);
   });
 
@@ -97,5 +133,57 @@ describe("selectBestLocationSessions", () => {
       config,
     );
     expect(result).toHaveLength(2);
+  });
+
+  it("preserves the non-overlapping remainder of a losing session", () => {
+    const result = selectBestLocationSessions(
+      [hourlySession("tel-aviv", 10, [25, 25]), hourlySession("herzliya", 11, [20, 20, 20, 20])],
+      config,
+    );
+
+    expect(
+      result.map(({ location, start, end }) => ({
+        location: location.id,
+        start: start.toISOString(),
+        end: end.toISOString(),
+      })),
+    ).toEqual([
+      {
+        location: "tel-aviv",
+        start: "2030-06-15T10:00:00.000Z",
+        end: "2030-06-15T12:00:00.000Z",
+      },
+      {
+        location: "herzliya",
+        start: "2030-06-15T12:00:00.000Z",
+        end: "2030-06-15T15:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("does not let an earlier wind peak decide later intervals", () => {
+    const result = selectBestLocationSessions(
+      [hourlySession("tel-aviv", 10, [30, 10, 10]), hourlySession("herzliya", 10, [20, 20, 20])],
+      config,
+    );
+
+    expect(
+      result.map(({ location, start, end }) => ({
+        location: location.id,
+        start: start.toISOString(),
+        end: end.toISOString(),
+      })),
+    ).toEqual([
+      {
+        location: "tel-aviv",
+        start: "2030-06-15T10:00:00.000Z",
+        end: "2030-06-15T11:00:00.000Z",
+      },
+      {
+        location: "herzliya",
+        start: "2030-06-15T11:00:00.000Z",
+        end: "2030-06-15T13:00:00.000Z",
+      },
+    ]);
   });
 });

@@ -7,6 +7,7 @@ import { generateIcsEvents } from "../utils/generateIcsEvents";
 import { checkRateLimit } from "../utils/rate-limit";
 import { isDev, getClientIp } from "../utils/api-handler";
 import { buildLocationSessions } from "../utils/location-sessions";
+import { queryToSearchParams } from "../utils/query-params.js";
 
 export default defineHandler(async (event) => {
   const dev = isDev();
@@ -27,13 +28,7 @@ export default defineHandler(async (event) => {
 
   let config: CalendarConfig;
   try {
-    const query = getQuery(event);
-    const searchParams = new URLSearchParams(
-      Object.fromEntries(Object.entries(query).filter(([, v]) => typeof v === "string")) as Record<
-        string,
-        string
-      >,
-    );
+    const searchParams = queryToSearchParams(getQuery(event));
     config = parseQueryParams(searchParams);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

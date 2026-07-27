@@ -64,8 +64,8 @@ Returns an ICS calendar feed with windsurfing/kitesurfing sessions filtered by w
 
 1. Fetch - Pulls wind and wave forecast data from Open-Meteo (primary) or [Windguru](https://www.windguru.cz/) (fallback)
 2. Filter - Removes forecasts outside your wind speed range, during darkness, or below minimum wave height
-3. Group - Merges adjacent hourly forecasts into sessions (max 3-hour gap between points)
-4. Rank - Resolves overlapping spots by peak wind, then peak wave (wave-only filters use peak wave)
+3. Rank - Picks the best spot for each forecast interval by wind, then wave
+4. Group - Merges adjacent winning forecasts into sessions (max 3-hour gap between points)
 5. Generate - Creates ICS calendar events with the winning spot and session details
 
 ### Filtering Logic

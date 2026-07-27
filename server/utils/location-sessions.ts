@@ -2,10 +2,11 @@ import type { CalendarConfig } from "../../shared/types";
 import type { Provider } from "../../shared/models";
 import { resolveLocation } from "../config";
 import { filterEvents } from "./filterEvents";
-import { groupSessions, type Session } from "./groupSessions";
+import { groupSessions } from "./groupSessions";
 import { resolveForecastData, type ErrorResponse } from "./api-handler";
+import { selectBestLocationSessions, type LocationSession } from "./select-location-sessions.js";
 
-export type LocationSession = Session & { location: { id: string; label: string; tz: string } };
+export { selectBestLocationSessions, type LocationSession } from "./select-location-sessions.js";
 
 export type LocationForecastsResult =
   | {
@@ -15,39 +16,6 @@ export type LocationForecastsResult =
       fallbackUsed: boolean;
     }
   | { success: false; status: number; body: ErrorResponse };
-
-function peakWave(session: Session, config: CalendarConfig): number {
-  const key = config.waveSource === "swell" ? "swellHeight" : "waveHeight";
-  return Math.max(...session.conditions.map((condition) => condition[key] ?? 0));
-}
-
-function overlaps(a: Session, b: Session): boolean {
-  return a.start < b.end && b.start < a.end;
-}
-
-export function selectBestLocationSessions(
-  sessions: LocationSession[],
-  config: CalendarConfig,
-): LocationSession[] {
-  const locationOrder = new Map(config.locations.map((location, index) => [location, index]));
-  const ranked = [...sessions].sort((a, b) => {
-    if (config.windEnabled && b.windMax !== a.windMax) return b.windMax - a.windMax;
-    if (config.waveEnabled) {
-      const waveDifference = peakWave(b, config) - peakWave(a, config);
-      if (waveDifference !== 0) return waveDifference;
-    }
-    return (
-      (locationOrder.get(a.location.id) ?? Number.MAX_SAFE_INTEGER) -
-      (locationOrder.get(b.location.id) ?? Number.MAX_SAFE_INTEGER)
-    );
-  });
-
-  const selected: LocationSession[] = [];
-  for (const session of ranked) {
-    if (!selected.some((winner) => overlaps(session, winner))) selected.push(session);
-  }
-  return selected.sort((a, b) => a.start.getTime() - b.start.getTime());
-}
 
 export async function buildLocationSessions(
   config: CalendarConfig,
@@ -86,7 +54,7 @@ export async function buildLocationSessions(
       sunset: result.fetchResult.sunset,
       tz: location.tz,
     });
-    return groupSessions(conditions, matchReasons, config.minSessionHours).map((session) => ({
+    return groupSessions(conditions, matchReasons, 0).map((session) => ({
       ...session,
       location: { id, label: location.label, tz: location.tz },
     }));

@@ -12,6 +12,7 @@ import { degreesToCardinal } from "../utils/groupSessions";
 import { checkRateLimit } from "../utils/rate-limit";
 import { isDev, getClientIp } from "../utils/api-handler";
 import { buildLocationSessions, type LocationSession } from "../utils/location-sessions";
+import { queryToSearchParams } from "../utils/query-params.js";
 import type { WindConditionRaw } from "../types/wind-conditions";
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
@@ -76,13 +77,7 @@ export default defineHandler(async (event) => {
 
   let config: CalendarConfig;
   try {
-    const query = getQuery(event);
-    const searchParams = new URLSearchParams(
-      Object.fromEntries(Object.entries(query).filter(([, v]) => typeof v === "string")) as Record<
-        string,
-        string
-      >,
-    );
+    const searchParams = queryToSearchParams(getQuery(event));
     config = parseQueryParams(searchParams);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

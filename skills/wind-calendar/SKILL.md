@@ -117,8 +117,9 @@ This uses default thresholds: 14-35kn wind, 2+ hour sessions. Wave filtering is 
 https://wind-calendar.vercel.app/api/calendar?locations=herzliya,beit-yanai,tel-aviv
 ```
 
-All filters apply to every location. When sessions overlap, the calendar keeps the location with
-the highest peak wind; peak wave breaks wind ties. Wave-only subscriptions rank by peak wave.
+All filters apply to every location. For each overlapping forecast interval, the calendar keeps the
+location with the strongest qualifying wind; wave height breaks wind ties. Wave-only subscriptions
+rank each interval by wave height.
 
 ### Customized for Stronger Winds
 
@@ -331,7 +332,7 @@ Upcoming wind sessions for Beit Yanai:
 
 1. Generate one URL with both locations: `https://wind-calendar.vercel.app/api/calendar?locations=herzliya,beit-yanai`
 2. Fetch the ICS and compare upcoming sessions
-3. Explain that overlapping sessions automatically keep the spot with the strongest peak wind
+3. Explain that overlapping forecast intervals automatically keep the spot with the strongest wind
 
 ### Workflow 6: Comparing Different Models
 
