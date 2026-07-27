@@ -7,7 +7,7 @@ import {
 
 export function Caveats() {
   return (
-    <section className="bg-card py-16 px-5">
+    <section className="bg-background py-16 px-5">
       <h2 className="text-2xl font-semibold text-secondary mb-8 text-center">Notes & FAQ</h2>
       <div className="max-w-2xl mx-auto">
         <Accordion type="single" collapsible className="flex flex-col gap-3">

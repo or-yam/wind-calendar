@@ -1,13 +1,43 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "MD IO Variable";
-  src:
-    url("/fonts/MDIOVariable.woff2") format("woff2"),
-    local("MD IO Variable Regular"),
-    local("MDIOVariable-Regular");
-  font-weight: 100 900;
-  font-style: normal italic;
+  font-family: "Barlow Condensed";
+  src: url("/fonts/barlow-condensed-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/barlow-condensed-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/barlow-condensed-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fonts/barlow-condensed-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Permanent Marker";
+  src: url("/fonts/permanent-marker-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 @theme inline {
@@ -29,6 +59,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-control-track: var(--control-track);
+  --color-control-off: var(--control-off);
+  --color-control-thumb: var(--control-thumb);
+  --color-range: var(--range);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -115,9 +149,13 @@
     --accent: #f5df24;
     --accent-foreground: #080808;
     --destructive: hsl(0, 84%, 60%);
-    --border: #4a3d19;
-    --input: #6f6010;
+    --border: #7f6e18;
+    --input: #7f6e18;
     --ring: #ff247f;
+    --control-track: #7f6e18;
+    --control-off: #7f6e18;
+    --control-thumb: #f6e79a;
+    --range: #0ea5e9;
     --radius: 0.5rem;
   }
 }
