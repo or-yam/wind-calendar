@@ -99,7 +99,7 @@ export function ConfigForm({
   return (
     <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="spot" className="text-slate-200">
+        <Label htmlFor="spot" className="text-foreground">
           Spot
         </Label>
         <Select value={location} onValueChange={onLocationChange}>
@@ -117,7 +117,7 @@ export function ConfigForm({
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label htmlFor="model" className="text-slate-200">
+        <Label htmlFor="model" className="text-foreground">
           Forecast Model
         </Label>
         <Select
@@ -172,12 +172,12 @@ export function ConfigForm({
               onCheckedChange={onWindEnabledChange}
               disabled={isOnlyActive("wind")}
             />
-            <Label htmlFor="wind-toggle" className="text-slate-200">
+            <Label htmlFor="wind-toggle" className="text-foreground">
               Wind
             </Label>
           </div>
           {windEnabled && (
-            <span className="text-slate-200 text-sm tabular-nums">
+            <span className="text-foreground text-sm tabular-nums">
               {localWind[0]} – {localWind[1]} kn
             </span>
           )}
@@ -210,12 +210,12 @@ export function ConfigForm({
               onCheckedChange={onWaveEnabledChange}
               disabled={isOnlyActive("wave")}
             />
-            <Label htmlFor="wave-toggle" className="text-slate-200">
+            <Label htmlFor="wave-toggle" className="text-foreground">
               Waves
             </Label>
           </div>
           {waveEnabled && (
-            <span className="text-slate-200 text-sm tabular-nums">
+            <span className="text-foreground text-sm tabular-nums">
               {localWaveHeight[0]} – {localWaveHeight[1]} m
             </span>
           )}
@@ -229,13 +229,13 @@ export function ConfigForm({
             >
               <div className="flex items-center gap-1.5">
                 <RadioGroupItem value="total" id="wave-total" />
-                <Label htmlFor="wave-total" className="text-sm text-slate-300">
+                <Label htmlFor="wave-total" className="text-sm text-foreground/80">
                   Total
                 </Label>
               </div>
               <div className="flex items-center gap-1.5">
                 <RadioGroupItem value="swell" id="wave-swell" />
-                <Label htmlFor="wave-swell" className="text-sm text-slate-300">
+                <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
                   Swell
                 </Label>
               </div>
@@ -256,10 +256,10 @@ export function ConfigForm({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="min-period" className="text-slate-300 text-sm">
+              <Label htmlFor="min-period" className="text-foreground/80 text-sm">
                 Min Period
               </Label>
-              <span className="text-slate-200 text-sm tabular-nums">{localWavePeriod} s</span>
+              <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
             </div>
             <div aria-label="Minimum wave period in seconds">
               <Slider
@@ -278,10 +278,10 @@ export function ConfigForm({
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <Label id="min-session-label" htmlFor="min-session" className="text-slate-200">
+          <Label id="min-session-label" htmlFor="min-session" className="text-foreground">
             Min Session
           </Label>
-          <span className="text-slate-200 text-sm tabular-nums">{localSession} hrs</span>
+          <span className="text-foreground text-sm tabular-nums">{localSession} hrs</span>
         </div>
         <Slider
           id="min-session"

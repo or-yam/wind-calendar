@@ -47,7 +47,7 @@ function groupByDay(sessions: ForecastSession[]): DayGroup[] {
 
 function ForecastCardSkeleton() {
   return (
-    <div className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 border-l-slate-700 aspect-[3/2] flex flex-col snap-center">
+    <div className="bg-card text-card-foreground border border-border rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 border-l-secondary aspect-[3/2] flex flex-col snap-center">
       <Skeleton className="h-3 w-16 mb-1" />
       <Skeleton className="h-4 w-6 mb-1" />
       <Skeleton className="h-3 w-20 mb-1" />
@@ -71,15 +71,15 @@ export function ForecastCards({
   const groups = groupByDay(weekSessions);
 
   return (
-    <section className="py-12 px-5 bg-[#0B1220]">
+    <section className="py-12 px-5 bg-background">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl font-semibold text-slate-200 mb-6">Upcoming Sessions</h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-6">Upcoming Sessions</h2>
 
         <nav aria-label="Week navigation" className="flex gap-2 mb-2 justify-center items-center">
           <Button variant="ghost" onClick={onPrev}>
             ← Prev
           </Button>
-          <span className="text-sm text-slate-300 font-medium min-w-[140px] text-center">
+          <span className="text-sm text-foreground/80 font-medium min-w-[140px] text-center">
             {formatWeekRange(weekStart)}
           </span>
           <Button variant="ghost" onClick={onNext}>
@@ -106,7 +106,7 @@ export function ForecastCards({
             {error.message}
           </p>
         ) : weekSessions.length === 0 ? (
-          <p aria-live="polite" className="text-slate-300 text-sm text-center py-8">
+          <p aria-live="polite" className="text-foreground/80 text-sm text-center py-8">
             No sessions match your filters this week
           </p>
         ) : (
@@ -123,17 +123,17 @@ export function ForecastCards({
                 return (
                   <div
                     key={dayKey}
-                    className={`min-w-30 shrink-0 snap-center rounded-lg${isToday ? " ring-1 ring-sky-500/50 bg-sky-950/20 p-1" : ""}`}
+                    className={`min-w-30 shrink-0 snap-center rounded-lg${isToday ? " ring-1 ring-primary bg-primary/15 p-1" : ""}`}
                   >
                     <div
                       aria-label={`${formatDayLabel(day)}: No sessions`}
-                      className="bg-[#0D1525] border border-[#1F2937] rounded-lg p-2 opacity-60 border-l-4 aspect-3/2 flex flex-col items-center justify-center"
+                      className="bg-card text-card-foreground border border-border rounded-lg p-2 opacity-60 border-l-4 aspect-3/2 flex flex-col items-center justify-center"
                       style={{ borderLeftColor: "#FFFFFF" }}
                     >
-                      <p className="text-[10px] font-semibold text-slate-300 uppercase mb-1">
+                      <p className="text-[10px] font-semibold text-card-foreground uppercase mb-1">
                         {formatDayLabel(day)}
                       </p>
-                      <p className="text-2xl text-slate-400">―</p>
+                      <p className="text-2xl text-card-foreground/70">―</p>
                     </div>
                   </div>
                 );
@@ -142,7 +142,7 @@ export function ForecastCards({
               return (
                 <div
                   key={dayKey}
-                  className={`flex flex-col gap-2 min-w-30 shrink-0 snap-center rounded-lg${isToday ? " ring-1 ring-sky-500/50 bg-sky-950/20 p-1" : ""}`}
+                  className={`flex flex-col gap-2 min-w-30 shrink-0 snap-center rounded-lg${isToday ? " ring-1 ring-primary bg-primary/15 p-1" : ""}`}
                 >
                   {dayGroup.sessions.map((session) => {
                     const midKnots = (session.wind.min + session.wind.max) / 2;
@@ -171,16 +171,16 @@ export function ForecastCards({
                       <div
                         key={`${dayKey}-${session.start}`}
                         aria-label={`${formatDayLabel(start)}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windLabel}` : session.matchType === "wave" ? `Wave ${session.wave.avgHeight.toFixed(1)}m` : `Wind ${windLabel}, Wave ${session.wave.avgHeight.toFixed(1)}m`}`}
-                        className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 border-l-4 aspect-3/2"
+                        className="bg-card text-card-foreground border border-border rounded-lg p-2 border-l-4 aspect-3/2"
                         style={{ borderLeftColor: borderColor }}
                       >
-                        <p className="text-[10px] font-semibold text-slate-300 uppercase mb-0.5">
+                        <p className="text-[10px] font-semibold text-card-foreground uppercase mb-0.5">
                           {formatDayLabel(start)}
                         </p>
                         <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
                           {icon}
                         </p>
-                        <p className="text-xs font-medium text-slate-200">{timeRange}</p>
+                        <p className="text-xs font-medium text-card-foreground">{timeRange}</p>
                         <div className="flex gap-1 mt-1 flex-wrap">
                           {session.matchType !== "wind" ? (
                             <span
