@@ -5,7 +5,7 @@ import type { CalendarConfig } from "@shared/types";
  */
 export function buildConfigParams(config: CalendarConfig): URLSearchParams {
   const params = new URLSearchParams({
-    location: config.location,
+    locations: config.locations.join(","),
     model: config.model.toString(),
     minSessionHours: config.minSessionHours.toString(),
     windEnabled: config.windEnabled.toString(),

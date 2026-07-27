@@ -1,20 +1,22 @@
 <div align="center">
   <img src="public/android-chrome-512x512.png" width="120" />
-  
-  # Wind Calendar
-  
-  **Generate windsurfing calendar feeds from weather forecasts**
-  
-  Subscribe to filtered wind forecasts for your preferred spots and get notifications when conditions are good.
-  
-  [**Launch App →**](https://wind-calendar.vercel.app)
-  
-  ---
+
+# Wind Calendar
+
+**Generate windsurfing calendar feeds from weather forecasts**
+
+Subscribe to filtered wind forecasts for your preferred spots and get notifications when conditions are good.
+
+[**Launch App →**](https://wind-calendar.vercel.app)
+
+---
+
 </div>
 
 ## Features
 
 - Smart filtering - Only get events when wind speed, daylight, and wave conditions match your preferences
+- Multi-spot subscriptions - Track up to three spots in one calendar and keep the best overlap
 - Multiple forecast models - Choose from GFS, ICON, GDPS, or IFS-HRES weather models
 - Session grouping - Automatically merges consecutive forecast hours into surf sessions
 - Calendar integration - Subscribe via standard ICS/webcal protocol (works with all major calendar apps)
@@ -31,7 +33,7 @@ Visit [wind-calendar.vercel.app](https://wind-calendar.vercel.app) to configure 
 Construct a URL and subscribe by replacing `https://` with `webcal://`:
 
 ```
-webcal://wind-calendar.vercel.app/api/calendar?location=herzliya&windMin=14&model=om_gfs
+webcal://wind-calendar.vercel.app/api/calendar?locations=herzliya,beit-yanai&windMin=14&model=om_gfs
 ```
 
 Paste the `webcal://` URL into your calendar app (Apple Calendar, Google Calendar, Outlook, etc.) to subscribe.
@@ -51,7 +53,7 @@ npx skills add https://github.com/or-yam/wind-calendar --skill wind-calendar
 **Quick Example:**
 
 ```bash
-https://wind-calendar.vercel.app/api/calendar?location=herzliya&windMin=14
+https://wind-calendar.vercel.app/api/calendar?locations=herzliya,beit-yanai&windMin=14
 ```
 
 Returns an ICS calendar feed with windsurfing/kitesurfing sessions filtered by wind conditions.
@@ -63,7 +65,8 @@ Returns an ICS calendar feed with windsurfing/kitesurfing sessions filtered by w
 1. Fetch - Pulls wind and wave forecast data from Open-Meteo (primary) or [Windguru](https://www.windguru.cz/) (fallback)
 2. Filter - Removes forecasts outside your wind speed range, during darkness, or below minimum wave height
 3. Group - Merges adjacent hourly forecasts into sessions (max 3-hour gap between points)
-4. Generate - Creates ICS calendar events with session details (wind range, gusts, direction, waves)
+4. Rank - Resolves overlapping spots by peak wind, then peak wave (wave-only filters use peak wave)
+5. Generate - Creates ICS calendar events with the winning spot and session details
 
 ### Filtering Logic
 
@@ -78,18 +81,18 @@ Returns an ICS calendar feed with windsurfing/kitesurfing sessions filtered by w
 
 ### API Query Parameters
 
-| Parameter         | Type           | Default      | Description                                               |
-| ----------------- | -------------- | ------------ | --------------------------------------------------------- |
-| `location`        | string         | `beit-yanai` | One of: `beit-yanai`, `bat-galim`, `herzliya`, `tel-aviv` |
-| `windMin`         | number         | `14`         | Minimum wind speed in knots (>= 0)                        |
-| `windMax`         | number         | `35`         | Maximum wind speed in knots (<= 200)                      |
-| `minSessionHours` | number         | `2`          | Minimum session duration in hours (0-24)                  |
-| `model`           | string, number | `om_gfs`     | Forecast model (see below)                                |
+| Parameter         | Type           | Default      | Description                                                      |
+| ----------------- | -------------- | ------------ | ---------------------------------------------------------------- |
+| `locations`       | string         | `beit-yanai` | Comma-separated location IDs (1-3); `location` remains supported |
+| `windMin`         | number         | `14`         | Minimum wind speed in knots (>= 0)                               |
+| `windMax`         | number         | `35`         | Maximum wind speed in knots (<= 200)                             |
+| `minSessionHours` | number         | `2`          | Minimum session duration in hours (0-24)                         |
+| `model`           | string, number | `om_gfs`     | Forecast model (see below)                                       |
 
 ### Example API Request
 
 ```bash
-curl "https://wind-calendar.vercel.app/api/calendar?location=beit-yanai&windMin=14&windMax=35&minSessionHours=2&model=om_gfs"
+curl "https://wind-calendar.vercel.app/api/calendar?locations=beit-yanai,herzliya&windMin=14&windMax=35&minSessionHours=2&model=om_gfs"
 ```
 
 ---

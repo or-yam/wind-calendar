@@ -45,7 +45,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
   function handleDownloadIcs() {
     const a = document.createElement("a");
     a.href = httpUrl;
-    a.download = `wind-calendar-${config.location}.ics`;
+    a.download = `wind-calendar-${config.locations.join("-")}.ics`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

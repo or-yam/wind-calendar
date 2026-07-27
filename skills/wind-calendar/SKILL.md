@@ -69,12 +69,10 @@ https://wind-calendar.vercel.app/api/calendar
 
 ## Query Parameters
 
-### Required
-
-- `location` - One of: `beit-yanai`, `herzliya`, `tel-aviv`, `bat-galim`
-
 ### Optional
 
+- `locations` - One to three comma-separated location IDs (default: `beit-yanai`)
+- `location` - Legacy single-location parameter, supported for backward compatibility
 - `windMin` - Minimum wind speed in knots (default: 14)
 - `windMax` - Maximum wind speed in knots (default: 35)
 - `minSessionHours` - Minimum session duration in hours (default: 2)
@@ -101,6 +99,7 @@ https://wind-calendar.vercel.app/api/calendar
 - `windMax` must be <= 200
 - `windMin` must be < `windMax`
 - `minSessionHours` must be between 0 and 24
+- `locations` must contain one to three valid, unique locations
 
 ## Example URL Construction
 
@@ -111,6 +110,15 @@ https://wind-calendar.vercel.app/api/calendar?location=herzliya
 ```
 
 This uses default thresholds: 14-35kn wind, 2+ hour sessions. Wave filtering is disabled by default.
+
+### Multiple Locations
+
+```
+https://wind-calendar.vercel.app/api/calendar?locations=herzliya,beit-yanai,tel-aviv
+```
+
+All filters apply to every location. When sessions overlap, the calendar keeps the location with
+the highest peak wind; peak wave breaks wind ties. Wave-only subscriptions rank by peak wave.
 
 ### Customized for Stronger Winds
 
@@ -321,10 +329,9 @@ Upcoming wind sessions for Beit Yanai:
 
 **Agent Actions**:
 
-1. Generate URLs for both locations
-2. Suggest subscribing to both calendars with different names/colors
-3. Or: Offer to fetch both ICS files and compare upcoming sessions
-4. Explain: "You can subscribe to both and see them side-by-side in your calendar"
+1. Generate one URL with both locations: `https://wind-calendar.vercel.app/api/calendar?locations=herzliya,beit-yanai`
+2. Fetch the ICS and compare upcoming sessions
+3. Explain that overlapping sessions automatically keep the spot with the strongest peak wind
 
 ### Workflow 6: Comparing Different Models
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateIcsEvents } from "../../../server/utils/generateIcsEvents";
-import type { Session } from "../../../server/utils/groupSessions";
+import type { LocationSession } from "../../../server/utils/location-sessions";
 import type { MatchReason } from "../../../server/utils/filterEvents";
 import { WIND_ICON, WAVE_ICON } from "../../../shared/constants";
 
@@ -13,8 +13,8 @@ function makeSession(
   windMax: number,
   gustMax: number,
   direction: string,
-  overrides: Partial<Session> = {},
-): Session {
+  overrides: Partial<LocationSession> = {},
+): LocationSession {
   const base = new Date("2024-06-15T05:00:00Z"); // 08:00 in Asia/Jerusalem
   const start = new Date(base.getTime() + startHourOffset * 3600000);
   const end = new Date(start.getTime() + numHours * 3600000);
@@ -31,6 +31,7 @@ function makeSession(
     swellDirection: null,
   }));
   return {
+    location: { id: "beit-yanai", label: "Beit Yanai", tz: TZ },
     start,
     end,
     windMin,
@@ -58,6 +59,12 @@ describe("generateIcsEvents", () => {
   it("title format: Wind prefix with range", () => {
     const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW")], TZ);
     expect(ics).toContain("Wind 12-17kn NW");
+  });
+
+  it("title and description identify the selected location", () => {
+    const ics = generateIcsEvents([makeSession(0, 3, 12, 17, 22, "NW")], TZ);
+    expect(ics).toContain("Beit Yanai");
+    expect(ics).toContain("Location: Beit Yanai");
   });
 
   it("title format: Wind prefix with single value", () => {

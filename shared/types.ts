@@ -1,7 +1,7 @@
 export type WaveSource = "total" | "swell";
 
 export interface CalendarConfig {
-  location: string;
+  locations: string[];
   minSessionHours: number;
   model: number | string; // Support both Windguru (number) and Open-Meteo (string)
 

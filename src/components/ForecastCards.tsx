@@ -170,12 +170,15 @@ export function ForecastCards({
                     return (
                       <div
                         key={`${dayKey}-${session.start}`}
-                        aria-label={`${formatDayLabel(start)}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windLabel}` : session.matchType === "wave" ? `Wave ${session.wave.avgHeight.toFixed(1)}m` : `Wind ${windLabel}, Wave ${session.wave.avgHeight.toFixed(1)}m`}`}
+                        aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windLabel}` : session.matchType === "wave" ? `Wave ${session.wave.avgHeight.toFixed(1)}m` : `Wind ${windLabel}, Wave ${session.wave.avgHeight.toFixed(1)}m`}`}
                         className="bg-[#111827] border border-[#1F2937] rounded-lg p-2 border-l-4 aspect-3/2"
                         style={{ borderLeftColor: borderColor }}
                       >
                         <p className="text-[10px] font-semibold text-slate-300 uppercase mb-0.5">
                           {formatDayLabel(start)}
+                        </p>
+                        <p className="truncate text-[10px] text-sky-300">
+                          {session.location.label}
                         </p>
                         <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
                           {icon}

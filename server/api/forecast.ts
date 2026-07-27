@@ -7,11 +7,11 @@ import type {
   ForecastSession,
   ForecastResponse,
 } from "../../shared/forecast-types";
-import { parseQueryParams, resolveLocation } from "../config";
-import { filterEvents } from "../utils/filterEvents";
-import { groupSessions, degreesToCardinal, type Session } from "../utils/groupSessions";
+import { parseQueryParams } from "../config";
+import { degreesToCardinal } from "../utils/groupSessions";
 import { checkRateLimit } from "../utils/rate-limit";
-import { isDev, getClientIp, resolveForecastData } from "../utils/api-handler";
+import { isDev, getClientIp } from "../utils/api-handler";
+import { buildLocationSessions, type LocationSession } from "../utils/location-sessions";
 import type { WindConditionRaw } from "../types/wind-conditions";
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
@@ -29,8 +29,12 @@ function serializeCondition(c: WindConditionRaw): HourlyCondition {
   };
 }
 
-function serializeSession(session: Session): ForecastSession {
+function serializeSession(session: LocationSession): ForecastSession {
   return {
+    location: {
+      id: session.location.id,
+      label: session.location.label,
+    },
     start: session.start.toISOString(),
     end: session.end.toISOString(),
     matchType: session.matchType,
@@ -89,19 +93,7 @@ export default defineHandler(async (event) => {
     });
   }
 
-  let location: ReturnType<typeof resolveLocation>;
-  try {
-    location = resolveLocation(config.location);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new HTTPError({
-      statusCode: 400,
-      statusMessage: "Bad Request",
-      data: { error: message },
-    });
-  }
-
-  const result = await resolveForecastData(config, location, dev);
+  const result = await buildLocationSessions(config, dev);
 
   if (result.success === false) {
     throw new HTTPError({
@@ -111,49 +103,16 @@ export default defineHandler(async (event) => {
     });
   }
 
-  const { fetchResult, dataSource, fallbackUsed } = result;
-
-  let sessions: Session[];
-  try {
-    const { conditions, matchReasons } = filterEvents(fetchResult.windData, {
-      windEnabled: config.windEnabled,
-      windMin: config.windMin,
-      windMax: config.windMax,
-      waveEnabled: config.waveEnabled,
-      waveSource: config.waveSource,
-      waveHeightMin: config.waveHeightMin,
-      waveHeightMax: config.waveHeightMax,
-      wavePeriodMin: config.wavePeriodMin,
-      sunrise: fetchResult.sunrise,
-      sunset: fetchResult.sunset,
-      tz: location.tz,
-    });
-
-    sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new HTTPError({
-      statusCode: 500,
-      statusMessage: "Internal Server Error",
-      data: {
-        error: "Failed to process forecast data",
-        code: "PIPELINE_ERROR",
-        ...(dev && {
-          debug: {
-            message,
-            spotId: location.spotId,
-            location: config.location,
-          },
-        }),
-      },
-    });
-  }
+  const { sessions, dataSources, fallbackUsed } = result;
+  const dataSource = [...new Set(Object.values(dataSources))].join(",");
 
   const body: ForecastResponse = {
     meta: {
-      location: config.location,
+      location: config.locations[0],
+      locations: config.locations,
       model: config.model,
       dataSource,
+      dataSources,
       generatedAt: new Date().toISOString(),
     },
     sessions: sessions.map(serializeSession),

@@ -2,36 +2,11 @@ import { defineHandler, HTTPError } from "nitro";
 import { getQuery } from "nitro/h3";
 
 import type { CalendarConfig } from "../../shared/types";
-import { parseQueryParams, resolveLocation } from "../config";
-import { fetchWindData } from "../windguru/api";
-import { filterEvents } from "../utils/filterEvents";
-import { groupSessions } from "../utils/groupSessions";
+import { parseQueryParams } from "../config";
 import { generateIcsEvents } from "../utils/generateIcsEvents";
 import { checkRateLimit } from "../utils/rate-limit";
-import { isDev, getClientIp, resolveForecastData } from "../utils/api-handler";
-
-function buildCalendar(
-  fetchResult: Awaited<ReturnType<typeof fetchWindData>>,
-  config: CalendarConfig,
-  tz: string,
-): string {
-  const { conditions, matchReasons } = filterEvents(fetchResult.windData, {
-    windEnabled: config.windEnabled,
-    windMin: config.windMin,
-    windMax: config.windMax,
-    waveEnabled: config.waveEnabled,
-    waveSource: config.waveSource,
-    waveHeightMin: config.waveHeightMin,
-    waveHeightMax: config.waveHeightMax,
-    wavePeriodMin: config.wavePeriodMin,
-    sunrise: fetchResult.sunrise,
-    sunset: fetchResult.sunset,
-    tz,
-  });
-
-  const sessions = groupSessions(conditions, matchReasons, config.minSessionHours);
-  return generateIcsEvents(sessions, tz);
-}
+import { isDev, getClientIp } from "../utils/api-handler";
+import { buildLocationSessions } from "../utils/location-sessions";
 
 export default defineHandler(async (event) => {
   const dev = isDev();
@@ -69,19 +44,7 @@ export default defineHandler(async (event) => {
     });
   }
 
-  let location: ReturnType<typeof resolveLocation>;
-  try {
-    location = resolveLocation(config.location);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new HTTPError({
-      statusCode: 400,
-      statusMessage: "Bad Request",
-      data: { error: message },
-    });
-  }
-
-  const result = await resolveForecastData(config, location, dev);
+  const result = await buildLocationSessions(config, dev);
 
   if (result.success === false) {
     throw new HTTPError({
@@ -91,11 +54,11 @@ export default defineHandler(async (event) => {
     });
   }
 
-  const { fetchResult, dataSource, fallbackUsed } = result;
+  const { sessions, dataSources, fallbackUsed } = result;
 
   let icsString;
   try {
-    icsString = buildCalendar(fetchResult, config, location.tz);
+    icsString = generateIcsEvents(sessions);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new HTTPError({
@@ -107,8 +70,7 @@ export default defineHandler(async (event) => {
         ...(dev && {
           debug: {
             message,
-            spotId: location.spotId,
-            location: config.location,
+            locations: config.locations,
           },
         }),
       },
@@ -116,7 +78,7 @@ export default defineHandler(async (event) => {
   }
 
   event.res.headers.set("Content-Type", "text/calendar; charset=utf-8");
-  event.res.headers.set("X-Data-Source", dataSource);
+  event.res.headers.set("X-Data-Source", [...new Set(Object.values(dataSources))].join(","));
   if (fallbackUsed) {
     event.res.headers.set("X-Fallback-Used", "true");
   }
@@ -126,7 +88,7 @@ export default defineHandler(async (event) => {
   );
   event.res.headers.set(
     "Content-Disposition",
-    `inline; filename="wind-forecast-${config.location}.ics"`,
+    `inline; filename="wind-forecast-${config.locations.join("-")}.ics"`,
   );
   return icsString;
 });

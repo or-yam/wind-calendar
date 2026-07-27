@@ -17,14 +17,29 @@ function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean)
   return raw === "true";
 }
 
-export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig {
-  const location = searchParams.get("location") ?? "beit-yanai";
+function parseLocations(searchParams: URLSearchParams): string[] {
+  const locationsParams = searchParams.getAll("locations");
+  const rawLocations =
+    locationsParams.length > 0
+      ? locationsParams.flatMap((value) => value.split(","))
+      : [searchParams.get("location") ?? DEFAULTS.locations[0]];
+  const locations = [...new Set(rawLocations.map((value) => value.trim()).filter(Boolean))];
 
-  if (!(location in LOCATIONS)) {
+  if (locations.length === 0) throw new Error("At least one location is required");
+  if (locations.length > 3) throw new Error("A maximum of 3 locations is allowed");
+
+  const unknown = locations.filter((location) => !(location in LOCATIONS));
+  if (unknown.length > 0) {
     throw new Error(
-      `Unknown location: "${location}". Valid locations: ${Object.keys(LOCATIONS).join(", ")}`,
+      `Unknown location: "${unknown[0]}". Valid locations: ${Object.keys(LOCATIONS).join(", ")}`,
     );
   }
+
+  return locations;
+}
+
+export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig {
+  const locations = parseLocations(searchParams);
 
   const minSessionHours = parseFloatParam(
     searchParams,
@@ -70,7 +85,7 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
   if (wavePeriodMin < 0) throw new Error("wavePeriodMin must be >= 0");
 
   return {
-    location,
+    locations,
     minSessionHours,
     model,
     windEnabled,
@@ -87,6 +102,7 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
 export function resolveLocation(name: string): {
   spotId: string;
   tz: string;
+  label: string;
   coordinates?: { lat: number; lon: number };
 } {
   const loc = LOCATIONS[name as keyof typeof LOCATIONS];

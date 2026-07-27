@@ -13,12 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LOCATIONS } from "@shared/locations";
 import { MODELS } from "@shared/models";
 import type { WaveSource } from "@shared/types";
+import { LocationMultiSelect } from "./LocationMultiSelect";
 
 interface ConfigFormProps {
-  location: string;
+  locations: string[];
   model: number | string;
   availableModels: number[];
   windEnabled: boolean;
@@ -30,7 +30,7 @@ interface ConfigFormProps {
   waveHeightMax: number;
   wavePeriodMin: number;
   minSessionHours: number;
-  onLocationChange: (location: string) => void;
+  onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: number | string) => void;
   onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;
@@ -43,13 +43,8 @@ interface ConfigFormProps {
   onMinSessionHoursChange: (value: number) => void;
 }
 
-const LOCATIONS_ARRAY = Object.entries(LOCATIONS).map(([key, { label }]) => ({
-  key,
-  label,
-}));
-
 export function ConfigForm({
-  location,
+  locations,
   model,
   availableModels,
   windEnabled,
@@ -61,7 +56,7 @@ export function ConfigForm({
   waveHeightMax,
   wavePeriodMin,
   minSessionHours,
-  onLocationChange,
+  onLocationsChange,
   onModelChange,
   onWindEnabledChange,
   onWindMinChange,
@@ -99,21 +94,9 @@ export function ConfigForm({
   return (
     <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="spot" className="text-slate-200">
-          Spot
-        </Label>
-        <Select value={location} onValueChange={onLocationChange}>
-          <SelectTrigger id="spot">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {LOCATIONS_ARRAY.map((loc) => (
-              <SelectItem key={loc.key} value={loc.key}>
-                {loc.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label className="text-slate-200">Spots</Label>
+        <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
+        <p className="text-xs text-slate-400">Select up to 3 spots.</p>
       </div>
 
       <div className="flex flex-col gap-3">
