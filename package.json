@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "portless run vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint",
@@ -53,6 +53,7 @@
     "lint-staged": "^17.2.0",
     "oxfmt": "^0.60.0",
     "oxlint": "^1.75.0",
+    "portless": "^0.15.4",
     "typescript": "~7.0.2",
     "vercel": "^57.0.0",
     "vite": "^8.1.5",
