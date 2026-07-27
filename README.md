@@ -1,15 +1,16 @@
 <div align="center">
   <img src="public/android-chrome-512x512.png" width="120" />
-  
-  # Wind Calendar
-  
-  **Generate windsurfing calendar feeds from weather forecasts**
-  
-  Subscribe to filtered wind forecasts for your preferred spots and get notifications when conditions are good.
-  
-  [**Launch App →**](https://wind-calendar.vercel.app)
-  
-  ---
+
+# Wind Calendar
+
+**Generate windsurfing calendar feeds from weather forecasts**
+
+Subscribe to filtered wind forecasts for your preferred spots and get notifications when conditions are good.
+
+[**Launch App →**](https://wind-calendar.vercel.app)
+
+---
+
 </div>
 
 ## Features
