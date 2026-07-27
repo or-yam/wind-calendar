@@ -2,7 +2,7 @@ import { ConfigForm } from "./ConfigForm";
 import type { WaveSource } from "@shared/types";
 
 export interface HeroProps {
-  location: string;
+  locations: string[];
   model: number | string;
   availableModels: number[];
   windEnabled: boolean;
@@ -14,7 +14,7 @@ export interface HeroProps {
   waveHeightMax: number;
   wavePeriodMin: number;
   minSessionHours: number;
-  onLocationChange: (location: string) => void;
+  onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: number | string) => void;
   onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;

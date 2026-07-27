@@ -34,18 +34,18 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
     try {
       await navigator.clipboard.writeText(httpUrl);
       setCopyState("success");
-      timeoutRef.current = setTimeout(() => setCopyState("idle"), 2000);
+      timeoutRef.current = window.setTimeout(() => setCopyState("idle"), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
       setCopyState("error");
-      timeoutRef.current = setTimeout(() => setCopyState("idle"), 2000);
+      timeoutRef.current = window.setTimeout(() => setCopyState("idle"), 2000);
     }
   }
 
   function handleDownloadIcs() {
     const a = document.createElement("a");
     a.href = httpUrl;
-    a.download = `wind-calendar-${config.location}.ics`;
+    a.download = `wind-calendar-${config.locations.join("-")}.ics`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
