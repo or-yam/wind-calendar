@@ -10,7 +10,7 @@ import {
 import type { CalendarConfig } from "../../../shared/types";
 
 const baseConfig: CalendarConfig = {
-  location: "tel-aviv",
+  locations: ["tel-aviv"],
   model: "om_gfs",
   minSessionHours: 2,
   windEnabled: true,
@@ -27,7 +27,7 @@ describe("buildConfigParams", () => {
   it("converts config to URLSearchParams", () => {
     const params = buildConfigParams(baseConfig);
 
-    expect(params.get("location")).toBe("tel-aviv");
+    expect(params.get("locations")).toBe("tel-aviv");
     expect(params.get("model")).toBe("om_gfs");
     expect(params.get("minSessionHours")).toBe("2");
     expect(params.get("windEnabled")).toBe("true");
@@ -74,14 +74,14 @@ describe("buildConfigParams", () => {
     expect(params.get("model")).toBe("3");
   });
 
-  it("handles special characters in location", () => {
+  it("joins multiple locations", () => {
     const config: CalendarConfig = {
       ...baseConfig,
-      location: "test location & more",
+      locations: ["tel-aviv", "herzliya", "beit-yanai"],
     };
 
     const params = buildConfigParams(config);
-    expect(params.get("location")).toBe("test location & more");
+    expect(params.get("locations")).toBe("tel-aviv,herzliya,beit-yanai");
   });
 });
 
@@ -90,18 +90,18 @@ describe("buildApiUrl", () => {
     const url = buildApiUrl(baseConfig);
 
     expect(url).toMatch(/^\/api\/calendar\?/);
-    expect(url).toContain("location=tel-aviv");
+    expect(url).toContain("locations=tel-aviv");
     expect(url).toContain("model=om_gfs");
   });
 
   it("encodes special characters", () => {
     const config: CalendarConfig = {
       ...baseConfig,
-      location: "test & location",
+      locations: ["test & location"],
     };
 
     const url = buildApiUrl(config);
-    expect(url).toMatch(/location=/);
+    expect(url).toMatch(/locations=/);
   });
 });
 
@@ -116,7 +116,7 @@ describe("buildFullUrl", () => {
     const url = buildFullUrl(baseConfig);
 
     expect(url).toMatch(/^http:\/\/localhost:5173\/api\/calendar\?/);
-    expect(url).toContain("location=tel-aviv");
+    expect(url).toContain("locations=tel-aviv");
   });
 
   it("uses custom baseUrl when provided", () => {
@@ -143,7 +143,7 @@ describe("buildWebcalUrl", () => {
 
   it("preserves query params", () => {
     const url = buildWebcalUrl(baseConfig);
-    expect(url).toContain("location=tel-aviv");
+    expect(url).toContain("locations=tel-aviv");
   });
 });
 

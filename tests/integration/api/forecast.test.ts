@@ -87,6 +87,7 @@ describe("forecast API handler", () => {
     const body = JSON.parse(res.body) as ForecastResponse;
     expect(body.meta).toBeDefined();
     expect(body.meta.location).toBe("beit-yanai");
+    expect(body.meta.locations).toEqual(["beit-yanai"]);
     expect(body.meta.dataSource).toBe("windguru");
     expect(body.sessions).toBeInstanceOf(Array);
   });
@@ -107,6 +108,29 @@ describe("forecast API handler", () => {
     expect(body.sessions).toHaveLength(0);
   });
 
+  it("returns multi-location metadata and only one overlapping winner", async () => {
+    const res = await callHandler(handler, "/api/forecast?locations=beit-yanai,tel-aviv");
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body) as ForecastResponse;
+    expect(body.meta.locations).toEqual(["beit-yanai", "tel-aviv"]);
+    expect(body.meta.dataSources).toEqual({
+      "beit-yanai": "windguru",
+      "tel-aviv": "windguru",
+    });
+    expect(new Set(body.sessions.map((session) => session.location.id))).toEqual(
+      new Set(["beit-yanai"]),
+    );
+  });
+
+  it("accepts repeated locations parameters", async () => {
+    const res = await callHandler(handler, "/api/forecast?locations=beit-yanai&locations=tel-aviv");
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body) as ForecastResponse;
+    expect(body.meta.locations).toEqual(["beit-yanai", "tel-aviv"]);
+  });
+
   it("sessions contain wind and wave data", async () => {
     const res = await callHandler(handler, "/api/forecast");
 
@@ -115,6 +139,7 @@ describe("forecast API handler", () => {
     expect(body.sessions.length).toBeGreaterThan(0);
 
     const session = body.sessions[0];
+    expect(session.location).toEqual({ id: "beit-yanai", label: "Beit Yanai" });
     expect(session.start).toBeDefined();
     expect(session.end).toBeDefined();
     expect(session.wind).toBeDefined();

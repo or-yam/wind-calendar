@@ -15,6 +15,7 @@ import { useWeekNavigation } from "./hooks/useWeekNavigation";
 import type { CalendarConfig } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
 import { LOCATIONS } from "@shared/locations";
+import { buildConfigParams } from "./lib/subscribe-urls";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -38,14 +39,23 @@ function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean)
 
 const VALID_LOCATIONS = new Set(Object.keys(LOCATIONS));
 
+function getAvailableModels(locations: string[]): number[] {
+  const modelLists = locations.map(
+    (location) => LOCATIONS[location as keyof typeof LOCATIONS].models as readonly number[],
+  );
+  return [...modelLists[0]].filter((model) => modelLists.every((models) => models.includes(model)));
+}
+
 function parseUrlParams(): CalendarConfig {
   const params = new URLSearchParams(window.location.search);
-  const rawLocation = params.get("location");
-  const location =
-    rawLocation && VALID_LOCATIONS.has(rawLocation) ? rawLocation : DEFAULTS.location;
+  const rawLocations = (params.get("locations") ?? params.get("location") ?? "")
+    .split(",")
+    .map((location) => location.trim())
+    .filter((location) => VALID_LOCATIONS.has(location));
+  const locations = [...new Set(rawLocations)].slice(0, 3);
   const waveSource = params.get("waveSource");
   return {
-    location,
+    locations: locations.length > 0 ? locations : [...DEFAULTS.locations],
     minSessionHours: parseNumParam(params, "minSessionHours", DEFAULTS.minSessionHours),
     model: parseModelParam(params, DEFAULTS.model),
     windEnabled: parseBoolParam(params, "windEnabled", DEFAULTS.windEnabled),
@@ -63,21 +73,7 @@ function App() {
   const [config, setConfig] = useState<CalendarConfig>(() => parseUrlParams());
 
   useEffect(() => {
-    const params = new URLSearchParams({
-      location: config.location,
-      model: config.model.toString(),
-      minSessionHours: config.minSessionHours.toString(),
-      windEnabled: config.windEnabled.toString(),
-      windMin: config.windMin.toString(),
-      windMax: config.windMax.toString(),
-      waveEnabled: config.waveEnabled.toString(),
-      ...(config.waveEnabled && {
-        waveSource: config.waveSource,
-        waveHeightMin: config.waveHeightMin.toString(),
-        waveHeightMax: config.waveHeightMax.toString(),
-        wavePeriodMin: config.wavePeriodMin.toString(),
-      }),
-    });
+    const params = buildConfigParams(config);
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", newUrl);
   }, [config]);
@@ -92,17 +88,23 @@ function App() {
   const sessions = data?.sessions ?? [];
   const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(sessions);
 
-  const handleLocationChange = (location: string) => {
-    if (!VALID_LOCATIONS.has(location)) return;
-    const newLocation = LOCATIONS[location as keyof typeof LOCATIONS];
+  const handleLocationsChange = (locations: string[]) => {
+    if (
+      locations.length < 1 ||
+      locations.length > 3 ||
+      locations.some((location) => !VALID_LOCATIONS.has(location))
+    )
+      return;
+    const availableModels = getAvailableModels(locations);
     const newModel =
-      typeof config.model === "number" &&
-      (newLocation.models as readonly number[]).includes(config.model)
+      typeof config.model === "string" || availableModels.includes(config.model)
         ? config.model
         : DEFAULTS.model;
 
-    setConfig((c) => ({ ...c, location, model: newModel }));
+    setConfig((c) => ({ ...c, locations, model: newModel }));
   };
+
+  const availableModels = getAvailableModels(config.locations);
 
   // Handler for model change
   const handleModelChange = (model: number | string) => {
@@ -112,9 +114,9 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-slate-200">
       <Hero
-        location={config.location}
+        locations={config.locations}
         model={config.model}
-        availableModels={LOCATIONS[config.location as keyof typeof LOCATIONS].models}
+        availableModels={availableModels}
         windEnabled={config.windEnabled}
         windMin={config.windMin}
         windMax={config.windMax}
@@ -124,7 +126,7 @@ function App() {
         waveHeightMax={config.waveHeightMax}
         wavePeriodMin={config.wavePeriodMin}
         minSessionHours={config.minSessionHours}
-        onLocationChange={handleLocationChange}
+        onLocationsChange={handleLocationsChange}
         onModelChange={handleModelChange}
         onWindEnabledChange={(windEnabled) => setConfig((c) => ({ ...c, windEnabled }))}
         onWindMinChange={(windMin) => setConfig((c) => ({ ...c, windMin }))}

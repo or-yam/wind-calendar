@@ -12,6 +12,10 @@ export interface HourlyCondition {
 }
 
 export interface ForecastSession {
+  location: {
+    id: string;
+    label: string;
+  };
   start: string; // ISO 8601 timestamp
   end: string; // ISO 8601 timestamp
   matchType: "wind" | "wave" | "both";
@@ -35,9 +39,11 @@ export interface ForecastSession {
 
 export interface ForecastResponse {
   meta: {
-    location: string; // location slug (e.g. "beit-yanai")
+    location: string; // First location, retained for backward compatibility
+    locations: string[];
     model: string | number; // Windguru model ID or Open-Meteo model string
     dataSource: string; // e.g. "windguru" or "open-meteo"
+    dataSources: Record<string, string>;
     generatedAt: string; // ISO 8601 timestamp
   };
   sessions: ForecastSession[];

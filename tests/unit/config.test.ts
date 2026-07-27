@@ -11,7 +11,7 @@ describe("parseQueryParams", () => {
     expect(config.windMax).toBe(DEFAULTS.windMax);
     expect(config.minSessionHours).toBe(DEFAULTS.minSessionHours);
     expect(config.model).toBe(DEFAULTS.model);
-    expect(config.location).toBe("beit-yanai");
+    expect(config.locations).toEqual(["beit-yanai"]);
     expect(config.windEnabled).toBe(true);
     expect(config.waveEnabled).toBe(false);
     expect(config.waveSource).toBe("total");
@@ -31,6 +31,21 @@ describe("parseQueryParams", () => {
     const params = new URLSearchParams("location=atlantis");
 
     expect(() => parseQueryParams(params)).toThrow(/Unknown location.*"atlantis"/);
+  });
+
+  it("parses up to three comma-separated locations", () => {
+    const config = parseQueryParams(new URLSearchParams("locations=tel-aviv,herzliya,beit-yanai"));
+    expect(config.locations).toEqual(["tel-aviv", "herzliya", "beit-yanai"]);
+  });
+
+  it("keeps legacy location URLs working", () => {
+    const config = parseQueryParams(new URLSearchParams("location=tel-aviv"));
+    expect(config.locations).toEqual(["tel-aviv"]);
+  });
+
+  it("rejects more than three locations", () => {
+    const params = new URLSearchParams("locations=tel-aviv,herzliya,beit-yanai,bat-galim");
+    expect(() => parseQueryParams(params)).toThrow("A maximum of 3 locations is allowed");
   });
 
   // --- New wave param tests ---

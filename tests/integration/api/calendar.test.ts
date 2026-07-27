@@ -113,6 +113,21 @@ describe("calendar API handler", () => {
     expect(res.body.includes("END:VCALENDAR")).toBe(true);
   });
 
+  it("accepts multiple locations and emits only the highest-ranked overlap", async () => {
+    const res = await callHandler(handler, "/api/calendar?locations=beit-yanai,tel-aviv");
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain("Beit Yanai");
+    expect(res.body).not.toContain("Tel Aviv");
+  });
+
+  it("accepts repeated locations parameters", async () => {
+    const res = await callHandler(handler, "/api/calendar?locations=beit-yanai&locations=tel-aviv");
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-disposition"]).toContain("wind-forecast-beit-yanai-tel-aviv.ics");
+  });
+
   it("wave model failure is non-fatal — still returns ICS", async () => {
     const res = await callHandler(handler, "/api/calendar");
 
