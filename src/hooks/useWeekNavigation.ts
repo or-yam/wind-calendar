@@ -3,78 +3,51 @@ import { getWeekStart, addDays } from "../lib/date-utils";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
-  startOnSunday: boolean;
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
-  toggleWeekStart: (startOnSunday: boolean) => void;
 }
 
-const WEEK_START_KEY = "weekStartsOnSunday";
+const START_ON_SUNDAY = true;
 
-function getDefaultWeekStart(): boolean {
-  try {
-    const locale = new Intl.Locale(navigator.language);
-    if ("weekInfo" in locale && locale.weekInfo) {
-      return (locale.weekInfo as { firstDay: number }).firstDay === 7;
-    }
-  } catch {}
-  const lang = navigator.language.toLowerCase();
-  return lang.startsWith("en-us") || lang.startsWith("he");
-}
-
-export function useWeekNavigation(items: { start: string }[]): UseWeekNavigationResult {
-  const [startOnSunday, setStartOnSunday] = useState(() => {
-    try {
-      const saved = localStorage.getItem(WEEK_START_KEY);
-      if (saved !== null) return saved === "1";
-      return getDefaultWeekStart();
-    } catch {
-      return true;
-    }
-  });
-
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), startOnSunday));
-  const hasNavigatedRef = useRef(false);
+export function useWeekNavigation(
+  items: { start: string }[],
+  resetKey: string,
+): UseWeekNavigationResult {
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), START_ON_SUNDAY));
+  const previousResetKeyRef = useRef(resetKey);
+  const shouldAutoNavigateRef = useRef(true);
 
   useEffect(() => {
-    hasNavigatedRef.current = false;
-  }, [items]);
-
-  useEffect(() => {
-    if (items.length > 0 && !hasNavigatedRef.current) {
-      hasNavigatedRef.current = true;
-      let earliestStart = items[0].start;
-      for (let i = 1; i < items.length; i++) {
-        if (items[i].start < earliestStart) earliestStart = items[i].start;
-      }
-      setWeekStart(getWeekStart(new Date(earliestStart), startOnSunday));
+    if (previousResetKeyRef.current !== resetKey) {
+      previousResetKeyRef.current = resetKey;
+      shouldAutoNavigateRef.current = true;
     }
-  }, [items, startOnSunday]);
+
+    if (items.length === 0 || !shouldAutoNavigateRef.current) return;
+
+    shouldAutoNavigateRef.current = false;
+    let earliestStart = items[0].start;
+    for (let i = 1; i < items.length; i++) {
+      if (items[i].start < earliestStart) earliestStart = items[i].start;
+    }
+    setWeekStart(getWeekStart(new Date(earliestStart), START_ON_SUNDAY));
+  }, [items, resetKey]);
 
   const goToToday = useCallback(() => {
-    setWeekStart(getWeekStart(new Date(), startOnSunday));
-  }, [startOnSunday]);
+    shouldAutoNavigateRef.current = false;
+    setWeekStart(getWeekStart(new Date(), START_ON_SUNDAY));
+  }, []);
 
   const goToPrev = useCallback(() => {
+    shouldAutoNavigateRef.current = false;
     setWeekStart((prev) => addDays(prev, -7));
   }, []);
 
   const goToNext = useCallback(() => {
+    shouldAutoNavigateRef.current = false;
     setWeekStart((prev) => addDays(prev, 7));
   }, []);
 
-  const toggleWeekStart = useCallback(
-    (startOnSunday: boolean) => {
-      setStartOnSunday(startOnSunday);
-      try {
-        localStorage.setItem(WEEK_START_KEY, startOnSunday ? "1" : "0");
-      } catch {}
-      const midWeek = addDays(weekStart, 3);
-      setWeekStart(getWeekStart(midWeek, startOnSunday));
-    },
-    [weekStart],
-  );
-
-  return { weekStart, startOnSunday, goToToday, goToPrev, goToNext, toggleWeekStart };
+  return { weekStart, goToToday, goToPrev, goToNext };
 }
