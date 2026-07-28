@@ -116,18 +116,18 @@ export function ForecastCards({
 
         <nav
           aria-label="Week navigation"
-          className="mb-7 flex flex-wrap items-center justify-center gap-2"
+          className="mb-7 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-center"
         >
           <Button variant="outline" onClick={onPrev}>
             ← Prev
           </Button>
-          <span className="min-w-[140px] text-center text-sm font-bold tracking-wide text-foreground/80 uppercase">
+          <span className="min-w-0 text-center text-sm font-bold tracking-wide text-foreground/80 uppercase">
             {formatWeekRange(weekStart)}
           </span>
           <Button variant="outline" onClick={onNext}>
             Next →
           </Button>
-          <Button variant="ghost" onClick={onToday} className="basis-full sm:basis-auto">
+          <Button variant="ghost" onClick={onToday} className="col-span-3 justify-self-center">
             Today
           </Button>
         </nav>

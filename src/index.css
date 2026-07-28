@@ -95,9 +95,9 @@
   }
 
   .grit-text {
-    -webkit-mask: url("/grit-texture.svg") repeat;
+    -webkit-mask: url("/grit-mask.svg") repeat;
     -webkit-mask-size: 260px 146px;
-    mask: url("/grit-texture.svg") repeat;
+    mask: url("/grit-mask.svg") repeat;
     mask-size: 260px 146px;
   }
 
