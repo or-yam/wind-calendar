@@ -2,8 +2,8 @@ import { GithubIcon } from "@/components/icons/github";
 
 export function Footer() {
   return (
-    <footer className="bg-card border-t border-primary py-6 px-5">
-      <div className="max-w-2xl mx-auto">
+    <footer className="border-t-2 border-primary bg-card px-5 py-8">
+      <div className="mx-auto max-w-[1080px]">
         <div className="flex justify-between items-center text-sm text-card-foreground mb-3">
           <span>Wind Calendar</span>
           <a

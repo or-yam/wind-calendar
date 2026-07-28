@@ -7,14 +7,11 @@ import {
 
 export function Caveats() {
   return (
-    <section className="bg-background py-16 px-5">
-      <h2 className="text-2xl font-semibold text-secondary mb-8 text-center">Notes & FAQ</h2>
-      <div className="max-w-2xl mx-auto">
+    <section className="night-section">
+      <div className="content-wrap">
+        <h2 className="sticker-heading">Notes &amp; FAQ</h2>
         <Accordion type="single" collapsible className="flex flex-col gap-3">
-          <AccordionItem
-            value="sync-frequency"
-            className="bg-card border border-border rounded-lg px-4"
-          >
+          <AccordionItem value="sync-frequency" className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Sync Frequency
             </AccordionTrigger>
@@ -25,10 +22,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem
-            value="forecast-accuracy"
-            className="bg-card border border-border rounded-lg px-4"
-          >
+          <AccordionItem value="forecast-accuracy" className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Forecast Accuracy
             </AccordionTrigger>
@@ -39,10 +33,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem
-            value="forecast-data-source"
-            className="bg-card border border-border rounded-lg px-4"
-          >
+          <AccordionItem value="forecast-data-source" className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Where does the forecast data come from?
             </AccordionTrigger>
@@ -54,10 +45,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem
-            value="session-definition"
-            className="bg-card border border-border rounded-lg px-4"
-          >
+          <AccordionItem value="session-definition" className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Session Definition
             </AccordionTrigger>
@@ -67,10 +55,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem
-            value="daylight-hours"
-            className="bg-card border border-border rounded-lg px-4"
-          >
+          <AccordionItem value="daylight-hours" className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Daylight Hours
             </AccordionTrigger>
@@ -80,7 +65,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="timezone" className="bg-card border border-border rounded-lg px-4">
+          <AccordionItem value="timezone" className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Timezone
             </AccordionTrigger>

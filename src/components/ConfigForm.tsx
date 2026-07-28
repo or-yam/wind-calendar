@@ -92,15 +92,20 @@ export function ConfigForm({
     (which === "wave" && waveEnabled && !windEnabled);
 
   return (
-    <form className="flex flex-col gap-5 max-w-xl mx-auto py-8 px-5">
+    <form className="config-panel grid grid-cols-1 gap-x-10 gap-y-7 p-6 md:grid-cols-2 md:p-8">
       <div className="flex flex-col gap-3">
-        <Label className="text-foreground">Spots</Label>
+        <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
+          Spots
+        </Label>
         <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
-        <p className="text-xs text-foreground/70">Select up to 3 spots.</p>
+        <p className="text-xs text-muted-foreground">Select up to 3 spots.</p>
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label htmlFor="model" className="text-foreground">
+        <Label
+          htmlFor="model"
+          className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+        >
           Forecast Model
         </Label>
         <Select
@@ -110,10 +115,10 @@ export function ConfigForm({
             onModelChange(Number.isNaN(num) ? v : num);
           }}
         >
-          <SelectTrigger id="model">
+          <SelectTrigger id="model" className="rounded-sm border-2 border-input bg-transparent">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="border-2 border-[#04090b] bg-[#c9e4dd] text-[#04090b]">
             <SelectGroup>
               <SelectLabel>Open-Meteo (Recommended)</SelectLabel>
               {Object.values(MODELS)
@@ -145,7 +150,7 @@ export function ConfigForm({
       </div>
 
       {/* Wind Section */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Switch
@@ -155,12 +160,15 @@ export function ConfigForm({
               onCheckedChange={onWindEnabledChange}
               disabled={isOnlyActive("wind")}
             />
-            <Label htmlFor="wind-toggle" className="text-foreground">
+            <Label
+              htmlFor="wind-toggle"
+              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+            >
               Wind
             </Label>
           </div>
           {windEnabled && (
-            <span className="text-foreground text-sm tabular-nums">
+            <span className="text-foreground text-base font-bold tabular-nums">
               {localWind[0]} – {localWind[1]} kn
             </span>
           )}
@@ -183,7 +191,7 @@ export function ConfigForm({
       </div>
 
       {/* Wave Section */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Switch
@@ -193,12 +201,15 @@ export function ConfigForm({
               onCheckedChange={onWaveEnabledChange}
               disabled={isOnlyActive("wave")}
             />
-            <Label htmlFor="wave-toggle" className="text-foreground">
+            <Label
+              htmlFor="wave-toggle"
+              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+            >
               Waves
             </Label>
           </div>
           {waveEnabled && (
-            <span className="text-foreground text-sm tabular-nums">
+            <span className="text-foreground text-base font-bold tabular-nums">
               {localWaveHeight[0]} – {localWaveHeight[1]} m
             </span>
           )}
@@ -259,12 +270,18 @@ export function ConfigForm({
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:col-span-2">
         <div className="flex items-center justify-between">
-          <Label id="min-session-label" htmlFor="min-session" className="text-foreground">
+          <Label
+            id="min-session-label"
+            htmlFor="min-session"
+            className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+          >
             Min Session
           </Label>
-          <span className="text-foreground text-sm tabular-nums">{localSession} hrs</span>
+          <span className="text-foreground text-base font-bold tabular-nums">
+            {localSession} hrs
+          </span>
         </div>
         <Slider
           id="min-session"

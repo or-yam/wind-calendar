@@ -86,11 +86,11 @@ function groupByDay(sessions: ForecastSession[]): DayGroup[] {
 
 function ForecastCardSkeleton() {
   return (
-    <div className="bg-card text-card-foreground border border-border rounded-lg p-2 min-w-[120px] shrink-0 border-l-4 border-l-secondary aspect-[3/2] flex flex-col snap-center">
-      <Skeleton className="h-3 w-16 mb-1" />
-      <Skeleton className="h-4 w-6 mb-1" />
-      <Skeleton className="h-3 w-20 mb-1" />
-      <Skeleton className="h-4 w-12 mt-auto" />
+    <div className="session-card flex min-h-[180px] flex-col p-4">
+      <Skeleton className="mb-3 h-3 w-16" />
+      <Skeleton className="mb-2 h-6 w-24" />
+      <Skeleton className="h-3 w-20" />
+      <Skeleton className="mt-auto h-5 w-16" />
     </div>
   );
 }
@@ -110,32 +110,30 @@ export function ForecastCards({
   const groups = groupByDay(weekSessions);
 
   return (
-    <section className="py-12 px-5 bg-background">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl font-semibold text-foreground mb-6">Upcoming Sessions</h2>
+    <section className="night-section">
+      <div className="content-wrap">
+        <h2 className="sticker-heading">Worth paddling out?</h2>
 
-        <nav aria-label="Week navigation" className="flex gap-2 mb-2 justify-center items-center">
-          <Button variant="ghost" onClick={onPrev}>
+        <nav
+          aria-label="Week navigation"
+          className="mb-7 flex flex-wrap items-center justify-center gap-2"
+        >
+          <Button variant="outline" onClick={onPrev}>
             ← Prev
           </Button>
-          <span className="text-sm text-foreground/80 font-medium min-w-[140px] text-center">
+          <span className="min-w-[140px] text-center text-sm font-bold tracking-wide text-foreground/80 uppercase">
             {formatWeekRange(weekStart)}
           </span>
-          <Button variant="ghost" onClick={onNext}>
+          <Button variant="outline" onClick={onNext}>
             Next →
           </Button>
-        </nav>
-        <div className="flex gap-2 mb-6 justify-center">
-          <Button variant="ghost" onClick={onToday}>
+          <Button variant="ghost" onClick={onToday} className="basis-full sm:basis-auto">
             Today
           </Button>
-        </div>
+        </nav>
 
         {isPending ? (
-          <div
-            aria-live="polite"
-            className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll"
-          >
+          <div aria-live="polite" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {Array.from({ length: 7 }, (_, i) => (
               <ForecastCardSkeleton key={i} />
             ))}
@@ -149,10 +147,7 @@ export function ForecastCards({
             No sessions match your filters this week
           </p>
         ) : (
-          <div
-            aria-live="polite"
-            className="flex flex-row gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 px-5 sm:overflow-x-visible sm:snap-x-none sm:-mx-0 sm:px-0 forecast-scroll"
-          >
+          <div aria-live="polite" className="grid grid-cols-2 items-start gap-4 lg:grid-cols-4">
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
@@ -162,17 +157,17 @@ export function ForecastCards({
                 return (
                   <div
                     key={dayKey}
-                    className={`min-w-30 shrink-0 snap-center rounded-lg${isToday ? " ring-1 ring-primary bg-primary/15 p-1" : ""}`}
+                    className={isToday ? "rounded-sm bg-primary/15 p-1 ring-2 ring-primary" : ""}
                   >
                     <div
                       aria-label={`${formatDayLabel(day)}: No sessions`}
-                      className="bg-card text-card-foreground border border-border rounded-lg p-2 opacity-60 border-l-4 aspect-3/2 flex flex-col items-center justify-center"
-                      style={{ borderLeftColor: "#FFFFFF" }}
+                      className="session-card flex min-h-[180px] flex-col items-center justify-center p-4 opacity-60"
                     >
-                      <p className="text-[10px] font-semibold text-card-foreground uppercase mb-1">
+                      <p className="mb-2 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
                         {formatDayLabel(day)}
                       </p>
-                      <p className="text-2xl text-card-foreground/70">―</p>
+                      <p className="text-3xl text-card-foreground/70">―</p>
+                      <p className="text-sm text-card-foreground/60">No match</p>
                     </div>
                   </div>
                 );
@@ -181,7 +176,7 @@ export function ForecastCards({
               return (
                 <div
                   key={dayKey}
-                  className={`flex flex-col gap-2 min-w-30 shrink-0 snap-center rounded-lg${isToday ? " ring-1 ring-primary bg-primary/15 p-1" : ""}`}
+                  className={`flex flex-col gap-4 rounded-sm${isToday ? " bg-primary/15 p-1 ring-2 ring-primary" : ""}`}
                 >
                   {dayGroup.sessions.map((session) => {
                     const midKnots = (session.wind.min + session.wind.max) / 2;
@@ -204,16 +199,16 @@ export function ForecastCards({
                       <div
                         key={`${dayKey}-${session.start}`}
                         aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
-                        className="bg-card text-card-foreground border border-border rounded-lg p-2 border-l-4 aspect-3/2"
-                        style={{ borderLeftColor: borderColor }}
+                        className="session-card min-h-[180px] p-4 text-card-foreground"
+                        style={{ borderColor }}
                       >
-                        <p className="text-[10px] font-semibold text-card-foreground uppercase mb-0.5">
+                        <p className="mb-1 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
                           {formatDayLabel(start)}
                         </p>
-                        <p className="truncate text-[10px] text-card-foreground/70">
+                        <p className="truncate text-sm text-card-foreground/70">
                           {session.location.label}
                         </p>
-                        <div className="flex items-center gap-1.5 mb-1">
+                        <div className="mt-3 mb-1 flex items-center gap-1.5">
                           {session.matchType !== "wave" ? (
                             <DirectionIndicator direction={session.wind.direction} label="Wind" />
                           ) : null}
@@ -225,11 +220,11 @@ export function ForecastCards({
                             />
                           ) : null}
                         </div>
-                        <p className="text-xs font-medium text-card-foreground">{timeRange}</p>
-                        <div className="flex gap-1 mt-1 flex-wrap">
+                        <p className="text-xl font-bold text-card-foreground">{timeRange}</p>
+                        <div className="mt-4 flex flex-wrap gap-1.5">
                           {session.matchType !== "wind" ? (
                             <span
-                              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
+                              className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
                               style={{
                                 backgroundColor: waveHeightColor(session.wave.avgHeight),
                                 color: waveHeightTextColor(session.wave.avgHeight),
@@ -240,7 +235,7 @@ export function ForecastCards({
                           ) : null}
                           {session.matchType !== "wave" ? (
                             <span
-                              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums"
+                              className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
                               style={{
                                 backgroundColor: windColor(midKnots),
                                 color: windTextColor(midKnots),
