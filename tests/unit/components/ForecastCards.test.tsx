@@ -22,7 +22,7 @@ describe("ForecastCards", () => {
     container.remove();
   });
 
-  it("shows wind and wave directions on upcoming sessions", async () => {
+  it("renders same-day sessions with directions in one horizontal track", async () => {
     const weekStart = new Date(2026, 6, 27);
     const session: ForecastSession = {
       location: { id: "beit-yanai", label: "Beit Yanai" },
@@ -93,5 +93,14 @@ describe("ForecastCards", () => {
     expect(
       container.querySelector('[aria-label*="Wind 12–16 kn W, Wave 1.2m 8s NW"]'),
     ).not.toBeNull();
+
+    const sessionTrack = container.querySelector(".forecast-scroll");
+    const sessionCards = container.querySelectorAll('[aria-label*="at Beit Yanai"]');
+    expect(sessionTrack).not.toBeNull();
+    expect(sessionTrack?.classList).toContain("overflow-x-auto");
+    expect(sessionCards).toHaveLength(3);
+    for (const card of sessionCards) {
+      expect(card.parentElement).toBe(sessionTrack);
+    }
   });
 });
