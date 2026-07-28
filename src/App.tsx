@@ -116,7 +116,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen flex-col text-foreground">
       <Hero
         locations={config.locations}
         model={config.model}
@@ -146,7 +146,7 @@ function App() {
         <SubscribeButtons config={config} />
         <ErrorBoundary
           fallback={
-            <div className="py-12 px-5 text-center">
+            <div className="night-section px-5 text-center">
               <p className="text-red-400 text-sm">
                 Something went wrong. Please try refreshing the page.
               </p>
@@ -163,10 +163,10 @@ function App() {
             onToday={goToToday}
           />
         </ErrorBoundary>
-        <section className="py-12 px-5">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-foreground font-semibold text-lg mb-3">About</h2>
-            <p className="text-foreground/80 text-sm leading-relaxed">
+        <section className="night-section">
+          <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
+            <h2 className="sticker-heading mb-0">About</h2>
+            <p className="max-w-2xl text-lg leading-relaxed text-foreground/80">
               Wind Calendar exists to give surfers a rough sense of when conditions might be worth
               checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
               view into your regular calendar so promising days are visible alongside everything

@@ -64,64 +64,72 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
   }[copyState];
 
   return (
-    <section className="py-12 px-5 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-foreground mb-6">Subscribe to Calendar</h2>
+    <section className="night-section">
+      <div className="content-wrap">
+        <h2 className="sticker-heading">Stick it somewhere</h2>
 
-      <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <a href={webcalUrl} className="block">
-            <div className="bg-card border border-border hover:border-secondary transition-all rounded-lg p-4 flex items-center gap-3">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <a href={webcalUrl} className="action-card flex items-center gap-3 p-4">
               <img
                 alt="macOS Calendar logo"
                 src="/macos-calendar_logo.png"
-                className="w-5 h-5 object-contain shrink-0"
+                className="size-6 shrink-0 object-contain"
               />
-              <strong className="font-semibold text-sm text-card-foreground">Apple Calendar</strong>
-            </div>
-          </a>
+              <strong className="text-base font-bold text-card-foreground">Apple Calendar</strong>
+            </a>
 
-          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="block">
-            <div className="bg-card border border-border hover:border-secondary transition-all rounded-lg p-4 flex items-center gap-3">
+            <a
+              href={googleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="action-card flex items-center gap-3 p-4"
+            >
               <img
                 alt="google calendar logo"
                 src="/google_calendar_logo.svg"
-                className="w-5 h-5 object-contain shrink-0"
+                className="size-6 shrink-0 object-contain"
               />
-              <strong className="font-semibold text-sm text-card-foreground">
-                Google Calendar
-              </strong>
-            </div>
-          </a>
+              <strong className="text-base font-bold text-card-foreground">Google Calendar</strong>
+            </a>
 
-          <a href={outlookUrl} target="_blank" rel="noopener noreferrer" className="block">
-            <div className="bg-card border border-border hover:border-secondary transition-all rounded-lg p-4 flex items-center gap-3">
+            <a
+              href={outlookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="action-card flex items-center gap-3 p-4"
+            >
               <img
                 alt="Microsoft Outlook calendar logo"
                 src="/outlook-calendar_logo.svg"
-                className="w-5 h-5 object-contain shrink-0"
+                className="size-6 shrink-0 object-contain"
               />
-              <strong className="font-semibold text-sm text-card-foreground">Outlook</strong>
-            </div>
-          </a>
-        </div>
+              <strong className="text-base font-bold text-card-foreground">Outlook</strong>
+            </a>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button type="button" onClick={handleCopyUrl} className="w-full text-left">
-            <div className="bg-card border border-border hover:border-secondary transition-all rounded-lg p-4 flex items-center gap-3">
-              <Copy className={cn("w-5 h-5 shrink-0", copyIconColor)} />
-              <strong className="font-semibold text-sm text-card-foreground">{copyText}</strong>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleCopyUrl}
+              className="action-card flex w-full items-center gap-3 p-4 text-left"
+            >
+              <Copy className={cn("size-6 shrink-0", copyIconColor)} />
+              <strong className="text-base font-bold text-card-foreground">{copyText}</strong>
               <span className="sr-only" role="status" aria-live="polite">
                 {copyState !== "idle" && copyText}
               </span>
-            </div>
-          </button>
+            </button>
 
-          <button type="button" onClick={handleDownloadIcs} className="w-full text-left">
-            <div className="bg-card border border-border hover:border-secondary transition-all rounded-lg p-4 flex items-center gap-3">
-              <Download className="text-primary w-5 h-5 shrink-0" />
-              <strong className="font-semibold text-sm text-card-foreground">Download .ics</strong>
-            </div>
-          </button>
+            <button
+              type="button"
+              onClick={handleDownloadIcs}
+              className="action-card flex w-full items-center gap-3 p-4 text-left"
+            >
+              <Download className="size-6 shrink-0 text-primary" />
+              <strong className="text-base font-bold text-card-foreground">Download .ics</strong>
+            </button>
+          </div>
         </div>
       </div>
     </section>
