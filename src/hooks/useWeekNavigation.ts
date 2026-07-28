@@ -3,38 +3,15 @@ import { getWeekStart, addDays } from "../lib/date-utils";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
-  startOnSunday: boolean;
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
-  toggleWeekStart: (startOnSunday: boolean) => void;
 }
 
-const WEEK_START_KEY = "weekStartsOnSunday";
-
-function getDefaultWeekStart(): boolean {
-  try {
-    const locale = new Intl.Locale(navigator.language);
-    if ("weekInfo" in locale && locale.weekInfo) {
-      return (locale.weekInfo as { firstDay: number }).firstDay === 7;
-    }
-  } catch {}
-  const lang = navigator.language.toLowerCase();
-  return lang.startsWith("en-us") || lang.startsWith("he");
-}
+const START_ON_SUNDAY = true;
 
 export function useWeekNavigation(items: { start: string }[]): UseWeekNavigationResult {
-  const [startOnSunday, setStartOnSunday] = useState(() => {
-    try {
-      const saved = localStorage.getItem(WEEK_START_KEY);
-      if (saved !== null) return saved === "1";
-      return getDefaultWeekStart();
-    } catch {
-      return true;
-    }
-  });
-
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), startOnSunday));
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), START_ON_SUNDAY));
   const hasNavigatedRef = useRef(false);
 
   useEffect(() => {
@@ -48,13 +25,13 @@ export function useWeekNavigation(items: { start: string }[]): UseWeekNavigation
       for (let i = 1; i < items.length; i++) {
         if (items[i].start < earliestStart) earliestStart = items[i].start;
       }
-      setWeekStart(getWeekStart(new Date(earliestStart), startOnSunday));
+      setWeekStart(getWeekStart(new Date(earliestStart), START_ON_SUNDAY));
     }
-  }, [items, startOnSunday]);
+  }, [items]);
 
   const goToToday = useCallback(() => {
-    setWeekStart(getWeekStart(new Date(), startOnSunday));
-  }, [startOnSunday]);
+    setWeekStart(getWeekStart(new Date(), START_ON_SUNDAY));
+  }, []);
 
   const goToPrev = useCallback(() => {
     setWeekStart((prev) => addDays(prev, -7));
@@ -64,17 +41,5 @@ export function useWeekNavigation(items: { start: string }[]): UseWeekNavigation
     setWeekStart((prev) => addDays(prev, 7));
   }, []);
 
-  const toggleWeekStart = useCallback(
-    (startOnSunday: boolean) => {
-      setStartOnSunday(startOnSunday);
-      try {
-        localStorage.setItem(WEEK_START_KEY, startOnSunday ? "1" : "0");
-      } catch {}
-      const midWeek = addDays(weekStart, 3);
-      setWeekStart(getWeekStart(midWeek, startOnSunday));
-    },
-    [weekStart],
-  );
-
-  return { weekStart, startOnSunday, goToToday, goToPrev, goToNext, toggleWeekStart };
+  return { weekStart, goToToday, goToPrev, goToNext };
 }

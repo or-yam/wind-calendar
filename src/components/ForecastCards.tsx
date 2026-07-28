@@ -32,6 +32,45 @@ interface DayGroup {
   sessions: ForecastSession[];
 }
 
+const DIRECTION_ROTATION: Record<string, number> = {
+  W: 0,
+  NW: 45,
+  N: 90,
+  NE: 135,
+  E: 180,
+  SE: 225,
+  S: 270,
+  SW: 315,
+};
+
+function DirectionIndicator({
+  direction,
+  label,
+  wave = false,
+}: {
+  direction: string;
+  label: "Wind" | "Wave";
+  wave?: boolean;
+}) {
+  return (
+    <span
+      role="img"
+      aria-label={`${label} direction ${direction}`}
+      className="inline-flex items-center gap-0.5 text-sm leading-none text-card-foreground"
+    >
+      {wave ? <span aria-hidden="true">{WAVE_ICON}</span> : null}
+      <span
+        aria-hidden="true"
+        className="inline-block"
+        style={{ transform: `rotate(${DIRECTION_ROTATION[direction] ?? 0}deg)` }}
+      >
+        {WIND_ICON}
+      </span>
+      <span aria-hidden="true">-{direction}</span>
+    </span>
+  );
+}
+
 function groupByDay(sessions: ForecastSession[]): DayGroup[] {
   const map = new Map<string, DayGroup>();
   for (const session of sessions) {
@@ -151,17 +190,11 @@ export function ForecastCards({
                         ? waveHeightColor(session.wave.avgHeight)
                         : windColor(midKnots);
 
-                    const windLabel =
+                    const windSpeedLabel =
                       session.wind.min === session.wind.max
                         ? `${session.wind.min} kn`
                         : `${session.wind.min}–${session.wind.max} kn`;
-
-                    const icon =
-                      session.matchType === "both"
-                        ? `${WIND_ICON}${WAVE_ICON}`
-                        : session.matchType === "wave"
-                          ? WAVE_ICON
-                          : WIND_ICON;
+                    const waveLabel = `${session.wave.avgHeight.toFixed(1)}m${session.wave.avgPeriod > 0 ? ` ${session.wave.avgPeriod}s` : ""}`;
 
                     const start = new Date(session.start);
                     const end = new Date(session.end);
@@ -170,7 +203,7 @@ export function ForecastCards({
                     return (
                       <div
                         key={`${dayKey}-${session.start}`}
-                        aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windLabel}` : session.matchType === "wave" ? `Wave ${session.wave.avgHeight.toFixed(1)}m` : `Wind ${windLabel}, Wave ${session.wave.avgHeight.toFixed(1)}m`}`}
+                        aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
                         className="bg-card text-card-foreground border border-border rounded-lg p-2 border-l-4 aspect-3/2"
                         style={{ borderLeftColor: borderColor }}
                       >
@@ -180,9 +213,18 @@ export function ForecastCards({
                         <p className="truncate text-[10px] text-card-foreground/70">
                           {session.location.label}
                         </p>
-                        <p className="text-sm leading-none mb-1" style={{ color: borderColor }}>
-                          {icon}
-                        </p>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          {session.matchType !== "wave" ? (
+                            <DirectionIndicator direction={session.wind.direction} label="Wind" />
+                          ) : null}
+                          {session.matchType !== "wind" ? (
+                            <DirectionIndicator
+                              direction={session.wave.direction}
+                              label="Wave"
+                              wave
+                            />
+                          ) : null}
+                        </div>
                         <p className="text-xs font-medium text-card-foreground">{timeRange}</p>
                         <div className="flex gap-1 mt-1 flex-wrap">
                           {session.matchType !== "wind" ? (
@@ -193,8 +235,7 @@ export function ForecastCards({
                                 color: waveHeightTextColor(session.wave.avgHeight),
                               }}
                             >
-                              {session.wave.avgHeight.toFixed(1)}m
-                              {session.wave.avgPeriod > 0 ? ` ${session.wave.avgPeriod}s` : ""}
+                              {waveLabel}
                             </span>
                           ) : null}
                           {session.matchType !== "wave" ? (
@@ -205,7 +246,7 @@ export function ForecastCards({
                                 color: windTextColor(midKnots),
                               }}
                             >
-                              {windLabel}
+                              {windSpeedLabel}
                             </span>
                           ) : null}
                         </div>
