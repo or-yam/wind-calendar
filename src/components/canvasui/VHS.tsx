@@ -549,6 +549,7 @@ export function VHS({ children, className, style, ...options }: VHSProps) {
   const native = supported && !failed;
 
   useEffect(() => {
+    if (!native) return;
     const source = sourceRef.current;
     const content = contentRef.current;
     const output = outputRef.current;
