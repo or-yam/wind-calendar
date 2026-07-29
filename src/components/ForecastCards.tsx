@@ -112,7 +112,7 @@ export function ForecastCards({
   return (
     <section className="night-section">
       <div className="content-wrap">
-        <h2 className="sticker-heading">Upcomming sessions</h2>
+        <h2 className="sticker-heading">Upcoming sessions</h2>
 
         <nav
           aria-label="Week navigation"
