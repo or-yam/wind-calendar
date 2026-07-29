@@ -86,7 +86,7 @@ function groupByDay(sessions: ForecastSession[]): DayGroup[] {
 
 function ForecastCardSkeleton() {
   return (
-    <div className="session-card flex min-h-[180px] flex-col p-4">
+    <div className="session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col p-4">
       <Skeleton className="mb-3 h-3 w-16" />
       <Skeleton className="mb-2 h-6 w-24" />
       <Skeleton className="h-3 w-20" />
@@ -112,7 +112,7 @@ export function ForecastCards({
   return (
     <section className="night-section">
       <div className="content-wrap">
-        <h2 className="sticker-heading">Worth paddling out?</h2>
+        <h2 className="sticker-heading">Upcoming sessions</h2>
 
         <nav
           aria-label="Week navigation"
@@ -133,7 +133,10 @@ export function ForecastCards({
         </nav>
 
         {isPending ? (
-          <div aria-live="polite" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div
+            aria-live="polite"
+            className="forecast-scroll -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3"
+          >
             {Array.from({ length: 7 }, (_, i) => (
               <ForecastCardSkeleton key={i} />
             ))}
@@ -147,7 +150,10 @@ export function ForecastCards({
             No sessions match your filters this week
           </p>
         ) : (
-          <div aria-live="polite" className="grid grid-cols-2 items-start gap-4 lg:grid-cols-4">
+          <div
+            aria-live="polite"
+            className="forecast-scroll -mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3"
+          >
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
@@ -157,99 +163,84 @@ export function ForecastCards({
                 return (
                   <div
                     key={dayKey}
-                    className={isToday ? "rounded-sm bg-primary/15 p-1 ring-2 ring-primary" : ""}
+                    aria-label={`${formatDayLabel(day)}: No sessions`}
+                    className={`session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col items-center justify-center p-4 opacity-60${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
                   >
-                    <div
-                      aria-label={`${formatDayLabel(day)}: No sessions`}
-                      className="session-card flex min-h-[180px] flex-col items-center justify-center p-4 opacity-60"
-                    >
-                      <p className="mb-2 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
-                        {formatDayLabel(day)}
-                      </p>
-                      <p className="text-3xl text-card-foreground/70">―</p>
-                      <p className="text-sm text-card-foreground/60">No match</p>
-                    </div>
+                    <p className="mb-2 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
+                      {formatDayLabel(day)}
+                    </p>
+                    <p className="text-3xl text-card-foreground/70">―</p>
+                    <p className="text-sm text-card-foreground/60">No match</p>
                   </div>
                 );
               }
 
-              return (
-                <div
-                  key={dayKey}
-                  className={`flex flex-col gap-4 rounded-sm${isToday ? " bg-primary/15 p-1 ring-2 ring-primary" : ""}`}
-                >
-                  {dayGroup.sessions.map((session) => {
-                    const midKnots = (session.wind.min + session.wind.max) / 2;
-                    const borderColor =
-                      session.matchType === "wave"
-                        ? waveHeightColor(session.wave.avgHeight)
-                        : windColor(midKnots);
+              return dayGroup.sessions.map((session) => {
+                const midKnots = (session.wind.min + session.wind.max) / 2;
+                const borderColor =
+                  session.matchType === "wave"
+                    ? waveHeightColor(session.wave.avgHeight)
+                    : windColor(midKnots);
 
-                    const windSpeedLabel =
-                      session.wind.min === session.wind.max
-                        ? `${session.wind.min} kn`
-                        : `${session.wind.min}–${session.wind.max} kn`;
-                    const waveLabel = `${session.wave.avgHeight.toFixed(1)}m${session.wave.avgPeriod > 0 ? ` ${session.wave.avgPeriod}s` : ""}`;
+                const windSpeedLabel =
+                  session.wind.min === session.wind.max
+                    ? `${session.wind.min} kn`
+                    : `${session.wind.min}–${session.wind.max} kn`;
+                const waveLabel = `${session.wave.avgHeight.toFixed(1)}m${session.wave.avgPeriod > 0 ? ` ${session.wave.avgPeriod}s` : ""}`;
 
-                    const start = new Date(session.start);
-                    const end = new Date(session.end);
-                    const timeRange = `${formatTimeFromDate(start)} – ${formatTimeFromDate(end)}`;
+                const start = new Date(session.start);
+                const end = new Date(session.end);
+                const timeRange = `${formatTimeFromDate(start)} – ${formatTimeFromDate(end)}`;
 
-                    return (
-                      <div
-                        key={`${dayKey}-${session.start}`}
-                        aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
-                        className="session-card min-h-[180px] p-4 text-card-foreground"
-                        style={{ borderColor }}
-                      >
-                        <p className="mb-1 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
-                          {formatDayLabel(start)}
-                        </p>
-                        <p className="truncate text-sm text-card-foreground/70">
-                          {session.location.label}
-                        </p>
-                        <div className="mt-3 mb-1 flex items-center gap-1.5">
-                          {session.matchType !== "wave" ? (
-                            <DirectionIndicator direction={session.wind.direction} label="Wind" />
-                          ) : null}
-                          {session.matchType !== "wind" ? (
-                            <DirectionIndicator
-                              direction={session.wave.direction}
-                              label="Wave"
-                              wave
-                            />
-                          ) : null}
-                        </div>
-                        <p className="text-xl font-bold text-card-foreground">{timeRange}</p>
-                        <div className="mt-4 flex flex-wrap gap-1.5">
-                          {session.matchType !== "wind" ? (
-                            <span
-                              className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
-                              style={{
-                                backgroundColor: waveHeightColor(session.wave.avgHeight),
-                                color: waveHeightTextColor(session.wave.avgHeight),
-                              }}
-                            >
-                              {waveLabel}
-                            </span>
-                          ) : null}
-                          {session.matchType !== "wave" ? (
-                            <span
-                              className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
-                              style={{
-                                backgroundColor: windColor(midKnots),
-                                color: windTextColor(midKnots),
-                              }}
-                            >
-                              {windSpeedLabel}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
+                return (
+                  <div
+                    key={`${dayKey}-${session.start}`}
+                    aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
+                    className={`session-card min-h-[180px] w-60 shrink-0 snap-start p-4 text-card-foreground${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
+                    style={{ borderColor }}
+                  >
+                    <p className="mb-1 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
+                      {formatDayLabel(start)}
+                    </p>
+                    <p className="truncate text-sm text-card-foreground/70">
+                      {session.location.label}
+                    </p>
+                    <div className="mt-3 mb-1 flex items-center gap-1.5">
+                      {session.matchType !== "wave" ? (
+                        <DirectionIndicator direction={session.wind.direction} label="Wind" />
+                      ) : null}
+                      {session.matchType !== "wind" ? (
+                        <DirectionIndicator direction={session.wave.direction} label="Wave" wave />
+                      ) : null}
+                    </div>
+                    <p className="text-xl font-bold text-card-foreground">{timeRange}</p>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {session.matchType !== "wind" ? (
+                        <span
+                          className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
+                          style={{
+                            backgroundColor: waveHeightColor(session.wave.avgHeight),
+                            color: waveHeightTextColor(session.wave.avgHeight),
+                          }}
+                        >
+                          {waveLabel}
+                        </span>
+                      ) : null}
+                      {session.matchType !== "wave" ? (
+                        <span
+                          className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
+                          style={{
+                            backgroundColor: windColor(midKnots),
+                            color: windTextColor(midKnots),
+                          }}
+                        >
+                          {windSpeedLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              });
             })}
           </div>
         )}
