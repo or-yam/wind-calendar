@@ -1,4 +1,4 @@
-import { defineHandler, HTTPError } from "nitro";
+import { HTTPError } from "nitro";
 import { getQuery } from "nitro/h3";
 
 import type { CalendarConfig } from "../../shared/types";
@@ -13,6 +13,7 @@ import { checkRateLimit } from "../utils/rate-limit";
 import { isDev, getClientIp } from "../utils/api-handler";
 import { buildLocationSessions, type LocationSession } from "../utils/location-sessions";
 import { queryToSearchParams } from "../utils/query-params.js";
+import { withRuntimeLogging } from "../utils/runtime-logging.js";
 import type { WindConditionRaw } from "../types/wind-conditions";
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
@@ -58,7 +59,7 @@ function serializeSession(session: LocationSession): ForecastSession {
   };
 }
 
-export default defineHandler(async (event) => {
+export default withRuntimeLogging("/api/forecast", async (event) => {
   const dev = isDev();
 
   const rateCheck = checkRateLimit(getClientIp(event));

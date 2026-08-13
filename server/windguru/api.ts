@@ -14,11 +14,17 @@ function validateTimeString(value: unknown, label: string): string {
   return value;
 }
 
-function extractWindData(forecast: Forecast, spotId: string): WindConditionRaw[] {
+function extractWindData(forecast: Forecast): WindConditionRaw[] {
   const fcst = forecast.fcst;
 
   if (!fcst?.WINDSPD) {
-    console.error(`No WINDSPD data in forecast for spot ${spotId} (model ${fcst?.id_model})`);
+    console.warn(
+      JSON.stringify({
+        level: "warning",
+        message: "windguru_wind_data_missing",
+        provider: "windguru",
+      }),
+    );
     return [];
   }
 
@@ -92,8 +98,12 @@ export async function fetchWindData(
   if (windResult.error) {
     // Try to fallback to GFS (model 3) if a different model was requested
     if (modelId !== 3) {
-      console.error(
-        `Model ${modelId} fetch failed for spot ${locationCode}, falling back to GFS (model 3): ${windResult.error.message}`,
+      console.warn(
+        JSON.stringify({
+          level: "warning",
+          message: "windguru_model_fallback",
+          provider: "windguru",
+        }),
       );
       const fallbackResult = await tryCatch(getForecast(locationCode, 3));
       if (fallbackResult.error) {
@@ -102,10 +112,14 @@ export async function fetchWindData(
       // Use fallback data
       const sunrise = validateTimeString(fallbackResult.data.sunrise, "sunrise");
       const sunset = validateTimeString(fallbackResult.data.sunset, "sunset");
-      const windData = extractWindData(fallbackResult.data, locationCode);
+      const windData = extractWindData(fallbackResult.data);
       if (waveResult.error) {
-        console.error(
-          `Wave model fetch failed for spot ${locationCode} (non-fatal): ${waveResult.error.message}`,
+        console.warn(
+          JSON.stringify({
+            level: "warning",
+            message: "windguru_wave_fetch_failed",
+            provider: "windguru",
+          }),
         );
       } else {
         mergeWaveData(windData, waveResult.data);
@@ -118,11 +132,15 @@ export async function fetchWindData(
   const sunrise = validateTimeString(windResult.data.sunrise, "sunrise");
   const sunset = validateTimeString(windResult.data.sunset, "sunset");
 
-  const windData = extractWindData(windResult.data, locationCode);
+  const windData = extractWindData(windResult.data);
 
   if (waveResult.error) {
-    console.error(
-      `Wave model fetch failed for spot ${locationCode} (non-fatal): ${waveResult.error.message}`,
+    console.warn(
+      JSON.stringify({
+        level: "warning",
+        message: "windguru_wave_fetch_failed",
+        provider: "windguru",
+      }),
     );
   } else {
     mergeWaveData(windData, waveResult.data);

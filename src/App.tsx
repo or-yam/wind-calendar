@@ -5,6 +5,9 @@ import { forecastQueryOptions } from "./lib/forecast-query";
 const Analytics = lazy(() =>
   import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
 );
+const SpeedInsights = lazy(() =>
+  import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })),
+);
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
 import { ForecastCards } from "./components/ForecastCards";
@@ -19,6 +22,7 @@ import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { redactQueryValues } from "./lib/observability";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -232,7 +236,8 @@ function App() {
       </main>
       <Footer />
       <Suspense fallback={null}>
-        <Analytics />
+        <Analytics beforeSend={redactQueryValues} />
+        <SpeedInsights beforeSend={redactQueryValues} />
       </Suspense>
     </div>
   );

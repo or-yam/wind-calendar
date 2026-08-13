@@ -26,6 +26,9 @@ importers:
       '@vercel/flags-core':
         specifier: ^1.7.1
         version: 1.7.1(ws@8.21.3)
+      '@vercel/speed-insights':
+        specifier: ^2.0.0
+        version: 2.0.0(react@19.2.8)
       ai:
         specifier: ^7.0.64
         version: 7.0.64(zod@4.4.3)
@@ -1592,6 +1595,32 @@ packages:
 
   '@vercel/sandbox@2.4.0':
     resolution: {integrity: sha512-pifnr8hex/rgQ3EPyLYHYwHyf0Kwmc4Vbya9kHGk4aERFVGj44P+742S8/SDdt2guMxBriXBOMkMLq1Kaiyyeg==}
+
+  '@vercel/speed-insights@2.0.0':
+    resolution: {integrity: sha512-jwkNcrTeafWxjmWq4AHBaptSqZiJkYU5adLC9QBSqeim0GcqDMgN5Ievh8OG1rJ6W3A4l1oiP7qr9CWxGuzu3w==}
+    peerDependencies:
+      '@sveltejs/kit': ^1 || ^2
+      next: '>= 13'
+      nuxt: '>= 3'
+      react: ^18 || ^19 || ^19.0.0-rc
+      svelte: '>= 4'
+      vue: ^3
+      vue-router: ^4
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      next:
+        optional: true
+      nuxt:
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+      vue-router:
+        optional: true
 
   '@vercel/static-build@2.12.5':
     resolution: {integrity: sha512-aztx2zqInymPe11fxEy2iwLyknZaqrE2TFXGpAWb8eNsDp0tulIs1lRywL0XSyEnxnIpTmy1BUS3b7l0XxFB/A==}
@@ -4501,6 +4530,10 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
       - react-native-b4a
+
+  '@vercel/speed-insights@2.0.0(react@19.2.8)':
+    optionalDependencies:
+      react: 19.2.8
 
   '@vercel/static-build@2.12.5':
     dependencies:

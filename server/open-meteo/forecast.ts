@@ -168,8 +168,12 @@ export async function fetchOpenMeteoData(
 
   // Merge wave data if available
   if (waveResult.error) {
-    console.error(
-      `Wave data fetch failed for ${lat},${lon} (non-fatal): ${waveResult.error.message}`,
+    console.warn(
+      JSON.stringify({
+        level: "warning",
+        message: "open_meteo_wave_fetch_failed",
+        provider: "openmeteo",
+      }),
     );
   } else {
     mergeWaveData(windData, waveResult.data);

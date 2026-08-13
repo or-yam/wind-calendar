@@ -168,3 +168,23 @@ pnpm lint:fix
 # Run tests
 pnpm test
 ```
+
+## Vercel Observability
+
+The app uses Vercel Web Analytics and Speed Insights in the browser. Both integrations remove query strings before sending page URLs because calendar configuration is URL-driven. The main forecast, calendar, and free-text handlers emit a structured JSON record when they throw a server error. These records contain only a fixed route, method, generated request ID, and error type; they omit request bodies, prompts, IPs, query values, raw error messages, and timing or final-response claims. Routine client validation errors are not duplicated in application logs. Provider fallback warnings also use fixed fields instead of coordinates or upstream error messages.
+
+### Dashboard setup
+
+1. In the Vercel project dashboard, open **Speed Insights**, click **Enable**, and deploy again. Vercel provisions the first-party `/_vercel/speed-insights/*` and deployment-specific resilient-intake routes on that deployment.
+2. Visit the deployed app, then navigate away or blur/close the tab so vitals are sent. Data appears under **Speed Insights** after traffic arrives; ad blockers and reverse proxies can block collection.
+3. Open **Logs** for Runtime Logs. Filter by route, status, environment, or log level, and search `api_request_failed` or an origin response's `X-Request-ID`. Vercel also groups each JSON line with its function invocation and platform Request ID.
+
+`X-Request-ID` correlates application logs produced during one Nitro/Vercel Function invocation. It is not Vercel's platform Request ID. CDN-cached responses do not invoke Nitro or produce application logs, and may replay the ID stored with the cached origin response, so do not treat this header as unique per viewer request. Use Vercel's Runtime Logs request metadata for platform-level request correlation and final status/duration.
+
+No runtime observability environment variables or external services are required.
+
+### Hobby limits
+
+As of August 2026, Hobby includes Speed Insights for one project with up to 10,000 events per month and a 7-day reporting window. Recording pauses after the event cap is reached. Hobby Runtime Logs retain only one hour of logs. Vercel also limits each request to 256 log lines, 256 KB per line, and 1 MB total, so this integration logs only server failures and significant provider warnings rather than every successful request. Speed Insights client collection also consumes Edge Requests and data transfer.
+
+Current Vercel references: [Speed Insights quickstart](https://vercel.com/docs/speed-insights/quickstart), [Speed Insights limits](https://vercel.com/docs/speed-insights/limits-and-pricing), and [Runtime Logs](https://vercel.com/docs/logs/runtime).

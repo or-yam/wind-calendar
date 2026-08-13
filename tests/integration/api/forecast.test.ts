@@ -83,6 +83,7 @@ describe("forecast API handler", () => {
     expect(res.headers["cache-control"]).toBe(
       "public, max-age=21600, stale-while-revalidate=86400, stale-if-error=604800",
     );
+    expect(res.headers["x-request-id"]).toMatch(/^[0-9a-f-]{36}$/);
 
     const body = JSON.parse(res.body) as ForecastResponse;
     expect(body.meta).toBeDefined();

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { fetchOpenMeteoData } from "../../../server/open-meteo/forecast";
 import type {
   OpenMeteoForecastResponse,
@@ -117,6 +117,7 @@ describe("fetchOpenMeteoData", () => {
 
   afterEach(() => {
     restoreFetch();
+    vi.restoreAllMocks();
   });
 
   it("fetches wind + wave data successfully", async () => {
@@ -140,6 +141,7 @@ describe("fetchOpenMeteoData", () => {
   });
 
   it("handles wave data fetch failure gracefully", async () => {
+    const warningSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     installFetchMock((url) => {
       if (url.hostname === "marine-api.open-meteo.com") {
         return new Response("Marine API error", { status: 500 });
@@ -155,6 +157,14 @@ describe("fetchOpenMeteoData", () => {
 
     // Wave data should be null when marine API fails
     expect(result.windData[0].waveHeight).toBeNull();
+    expect(warningSpy).toHaveBeenCalledOnce();
+    expect(JSON.parse(warningSpy.mock.calls[0][0] as string)).toEqual({
+      level: "warning",
+      message: "open_meteo_wave_fetch_failed",
+      provider: "openmeteo",
+    });
+    expect(warningSpy.mock.calls[0][0]).not.toContain("32.08");
+    expect(warningSpy.mock.calls[0][0]).not.toContain("Marine API error");
   });
 
   it("throws when wind forecast API fails", async () => {

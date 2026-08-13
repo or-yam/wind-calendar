@@ -27,6 +27,7 @@ describe("POST /api/interpret-config", () => {
 
   afterEach(() => {
     delete process.env.OPENAI_API_KEY;
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -80,6 +81,7 @@ describe("POST /api/interpret-config", () => {
   });
 
   it("hides model errors behind an actionable response", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     interpretFreeTextConfig.mockRejectedValue(new Error("provider secret details"));
     const response = await callHandler(handler, "/api/interpret-config", {
       method: "POST",
@@ -90,5 +92,43 @@ describe("POST /api/interpret-config", () => {
     expect(response.statusCode).toBe(502);
     expect(response.body).toContain("Could not interpret that request");
     expect(response.body).not.toContain("provider secret details");
+    expect(errorSpy).toHaveBeenCalledOnce();
+    const log = JSON.parse(errorSpy.mock.calls[0][0] as string);
+    expect(log).toMatchObject({
+      level: "error",
+      message: "api_request_failed",
+      route: "/api/interpret-config",
+      method: "POST",
+    });
+    expect(log).not.toHaveProperty("body");
+    expect(log).not.toHaveProperty("status");
+    expect(log).not.toHaveProperty("durationMs");
+    expect(log.requestId).toBe(response.headers["x-request-id"]);
+    expect(JSON.stringify(log)).not.toContain("provider secret details");
+  });
+
+  it("does not claim completion before Nitro finalizes a successful response", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const response = await callHandler(handler, "/api/interpret-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ request: "Kitesurfing at Beit Yanai with 14-20 knots" }),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["x-request-id"]).toMatch(/^[0-9a-f-]{36}$/);
+    expect(logSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not log expected invalid input", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const response = await callHandler(handler, "/api/interpret-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ request: "private" }),
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 });

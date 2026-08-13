@@ -2,6 +2,13 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const observabilityProps = vi.hoisted(() => ({
+  analytics: undefined as undefined | { beforeSend: (event: { url: string }) => { url: string } },
+  speedInsights: undefined as
+    | undefined
+    | { beforeSend: (event: { url: string }) => { url: string } },
+}));
+
 vi.mock("@tanstack/react-query", () => ({
   queryOptions: (options: unknown) => options,
   useQuery: (options: { queryKey: string[] }) =>
@@ -11,7 +18,17 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 vi.mock("@vercel/analytics/react", () => ({
-  Analytics: () => null,
+  Analytics: (props: typeof observabilityProps.analytics) => {
+    observabilityProps.analytics = props;
+    return null;
+  },
+}));
+
+vi.mock("@vercel/speed-insights/react", () => ({
+  SpeedInsights: (props: typeof observabilityProps.speedInsights) => {
+    observabilityProps.speedInsights = props;
+    return null;
+  },
 }));
 
 vi.mock("../../src/components/Hero", async () => {
@@ -71,6 +88,8 @@ describe("App location selection", () => {
   let root: Root;
 
   beforeEach(() => {
+    observabilityProps.analytics = undefined;
+    observabilityProps.speedInsights = undefined;
     window.history.replaceState(null, "", "/?locations=beit-yanai&model=om_gfs");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -113,5 +132,17 @@ describe("App location selection", () => {
     )!;
     await act(async () => confirm.click());
     expect(subscriptionLink().href).toContain("locations=tel-aviv");
+  });
+
+  it("removes query values from Vercel browser observability events", async () => {
+    await act(async () => root.render(createElement(App)));
+
+    expect(observabilityProps.analytics).toBeDefined();
+    expect(observabilityProps.speedInsights).toBeDefined();
+    const event = { url: "https://wind-calendar.test/?locations=private&windMin=17" };
+    expect(observabilityProps.analytics!.beforeSend(event).url).toBe("https://wind-calendar.test/");
+    expect(observabilityProps.speedInsights!.beforeSend(event).url).toBe(
+      "https://wind-calendar.test/",
+    );
   });
 });

@@ -8,7 +8,12 @@ export const FEATURE_FLAGS = {
 export async function isFeatureEnabled(flag: (typeof FEATURE_FLAGS)[keyof typeof FEATURE_FLAGS]) {
   const { data: result, error } = await tryCatch(flagsClient.evaluate<boolean>(flag, false));
   if (error) {
-    console.error(`Feature flag evaluation failed for ${flag}`, error);
+    console.warn(
+      JSON.stringify({
+        level: "warning",
+        message: "feature_flag_evaluation_failed",
+      }),
+    );
     return false;
   }
 

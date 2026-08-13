@@ -1,4 +1,4 @@
-import { defineHandler, HTTPError } from "nitro";
+import { HTTPError } from "nitro";
 import { readBody } from "nitro/h3";
 import { z } from "zod";
 import { interpretFreeTextConfig } from "../free-text-config.js";
@@ -6,6 +6,7 @@ import { checkRateLimit } from "../utils/rate-limit.js";
 import { getClientIp } from "../utils/api-handler.js";
 import { tryCatch } from "../utils/try-catch.js";
 import { FEATURE_FLAGS, isFeatureEnabled } from "../feature-flags.js";
+import { withRuntimeLogging } from "../utils/runtime-logging.js";
 
 export const freeTextRequestSchema = z
   .object({
@@ -25,7 +26,7 @@ export const freeTextRequestSchema = z
   })
   .strict();
 
-export default defineHandler(async (event) => {
+export default withRuntimeLogging("/api/interpret-config", async (event) => {
   if (event.req.method !== "POST") {
     throw new HTTPError({ statusCode: 405, statusMessage: "Method Not Allowed" });
   }
@@ -59,7 +60,6 @@ export default defineHandler(async (event) => {
 
   const { data: result, error } = await tryCatch(interpretFreeTextConfig(parsed.data.request));
   if (error) {
-    console.error("Free-text configuration failed", error);
     throw new HTTPError({
       statusCode: 502,
       statusMessage: "AI interpretation failed",

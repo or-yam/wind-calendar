@@ -1,4 +1,4 @@
-import { defineHandler, HTTPError } from "nitro";
+import { HTTPError } from "nitro";
 import { getQuery } from "nitro/h3";
 
 import type { CalendarConfig } from "../../shared/types";
@@ -8,8 +8,9 @@ import { checkRateLimit } from "../utils/rate-limit";
 import { isDev, getClientIp } from "../utils/api-handler";
 import { buildLocationSessions } from "../utils/location-sessions";
 import { queryToSearchParams } from "../utils/query-params.js";
+import { withRuntimeLogging } from "../utils/runtime-logging.js";
 
-export default defineHandler(async (event) => {
+export default withRuntimeLogging("/api/calendar", async (event) => {
   const dev = isDev();
 
   const rateCheck = checkRateLimit(getClientIp(event));

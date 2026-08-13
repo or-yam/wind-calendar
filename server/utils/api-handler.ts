@@ -217,10 +217,6 @@ export async function resolveForecastData(
 
     const openMeteoSlug = getOpenMeteoSlug(modelId);
 
-    if (dev) {
-      console.log(`[API] Fetching Open-Meteo: ${config.location}, model ${openMeteoSlug}`);
-    }
-
     const { data: omData, error: omError } = await tryCatch(
       fetchOpenMeteoData(
         location.coordinates.lat,
@@ -231,17 +227,9 @@ export async function resolveForecastData(
     );
 
     if (omError) {
-      if (dev) {
-        console.error(`[API] Open-Meteo failed: ${omError.message}`);
-      }
-
       const fallbackModelId = getWindguruFallback(modelId);
 
       if (fallbackModelId) {
-        if (dev) {
-          console.log(`[API] Falling back to Windguru model ${fallbackModelId}`);
-        }
-
         const locationInfo = `location=${config.location}, spotId=${location.spotId}`;
         const result = await fetchWindguruWithErrorHandling(
           location.spotId,
@@ -272,11 +260,6 @@ export async function resolveForecastData(
     }
 
     return { success: true, fetchResult: omData, dataSource: "openmeteo", fallbackUsed: false };
-  }
-
-  // Windguru path
-  if (dev) {
-    console.log(`[API] Fetching Windguru: ${config.location}, model ${modelId}`);
   }
 
   const locationInfo = `location=${config.location}, spotId=${location.spotId}`;
