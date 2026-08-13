@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { AlertCircle, CheckCircle2, TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import type { CalendarConfig, InterpretConfigResponse } from "@shared/types";
 
 interface FreeTextConfigBuilderProps {
@@ -21,14 +24,6 @@ async function interpretConfig(request: string): Promise<InterpretConfigResponse
   return body;
 }
 
-function resultMessage(result: InterpretConfigResponse): string {
-  if (result.outcome === "configured") return result.message;
-  if (result.outcome === "insufficient") {
-    return `Not enough information to build a specific configuration. Defaults were loaded. ${result.message}`;
-  }
-  return `That request is not supported. Defaults were loaded. ${result.message}`;
-}
-
 export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) {
   const [request, setRequest] = useState("");
   const interpretation = useMutation({
@@ -42,10 +37,6 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
     if (normalized.length < 10) return;
     interpretation.mutate(normalized);
   }
-
-  const message = interpretation.data
-    ? resultMessage(interpretation.data)
-    : interpretation.error?.message;
 
   return (
     <form onSubmit={handleSubmit} className="mb-6 grid gap-3" aria-label="Describe conditions">
@@ -67,16 +58,38 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
           disabled={interpretation.isPending}
         />
         <Button type="submit" disabled={interpretation.isPending || request.trim().length < 10}>
+          {interpretation.isPending && <Spinner />}
           {interpretation.isPending ? "Interpreting..." : "Build configuration"}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
         English and Hebrew supported. Do not include personal information.
       </p>
-      {message && (
-        <p role="status" className="text-sm font-bold text-primary">
-          {message}
-        </p>
+      {interpretation.data?.outcome === "configured" && (
+        <Alert variant="success">
+          <CheckCircle2 aria-hidden="true" />
+          <AlertTitle>Configuration ready</AlertTitle>
+          <AlertDescription>{interpretation.data.message}</AlertDescription>
+        </Alert>
+      )}
+      {interpretation.data && interpretation.data.outcome !== "configured" && (
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
+          <AlertTitle>Defaults loaded</AlertTitle>
+          <AlertDescription>
+            {interpretation.data.outcome === "insufficient"
+              ? "There was not enough information to build a specific configuration. "
+              : "That request is not supported. "}
+            {interpretation.data.message}
+          </AlertDescription>
+        </Alert>
+      )}
+      {interpretation.error && (
+        <Alert variant="destructive">
+          <AlertCircle aria-hidden="true" />
+          <AlertTitle>Could not build configuration</AlertTitle>
+          <AlertDescription>{interpretation.error.message}</AlertDescription>
+        </Alert>
       )}
     </form>
   );

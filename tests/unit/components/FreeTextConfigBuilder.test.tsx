@@ -69,4 +69,51 @@ describe("FreeTextConfigBuilder", () => {
     await act(async () => container.querySelector("form")!.requestSubmit());
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("shows a clear success outcome", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ outcome: "configured", message: "Review this.", config: DEFAULTS }),
+      }),
+    );
+    await act(async () => renderBuilder(vi.fn()));
+
+    const input = container.querySelector("input")!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    await act(async () => {
+      setter.call(input, "Beginner session in Tel Aviv");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      container.querySelector("form")!.requestSubmit();
+      await vi.waitFor(() => expect(container.textContent).toContain("Configuration ready"));
+    });
+
+    expect(container.querySelector('[role="status"] svg')).not.toBeNull();
+  });
+
+  it("shows a destructive error outcome", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ error: "Service unavailable" }),
+      }),
+    );
+    await act(async () => renderBuilder(vi.fn()));
+
+    const input = container.querySelector("input")!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    await act(async () => {
+      setter.call(input, "Beginner session in Tel Aviv");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      container.querySelector("form")!.requestSubmit();
+      await vi.waitFor(() => expect(container.textContent).toContain("Service unavailable"));
+    });
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      "Could not build configuration",
+    );
+  });
 });
