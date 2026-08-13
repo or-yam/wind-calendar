@@ -16,7 +16,7 @@ describe("parseQueryParams", () => {
     expect(config.waveEnabled).toBe(false);
     expect(config.waveSource).toBe("total");
     expect(config.waveHeightMin).toBe(0.5);
-    expect(config.waveHeightMax).toBe(5.0);
+    expect(config.waveHeightMax).toBe(3.0);
     expect(config.wavePeriodMin).toBe(0);
   });
 

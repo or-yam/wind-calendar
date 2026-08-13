@@ -66,7 +66,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
   return (
     <section className="night-section">
       <div className="content-wrap">
-        <h2 className="sticker-heading">Stick it somewhere</h2>
+        <h2 className="sticker-heading">Sync with your calendar</h2>
 
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

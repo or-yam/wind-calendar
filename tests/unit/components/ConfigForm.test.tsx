@@ -59,4 +59,35 @@ describe("ConfigForm", () => {
     expect(container.textContent).toContain("wave height and period match");
     expect(container.textContent).toContain("Ignore short weather windows");
   });
+
+  it("updates single-value ranges while they move and caps waves at 3 meters", async () => {
+    const onWavePeriodMinChange = vi.fn();
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          waveEnabled: true,
+          onWavePeriodMinChange,
+          onMinSessionHoursChange,
+        }),
+      ),
+    );
+
+    const ranges = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
+    const waveMax = ranges.find(
+      (range) => range.max === "3" && range.getAttribute("aria-valuetext")?.includes("end"),
+    );
+    const minPeriod = ranges.find((range) => range.max === "20");
+    const minSession = ranges.find((range) => range.getAttribute("aria-labelledby"));
+
+    expect(waveMax?.max).toBe("3");
+    await act(async () => {
+      minPeriod?.dispatchEvent(new InputEvent("input", { bubbles: true }));
+      minPeriod?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      minSession?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
+    expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
 });

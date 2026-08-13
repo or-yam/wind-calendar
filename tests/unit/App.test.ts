@@ -122,7 +122,7 @@ describe("App location selection", () => {
       (heading) => heading.textContent === "Upcoming sessions",
     )!;
     const subscriptionHeading = [...container.querySelectorAll("h2")].find(
-      (heading) => heading.textContent === "Stick it somewhere",
+      (heading) => heading.textContent === "Sync with your calendar",
     )!;
 
     expect(forecastHeading.compareDocumentPosition(subscriptionHeading)).toBe(

@@ -1,24 +1,18 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useWeekNavigation } from "../../../src/hooks/useWeekNavigation";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 function WeekStart() {
-  const { weekStart } = useWeekNavigation([], "default");
+  const { weekStart } = useWeekNavigation("default");
   return createElement("span", null, weekStart.getDay());
 }
 
-function Navigation({
-  items,
-  resetKey = "default",
-}: {
-  items: { start: string }[];
-  resetKey?: string;
-}) {
-  const { weekStart, goToNext } = useWeekNavigation(items, resetKey);
+function Navigation({ resetKey = "default" }: { resetKey?: string }) {
+  const { weekStart, goToNext } = useWeekNavigation(resetKey);
   return createElement(
     "div",
     null,
@@ -32,6 +26,8 @@ describe("useWeekNavigation", () => {
   let root: Root;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 29, 12));
     localStorage.setItem("weekStartsOnSunday", "0");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -40,6 +36,7 @@ describe("useWeekNavigation", () => {
 
   afterEach(() => {
     act(() => root.unmount());
+    vi.useRealTimers();
     localStorage.clear();
     container.remove();
   });
@@ -50,46 +47,23 @@ describe("useWeekNavigation", () => {
     expect(container.textContent).toBe("0");
   });
 
-  it("preserves manual navigation when forecast data refreshes", async () => {
-    const items = [{ start: new Date(2026, 6, 28, 9).toISOString() }];
-    await act(async () => root.render(createElement(Navigation, { items })));
+  it("preserves manual navigation when the component rerenders", async () => {
+    await act(async () => root.render(createElement(Navigation)));
     expect(container.querySelector("span")?.textContent).toBe("26");
 
     await act(async () => container.querySelector("button")?.click());
     expect(container.querySelector("span")?.textContent).toBe("2");
 
-    await act(async () =>
-      root.render(createElement(Navigation, { items: items.map((item) => ({ ...item })) })),
-    );
+    await act(async () => root.render(createElement(Navigation)));
     expect(container.querySelector("span")?.textContent).toBe("2");
   });
 
-  it("repositions to the earliest session when forecast configuration changes", async () => {
-    const items = [{ start: new Date(2026, 6, 28, 9).toISOString() }];
-    await act(async () => root.render(createElement(Navigation, { items })));
+  it("repositions to today when forecast configuration changes", async () => {
+    await act(async () => root.render(createElement(Navigation)));
     await act(async () => container.querySelector("button")?.click());
 
-    const updatedItems = [{ start: new Date(2026, 7, 11, 9).toISOString() }];
-    await act(async () =>
-      root.render(createElement(Navigation, { items: updatedItems, resetKey: "new-config" })),
-    );
+    await act(async () => root.render(createElement(Navigation, { resetKey: "new-config" })));
 
-    expect(container.querySelector("span")?.textContent).toBe("9");
-  });
-
-  it("preserves navigation performed while changed forecast data is loading", async () => {
-    const items = [{ start: new Date(2026, 6, 28, 9).toISOString() }];
-    await act(async () => root.render(createElement(Navigation, { items })));
-    await act(async () =>
-      root.render(createElement(Navigation, { items: [], resetKey: "new-config" })),
-    );
-    await act(async () => container.querySelector("button")?.click());
-
-    const loadedItems = [{ start: new Date(2026, 7, 11, 9).toISOString() }];
-    await act(async () =>
-      root.render(createElement(Navigation, { items: loadedItems, resetKey: "new-config" })),
-    );
-
-    expect(container.querySelector("span")?.textContent).toBe("2");
+    expect(container.querySelector("span")?.textContent).toBe("26");
   });
 });

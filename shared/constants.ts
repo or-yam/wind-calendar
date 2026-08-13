@@ -12,7 +12,7 @@ export const DEFAULTS = {
   waveEnabled: false,
   waveSource: "total" as const,
   waveHeightMin: 0.5,
-  waveHeightMax: 5.0,
+  waveHeightMax: 3.0,
   wavePeriodMin: 0,
 } as const;
 

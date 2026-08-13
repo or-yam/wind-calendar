@@ -202,7 +202,7 @@ export function ConfigForm({
                   onWaveHeightMaxChange(max);
                 }}
                 min={0}
-                max={8}
+                max={3}
                 step={0.1}
               />
             </div>
@@ -217,8 +217,10 @@ export function ConfigForm({
               <Slider
                 id="min-period"
                 value={[localWavePeriod]}
-                onValueChange={([v]) => setLocalWavePeriod(v)}
-                onValueCommitted={([v]) => onWavePeriodMinChange(v)}
+                onValueChange={([v]) => {
+                  setLocalWavePeriod(v);
+                  onWavePeriodMinChange(v);
+                }}
                 min={0}
                 max={20}
                 step={1}
@@ -248,8 +250,10 @@ export function ConfigForm({
           id="min-session"
           aria-labelledby="min-session-label"
           value={[localSession]}
-          onValueChange={([v]) => setLocalSession(v)}
-          onValueCommitted={([v]) => onMinSessionHoursChange(v)}
+          onValueChange={([v]) => {
+            setLocalSession(v);
+            onMinSessionHoursChange(v);
+          }}
           min={0.5}
           max={8}
           step={0.5}
