@@ -18,6 +18,12 @@ export interface CalendarConfig {
   wavePeriodMin: number;
 }
 
+export interface InterpretConfigResponse {
+  outcome: "configured" | "insufficient" | "unsupported";
+  message: string;
+  config: CalendarConfig;
+}
+
 export interface LocationConfig {
   spotId: string;
   tz: string;

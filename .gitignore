@@ -13,6 +13,7 @@ dist-ssr
 .output
 *.local
 .env*
+!.env.example
 
 # Editor directories and files
 .vscode/*

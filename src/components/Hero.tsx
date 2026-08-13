@@ -1,6 +1,8 @@
 import { ConfigForm } from "./ConfigForm";
 import VHS from "./canvasui/VHS";
 import type { WaveSource } from "@shared/types";
+import type { CalendarConfig } from "@shared/types";
+import { NaturalLanguageBuilder } from "./NaturalLanguageBuilder";
 
 export interface HeroProps {
   locations: string[];
@@ -26,6 +28,7 @@ export interface HeroProps {
   onWaveHeightMaxChange: (value: number) => void;
   onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
+  onNaturalLanguageConfig: (config: CalendarConfig, message: string) => void;
 }
 
 export function Hero(props: HeroProps) {
@@ -75,6 +78,7 @@ export function Hero(props: HeroProps) {
       <section className="night-section">
         <div className="content-wrap">
           <h2 className="sticker-heading">Build a session</h2>
+          <NaturalLanguageBuilder onConfig={props.onNaturalLanguageConfig} />
           <ConfigForm {...props} />
         </div>
       </section>

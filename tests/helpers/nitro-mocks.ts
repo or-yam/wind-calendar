@@ -11,6 +11,7 @@ export interface TestResponse {
 export async function callHandler(
   handler: (event: H3Event) => Promise<unknown>,
   url: string,
+  init?: RequestInit,
 ): Promise<TestResponse> {
   const app = new H3();
   app.use(handler);
@@ -25,7 +26,7 @@ export async function callHandler(
   const fullUrl = `http://localhost:${port}${url}`;
 
   try {
-    const response = await fetch(fullUrl);
+    const response = await fetch(fullUrl, init);
     const body = await response.text();
     const headers: Record<string, string> = {};
     response.headers.forEach((value, key) => {
