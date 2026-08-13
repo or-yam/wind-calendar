@@ -138,7 +138,7 @@ pnpm install
 cp .env.example .env
 ```
 
-Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. The key is server-only; never expose it through a `VITE_` variable. Manual configuration works without this key.
+Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. Create a boolean Vercel Flag named `free-text-config-builder`, then run `vercel link && vercel env pull` to evaluate it locally. The key and flag credentials are server-only; never expose them through a `VITE_` variable. Manual configuration works without either.
 
 **Run locally:**
 

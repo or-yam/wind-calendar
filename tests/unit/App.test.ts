@@ -4,11 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-query", () => ({
   queryOptions: (options: unknown) => options,
-  useQuery: () => ({
-    data: { sessions: [] },
-    isPending: false,
-    error: null,
-  }),
+  useQuery: (options: { queryKey: string[] }) =>
+    options.queryKey[0] === "features"
+      ? { data: { freeTextConfigBuilder: true }, isPending: false, error: null }
+      : { data: { sessions: [] }, isPending: false, error: null },
 }));
 
 vi.mock("@vercel/analytics/react", () => ({
@@ -22,10 +21,11 @@ vi.mock("../../src/components/Hero", async () => {
       model: string | number;
       onLocationsChange: (locations: string[]) => void;
       onFreeTextConfig: (config: unknown, message: string) => void;
+      freeTextConfigBuilderEnabled: boolean;
     }) =>
       createElement(
         "div",
-        null,
+        { "data-free-text-config-enabled": props.freeTextConfigBuilderEnabled },
         createElement(
           "button",
           {
