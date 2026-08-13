@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Wind Calendar</title>
+  <desc id="description">Only the days worth surfing. No doom-scrolling the forecast.</desc>
+  <defs>
+    <style>
+      @font-face { font-family: "Barlow Condensed"; src: url("fonts/barlow-condensed-700.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "Barlow Condensed"; src: url("fonts/barlow-condensed-500.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "Permanent Marker"; src: url("fonts/permanent-marker-400.woff2") format("woff2"); font-weight: 400; }
+    </style>
+    <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.25" fill="#c9e4dd" opacity=".09"/>
+    </pattern>
+    <pattern id="grit" width="160" height="90" patternUnits="userSpaceOnUse">
+      <g fill="#04090b" opacity=".22">
+        <circle cx="12" cy="23" r="2"/><circle cx="43" cy="9" r="1.5"/><circle cx="77" cy="42" r="2.5"/>
+        <circle cx="112" cy="18" r="1"/><circle cx="148" cy="53" r="2"/><circle cx="25" cy="81" r="1.5"/>
+        <path d="M31 47l14-3 2 5-15 2zM88 75l21-4 1 4-19 4zM4 84l18-5 1 3-17 6z"/>
+      </g>
+    </pattern>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".015" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="180%" height="180%">
+      <feDropShadow dx="12" dy="14" stdDeviation="0" flood-color="#ff3d8d"/>
+    </filter>
+    <clipPath id="iconClip"><circle cx="1015" cy="294" r="154"/></clipPath>
+  </defs>
+
+  <rect width="1280" height="640" fill="#04090b"/>
+  <rect width="1280" height="640" fill="url(#dots)"/>
+
+  <path d="M0 74C218 104 318 30 536 65S893 115 1280 48V0H0Z" fill="#102126"/>
+  <path d="M0 584c194-47 388 30 590-4s398-78 690-24v84H0Z" fill="#102126"/>
+  <path d="M-14 559c239-72 420 17 649-25 207-38 377-84 662-25" fill="none" stroke="#3ee6cf" stroke-width="7" opacity=".9"/>
+  <path d="M-20 584c236-61 431 31 663-13 218-42 394-74 662-20" fill="none" stroke="#ff3d8d" stroke-width="4" opacity=".9"/>
+
+  <g transform="rotate(-3 454 264)">
+    <text x="79" y="248" fill="#ff3d8d" stroke="#080808" stroke-width="12" paint-order="stroke fill" font-family="Permanent Marker, Marker Felt, cursive" font-size="112" font-weight="700" letter-spacing="-6">WIND</text>
+    <text x="75" y="365" fill="#ff3d8d" stroke="#080808" stroke-width="12" paint-order="stroke fill" font-family="Permanent Marker, Marker Felt, cursive" font-size="112" font-weight="700" letter-spacing="-6">CALENDAR</text>
+    <text x="81" y="248" fill="url(#grit)" font-family="Permanent Marker, Marker Felt, cursive" font-size="112" font-weight="700" letter-spacing="-6">WIND</text>
+    <text x="77" y="365" fill="url(#grit)" font-family="Permanent Marker, Marker Felt, cursive" font-size="112" font-weight="700" letter-spacing="-6">CALENDAR</text>
+  </g>
+
+  <g transform="rotate(-1 365 438)" filter="url(#rough)">
+    <rect x="74" y="399" width="625" height="76" rx="38" fill="#3ee6cf" stroke="#080808" stroke-width="6"/>
+    <rect x="74" y="399" width="625" height="76" rx="38" fill="url(#grit)" opacity=".55"/>
+    <text x="386" y="448" text-anchor="middle" fill="#04090b" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="34" font-weight="700" letter-spacing=".5">ONLY THE DAYS WORTH SURFING</text>
+  </g>
+  <text x="82" y="519" fill="#9dbdb6" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="27" font-weight="500" letter-spacing=".7">WIND FORECASTS, FILTERED INTO YOUR CALENDAR.</text>
+
+  <g transform="rotate(6 1015 294)" filter="url(#shadow)">
+    <circle cx="1015" cy="294" r="175" fill="#3ee6cf" stroke="#080808" stroke-width="10"/>
+    <circle cx="1015" cy="294" r="158" fill="#0a6ac7" stroke="#080808" stroke-width="6"/>
+    <image href="android-chrome-512x512.png" x="857" y="136" width="316" height="316" clip-path="url(#iconClip)"/>
+    <circle cx="1015" cy="294" r="158" fill="url(#grit)" opacity=".35"/>
+  </g>
+
+  <g transform="rotate(3 1060 500)" filter="url(#rough)">
+    <rect x="877" y="465" width="348" height="65" rx="6" fill="#c9e4dd" stroke="#080808" stroke-width="6"/>
+    <text x="1051" y="507" text-anchor="middle" fill="#04090b" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="28" font-weight="700" letter-spacing="1.5">FORECAST → SESSION</text>
+  </g>
+</svg>
