@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "sentry": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/sentry/SKILL.md",
+      "computedHash": "ac32ffd194fee6dfc777e8d16b85ea7f9c5975cf4c7488d2616dc3e5dfa07386"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

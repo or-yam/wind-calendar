@@ -10,8 +10,8 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "lint:ci": "oxlint --format=github",
-    "fmt": "oxfmt --write .",
-    "fmt:check": "oxfmt --check .",
+    "fmt": "oxfmt --write . '!**/.agents/**'",
+    "fmt:check": "oxfmt --check . '!**/.agents/**'",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check": "pnpm run fmt:check && pnpm run lint && tsc -b && vitest run",
@@ -21,6 +21,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.41",
     "@base-ui/react": "^1.7.0",
+    "@sentry/nitro": "^10.70.0",
+    "@sentry/react": "^10.70.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.101.4",
     "@vercel/analytics": "^2.0.1",
@@ -39,6 +41,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^5.4.0",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
