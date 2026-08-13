@@ -1,6 +1,6 @@
 import type { CalendarConfig } from "./calendar-config-schema";
 
-export type WaveSource = "total" | "swell";
+export type WaveSource = CalendarConfig["waveSource"];
 export type { CalendarConfig } from "./calendar-config-schema";
 
 export interface InterpretConfigResponse {
