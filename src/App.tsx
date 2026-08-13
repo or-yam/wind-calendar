@@ -15,7 +15,9 @@ import { useWeekNavigation } from "./hooks/useWeekNavigation";
 import type { CalendarConfig } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
 import { LOCATIONS } from "@shared/locations";
+import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
+import { calendarConfigSchema } from "@shared/calendar-config-schema";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -24,11 +26,12 @@ function parseNumParam(params: URLSearchParams, key: string, fallback: number): 
   return Number.isFinite(num) ? num : fallback;
 }
 
-function parseModelParam(params: URLSearchParams, fallback: number | string): number | string {
+function parseModelParam(params: URLSearchParams, fallback: ModelId): ModelId {
   const raw = params.get("model");
   if (raw === null) return fallback;
   const num = Number(raw);
-  return Number.isFinite(num) ? num : raw; // Return string if not a number
+  const model = Number.isFinite(num) ? num : raw;
+  return isValidModelId(model) ? model : fallback;
 }
 
 function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean): boolean {
@@ -46,7 +49,7 @@ function getAvailableModels(locations: string[]): number[] {
   return [...modelLists[0]].filter((model) => modelLists.every((models) => models.includes(model)));
 }
 
-function parseUrlParams(): CalendarConfig {
+function parseUrlParams() {
   const params = new URLSearchParams(window.location.search);
   const rawLocations = (params.get("locations") ?? params.get("location") ?? "")
     .split(",")
@@ -69,8 +72,25 @@ function parseUrlParams(): CalendarConfig {
   };
 }
 
+function parseValidatedUrlParams(): CalendarConfig {
+  const parsed = calendarConfigSchema.safeParse(parseUrlParams());
+  return parsed.success
+    ? parsed.data
+    : { ...DEFAULTS, locations: [...DEFAULTS.locations], model: DEFAULTS.model };
+}
+
 function App() {
-  const [config, setConfig] = useState<CalendarConfig>(() => parseUrlParams());
+  const [config, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
+  const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
+    parseValidatedUrlParams(),
+  );
+  const [confirmationPending, setConfirmationPending] = useState(false);
+
+  const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
+    const nextConfig = update(config);
+    setConfig(nextConfig);
+    if (!confirmationPending) setConfirmedConfig(nextConfig);
+  };
 
   useEffect(() => {
     const params = buildConfigParams(config);
@@ -79,7 +99,12 @@ function App() {
   }, [config]);
 
   useEffect(() => {
-    const handler = () => setConfig(parseUrlParams());
+    const handler = () => {
+      const nextConfig = parseValidatedUrlParams();
+      setConfig(nextConfig);
+      setConfirmedConfig(nextConfig);
+      setConfirmationPending(false);
+    };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
   }, []);
@@ -105,14 +130,14 @@ function App() {
         ? config.model
         : DEFAULTS.model;
 
-    setConfig((c) => ({ ...c, locations, model: newModel }));
+    updateConfig((c) => ({ ...c, locations, model: newModel }));
   };
 
   const availableModels = getAvailableModels(config.locations);
 
   // Handler for model change
-  const handleModelChange = (model: number | string) => {
-    setConfig((c) => ({ ...c, model }));
+  const handleModelChange = (model: ModelId) => {
+    updateConfig((c) => ({ ...c, model }));
   };
 
   return (
@@ -132,18 +157,44 @@ function App() {
         minSessionHours={config.minSessionHours}
         onLocationsChange={handleLocationsChange}
         onModelChange={handleModelChange}
-        onWindEnabledChange={(windEnabled) => setConfig((c) => ({ ...c, windEnabled }))}
-        onWindMinChange={(windMin) => setConfig((c) => ({ ...c, windMin }))}
-        onWindMaxChange={(windMax) => setConfig((c) => ({ ...c, windMax }))}
-        onWaveEnabledChange={(waveEnabled) => setConfig((c) => ({ ...c, waveEnabled }))}
-        onWaveSourceChange={(waveSource) => setConfig((c) => ({ ...c, waveSource }))}
-        onWaveHeightMinChange={(waveHeightMin) => setConfig((c) => ({ ...c, waveHeightMin }))}
-        onWaveHeightMaxChange={(waveHeightMax) => setConfig((c) => ({ ...c, waveHeightMax }))}
-        onWavePeriodMinChange={(wavePeriodMin) => setConfig((c) => ({ ...c, wavePeriodMin }))}
-        onMinSessionHoursChange={(minSessionHours) => setConfig((c) => ({ ...c, minSessionHours }))}
+        onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
+        onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
+        onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
+        onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
+        onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
+        onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
+        onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
+        onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
+        onMinSessionHoursChange={(minSessionHours) =>
+          updateConfig((c) => ({ ...c, minSessionHours }))
+        }
+        onFreeTextConfig={(nextConfig) => {
+          setConfig(calendarConfigSchema.parse(nextConfig));
+          setConfirmationPending(true);
+        }}
       />
       <main>
-        <SubscribeButtons config={config} />
+        {confirmationPending && (
+          <section className="night-section pb-0">
+            <div className="content-wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="font-bold">
+                Review the extracted settings above before updating subscription links.
+              </p>
+              <button
+                type="button"
+                className="rounded-sm bg-primary px-5 py-3 font-bold text-primary-foreground"
+                onClick={() => {
+                  const validated = calendarConfigSchema.parse(config);
+                  setConfirmedConfig(validated);
+                  setConfirmationPending(false);
+                }}
+              >
+                Confirm configuration
+              </button>
+            </div>
+          </section>
+        )}
+        <SubscribeButtons config={confirmedConfig} />
         <ErrorBoundary
           fallback={
             <div className="night-section px-5 text-center">

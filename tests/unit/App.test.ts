@@ -18,14 +18,46 @@ vi.mock("@vercel/analytics/react", () => ({
 vi.mock("../../src/components/Hero", async () => {
   const { createElement } = await import("react");
   return {
-    Hero: (props: { model: string | number; onLocationsChange: (locations: string[]) => void }) =>
+    Hero: (props: {
+      model: string | number;
+      onLocationsChange: (locations: string[]) => void;
+      onFreeTextConfig: (config: unknown, message: string) => void;
+    }) =>
       createElement(
-        "button",
-        {
-          type: "button",
-          onClick: () => props.onLocationsChange(["beit-yanai", "tel-aviv"]),
-        },
-        `Add Tel Aviv (${props.model})`,
+        "div",
+        null,
+        createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => props.onLocationsChange(["beit-yanai", "tel-aviv"]),
+          },
+          `Add Tel Aviv (${props.model})`,
+        ),
+        createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () =>
+              props.onFreeTextConfig(
+                {
+                  locations: ["tel-aviv"],
+                  minSessionHours: 2,
+                  model: "om_gfs",
+                  windEnabled: true,
+                  windMin: 12,
+                  windMax: 20,
+                  waveEnabled: false,
+                  waveSource: "total",
+                  waveHeightMin: 0.5,
+                  waveHeightMax: 5,
+                  wavePeriodMin: 0,
+                },
+                "Review this",
+              ),
+          },
+          "Apply AI config",
+        ),
       ),
   };
 });
@@ -61,5 +93,25 @@ describe("App location selection", () => {
     await act(async () => addTelAviv.click());
 
     expect(new URLSearchParams(window.location.search).get("model")).toBe("om_gfs");
+  });
+
+  it("does not update subscription links until AI settings are confirmed", async () => {
+    await act(async () => root.render(createElement(App)));
+
+    const subscriptionLink = () =>
+      container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    expect(subscriptionLink().href).toContain("locations=beit-yanai");
+
+    const apply = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Apply AI config",
+    )!;
+    await act(async () => apply.click());
+    expect(subscriptionLink().href).toContain("locations=beit-yanai");
+
+    const confirm = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Confirm configuration",
+    )!;
+    await act(async () => confirm.click());
+    expect(subscriptionLink().href).toContain("locations=tel-aviv");
   });
 });
