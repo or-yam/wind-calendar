@@ -5,6 +5,8 @@ import { calendarConfigSchema } from "../shared/calendar-config-schema.js";
 import { DEFAULTS } from "../shared/constants.js";
 import { LOCATIONS } from "../shared/locations.js";
 import type { InterpretConfigResponse } from "../shared/types.js";
+import { createConfigFeedbackToken } from "./config-feedback-token.js";
+import { observeFreeTextConfig } from "./langfuse.js";
 
 const interpretationSchema = z
   .object({
@@ -32,17 +34,33 @@ For configured output, preserve defaults for omitted non-safety options and summ
 Keep message in English. Always return a complete configuration.`;
 
 const model = openai("gpt-4.1-mini");
+export const FREE_TEXT_CONFIG_PROMPT_VERSION = "free-text-config-v1";
 
 export async function interpretFreeTextConfig(request: string): Promise<InterpretConfigResponse> {
-  const { output } = await generateText({
-    model,
-    output: Output.object({
-      schema: interpretationSchema,
-      name: "calendar_configuration",
-    }),
-    instructions,
-    prompt: request,
-  });
+  const { result, traceId } = await observeFreeTextConfig(
+    request,
+    FREE_TEXT_CONFIG_PROMPT_VERSION,
+    async (telemetryEnabled) => {
+      const { output } = await generateText({
+        model,
+        output: Output.object({
+          schema: interpretationSchema,
+          name: "calendar_configuration",
+        }),
+        instructions,
+        prompt: request,
+        runtimeContext: { promptVersion: FREE_TEXT_CONFIG_PROMPT_VERSION },
+        telemetry: {
+          isEnabled: telemetryEnabled,
+          functionId: "generate-free-text-config",
+          includeRuntimeContext: { promptVersion: true },
+        },
+      });
 
-  return interpretationSchema.parse(output);
+      return interpretationSchema.parse(output);
+    },
+  );
+
+  const feedbackToken = traceId ? createConfigFeedbackToken(traceId, result.config) : undefined;
+  return { ...result, ...(feedbackToken && { feedbackToken }) };
 }

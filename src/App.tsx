@@ -19,6 +19,7 @@ import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { sendConfigFeedback } from "./lib/config-feedback";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -86,6 +87,7 @@ function App() {
     parseValidatedUrlParams(),
   );
   const [confirmationPending, setConfirmationPending] = useState(false);
+  const [feedbackToken, setFeedbackToken] = useState<string>();
   const { data: features } = useQuery(featuresQueryOptions);
 
   const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
@@ -170,8 +172,10 @@ function App() {
         onMinSessionHoursChange={(minSessionHours) =>
           updateConfig((c) => ({ ...c, minSessionHours }))
         }
-        onFreeTextConfig={(nextConfig) => {
-          setConfig(calendarConfigSchema.parse(nextConfig));
+        onFreeTextConfig={(nextConfig, _message, token) => {
+          const validated = calendarConfigSchema.parse(nextConfig);
+          setConfig(validated);
+          setFeedbackToken(token);
           setConfirmationPending(true);
         }}
         freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
@@ -190,6 +194,10 @@ function App() {
                   const validated = calendarConfigSchema.parse(config);
                   setConfirmedConfig(validated);
                   setConfirmationPending(false);
+                  if (feedbackToken) {
+                    void sendConfigFeedback(feedbackToken, validated);
+                    setFeedbackToken(undefined);
+                  }
                 }}
               >
                 Confirm configuration

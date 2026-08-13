@@ -42,7 +42,13 @@ describe("FreeTextConfigBuilder", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ outcome: "configured", message: "Review this.", config }),
+        json: () =>
+          Promise.resolve({
+            outcome: "configured",
+            message: "Review this.",
+            config,
+            feedbackToken: "opaque-feedback-token",
+          }),
       }),
     );
     await act(async () => renderBuilder(onConfig));
@@ -58,7 +64,7 @@ describe("FreeTextConfigBuilder", () => {
       await vi.waitFor(() => expect(container.textContent).toContain("Review this."));
     });
 
-    expect(onConfig).toHaveBeenCalledWith(config, "Review this.");
+    expect(onConfig).toHaveBeenCalledWith(config, "Review this.", "opaque-feedback-token");
   });
 
   it("does not call the server for short input", async () => {

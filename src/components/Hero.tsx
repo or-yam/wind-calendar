@@ -29,7 +29,7 @@ export interface HeroProps {
   onWaveHeightMaxChange: (value: number) => void;
   onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
-  onFreeTextConfig: (config: CalendarConfig, message: string) => void;
+  onFreeTextConfig: (config: CalendarConfig, message: string, feedbackToken?: string) => void;
   freeTextConfigBuilderEnabled: boolean;
 }
 

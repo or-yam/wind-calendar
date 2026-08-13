@@ -21,6 +21,11 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.41",
     "@base-ui/react": "^1.7.0",
+    "@langfuse/client": "5.10.0",
+    "@langfuse/otel": "5.10.0",
+    "@langfuse/tracing": "5.10.0",
+    "@langfuse/vercel-ai-sdk": "5.10.0",
+    "@opentelemetry/sdk-node": "0.221.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.101.4",
     "@vercel/analytics": "^2.0.1",
@@ -61,6 +66,9 @@
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "oxlint --fix"
     ]
+  },
+  "engines": {
+    "node": ">=22"
   },
   "packageManager": "pnpm@11.21.0"
 }

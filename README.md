@@ -140,6 +140,10 @@ cp .env.example .env
 
 Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. Create a boolean Vercel Flag named `free-text-config-builder`, then run `vercel link && vercel env pull` to evaluate it locally. The key and flag credentials are server-only; never expose them through a `VITE_` variable. Manual configuration works without either.
 
+Langfuse observability is optional. To enable it, create a Langfuse project API key pair and set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and the regional `LANGFUSE_BASE_URL` on the server. Set `LANGFUSE_TRACING_ENVIRONMENT` to separate development, preview, and production traces. Set a random `LANGFUSE_FEEDBACK_SECRET` to keep feedback-token signing independent from Langfuse key rotation; when omitted it derives a signing key from `LANGFUSE_SECRET_KEY`. The code prompt remains local and is identified as `free-text-config-v1`; no Langfuse prompt setup is required.
+
+The native AI SDK generation observation stores the full system instructions, raw free-text request, generated configuration, model, token usage, calculated cost, and latency. The parent trace stores only request length and completion status to avoid duplicating sensitive content. This data is disclosed to users beside the input as potentially sensitive; do not submit personal information. Before production, explicitly choose Langfuse retention/deletion periods and restrict project access to authorized operators according to the application's privacy policy. If either Langfuse key is absent, tracing and confirmation scoring are disabled without affecting generation.
+
 **Run locally:**
 
 ```bash

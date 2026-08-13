@@ -1,5 +1,6 @@
 allowBuilds:
   esbuild: true
+  protobufjs: false
 minimumReleaseAgeExclude:
   - "@vercel/container@0.2.0"
   - "@vercel/python@6.56.2"
