@@ -8,6 +8,7 @@ import {
 } from "../lib/subscribe-urls";
 import { cn } from "../lib/utils";
 import type { CalendarConfig } from "@shared/types";
+import { captureApiError, captureEvent } from "../lib/analytics";
 
 interface SubscribeButtonsProps {
   config: CalendarConfig;
@@ -33,6 +34,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
 
     try {
       await navigator.clipboard.writeText(httpUrl);
+      captureEvent("url copied", {});
       setCopyState("success");
       timeoutRef.current = window.setTimeout(() => setCopyState("idle"), 2000);
     } catch (err) {
@@ -42,13 +44,47 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
     }
   }
 
-  function handleDownloadIcs() {
-    const a = document.createElement("a");
-    a.href = httpUrl;
-    a.download = `wind-calendar-${config.locations.join("-")}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  async function handleDownloadIcs() {
+    let response: Response;
+    try {
+      response = await fetch(httpUrl);
+    } catch {
+      captureApiError("calendar", 0, "network");
+      return;
+    }
+
+    if (!response.ok) {
+      captureApiError("calendar", response.status, "http");
+      return;
+    }
+
+    const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+    if (!contentType.startsWith("text/calendar")) {
+      captureApiError("calendar", response.status, "invalid response");
+      return;
+    }
+
+    try {
+      const blob = await response.blob();
+      if (!(await blob.text()).trimStart().startsWith("BEGIN:VCALENDAR")) {
+        captureApiError("calendar", response.status, "invalid response");
+        return;
+      }
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      try {
+        a.href = objectUrl;
+        a.download = `wind-calendar-${config.locations.join("-")}.ics`;
+        document.body.appendChild(a);
+        a.click();
+      } finally {
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+      }
+      captureEvent("ics downloaded", {});
+    } catch {
+      captureApiError("calendar", response.status, "processing");
+    }
   }
 
   const copyIconColor = {
@@ -70,7 +106,11 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
 
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <a href={webcalUrl} className="action-card flex items-center gap-3 p-4">
+            <a
+              href={webcalUrl}
+              onClick={() => captureEvent("subscription clicked", { provider: "apple" })}
+              className="action-card flex items-center gap-3 p-4"
+            >
               <img
                 alt="macOS Calendar logo"
                 src="/macos-calendar_logo.png"
@@ -83,6 +123,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
               href={googleUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => captureEvent("subscription clicked", { provider: "google" })}
               className="action-card flex items-center gap-3 p-4"
             >
               <img
@@ -97,6 +138,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
               href={outlookUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => captureEvent("subscription clicked", { provider: "outlook" })}
               className="action-card flex items-center gap-3 p-4"
             >
               <img

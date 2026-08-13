@@ -6,6 +6,9 @@ import { DEFAULTS } from "../../../shared/constants";
 import type { CalendarConfig } from "../../../shared/types";
 import { FreeTextConfigBuilder } from "../../../src/components/FreeTextConfigBuilder";
 
+const captureApiError = vi.hoisted(() => vi.fn());
+vi.mock("../../../src/lib/analytics", () => ({ captureApiError }));
+
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 describe("FreeTextConfigBuilder", () => {
@@ -24,6 +27,7 @@ describe("FreeTextConfigBuilder", () => {
   }
 
   beforeEach(() => {
+    captureApiError.mockReset();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -115,5 +119,44 @@ describe("FreeTextConfigBuilder", () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       "Could not build configuration",
     );
+  });
+
+  it("captures non-JSON errors as invalid responses", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("gateway html", { status: 502 })),
+    );
+    await act(async () => renderBuilder(vi.fn()));
+    const input = container.querySelector("input")!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    await act(async () => {
+      setter.call(input, "Beginner session in Tel Aviv");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      container.querySelector("form")!.requestSubmit();
+      await vi.waitFor(() => expect(container.textContent).toContain("invalid response"));
+    });
+    expect(captureApiError).toHaveBeenCalledWith("interpret config", 502, "invalid response");
+  });
+
+  it("captures malformed successful responses", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ outcome: "configured", message: "missing config" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+    await act(async () => renderBuilder(vi.fn()));
+    const input = container.querySelector("input")!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    await act(async () => {
+      setter.call(input, "Beginner session in Tel Aviv");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      container.querySelector("form")!.requestSubmit();
+      await vi.waitFor(() => expect(container.textContent).toContain("invalid response"));
+    });
+    expect(captureApiError).toHaveBeenCalledWith("interpret config", 200, "invalid response");
   });
 });

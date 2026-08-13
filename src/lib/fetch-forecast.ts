@@ -1,15 +1,25 @@
 import type { CalendarConfig } from "@shared/types";
 import type { ForecastResponse } from "@shared/forecast-types";
 import { buildConfigParams } from "./subscribe-urls";
+import { captureApiError, captureEvent } from "./analytics";
 
 export async function fetchForecast(
   config: CalendarConfig,
   signal?: AbortSignal,
 ): Promise<ForecastResponse> {
   const params = buildConfigParams(config);
-  const response = await fetch(`/api/forecast?${params}`, { signal });
+  let response: Response;
+  try {
+    response = await fetch(`/api/forecast?${params}`, { signal });
+  } catch (error) {
+    if (!(error instanceof DOMException && error.name === "AbortError")) {
+      captureApiError("forecast", 0, "network");
+    }
+    throw error;
+  }
 
   if (!response.ok) {
+    captureApiError("forecast", response.status, "http");
     const contentType = response.headers.get("content-type");
     const body = await response.text();
 
@@ -27,8 +37,19 @@ export async function fetchForecast(
 
   const contentType = response.headers.get("content-type");
   if (!contentType?.includes("application/json")) {
+    captureApiError("forecast", response.status, "invalid response");
     throw new Error("API returned non-JSON response");
   }
 
-  return response.json();
+  try {
+    const forecast = (await response.json()) as ForecastResponse;
+    captureEvent("forecast loaded", {
+      session_count: forecast.sessions.length,
+      data_source: forecast.meta.dataSource,
+    });
+    return forecast;
+  } catch (error) {
+    captureApiError("forecast", response.status, "invalid response");
+    throw error;
+  }
 }

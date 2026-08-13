@@ -1,10 +1,11 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
+import { buildContentSecurityPolicy } from "./shared/posthog-config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,17 +15,13 @@ const __dirname = path.dirname(__filename);
  * Dev: Relaxed CSP with 'unsafe-inline' for Vite HMR.
  * Prod: Strict CSP without 'unsafe-inline' for scripts.
  */
-function injectCSP(): Plugin {
+function injectCSP(postHogHost?: string): Plugin {
   return {
     name: "inject-csp",
     transformIndexHtml(html, ctx) {
       const isDev = ctx.server !== undefined; // Vite dev server is running
 
-      const csp = isDev
-        ? // Development: Allow inline scripts for Vite HMR
-          "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com http://localhost:* ws://localhost:*; img-src 'self' data:; frame-ancestors 'none'"
-        : // Production: Strict CSP, no 'unsafe-inline' for scripts
-          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'";
+      const csp = buildContentSecurityPolicy(isDev, postHogHost);
 
       return [
         {
@@ -40,12 +37,17 @@ function injectCSP(): Plugin {
   };
 }
 
-export default defineConfig({
-  plugins: [nitro(), react(), tailwindcss(), injectCSP()],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    nitro(),
+    react(),
+    tailwindcss(),
+    injectCSP(loadEnv(mode, process.cwd(), "VITE_POSTHOG_").VITE_POSTHOG_HOST),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@shared": path.resolve(__dirname, "./shared"),
     },
   },
-});
+}));

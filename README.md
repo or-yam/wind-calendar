@@ -140,6 +140,23 @@ cp .env.example .env
 
 Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. Create a boolean Vercel Flag named `free-text-config-builder`, then run `vercel link && vercel env pull` to evaluate it locally. The key and flag credentials are server-only; never expose them through a `VITE_` variable. Manual configuration works without either.
 
+### Product analytics
+
+Set both `VITE_POSTHOG_PROJECT_TOKEN` and `VITE_POSTHOG_HOST` locally and in Vercel to enable PostHog. The host is required and must be the project's explicit HTTPS regional ingestion host; there is no fallback host. Without either valid setting, analytics is a no-op. The SDK loads asynchronously only after configuration is validated. The integration sends only explicit events, creates no person profiles or persistent identity, and uses an in-memory anonymous transport identity because persistence is disabled. It also disables attribution, autocapture, pageviews, pageleaves, session recording, surveys, feature flags, heatmaps, performance, and exception capture. Each event is rebuilt from an event-specific property allowlist before it is sent.
+
+In PostHog, go to **Settings > Project > General > IP data capture configuration** and select **Discard IP data**. This is a required dashboard setting because the browser SDK cannot disable ingestion-time IP capture. Keep project autocapture and session replay disabled as defense in depth.
+
+Create an activation insight or funnel with either `subscription clicked` or `ics downloaded` as the observable activation proxy. These events prove that the user clicked a provider link or completed a browser download, not that a provider successfully created or refreshed a subscription. Do not count page visits, `url copied`, or share actions as activation. A useful funnel is `forecast loaded` -> `configuration changed` -> (`subscription clicked` or `ics downloaded`), broken down by subscription `provider` where relevant. The tracked taxonomy is:
+
+- `forecast loaded`: emitted once for each successful forecast network response, with safe aggregate `session_count` and `data_source`
+- `configuration changed`: `field` and `source` only; never values, locations, URLs, or free-text prompts
+- `subscription clicked`: `provider` (`apple`, `google`, or `outlook`); captured before navigation
+- `url copied`: only after the clipboard promise resolves successfully
+- `ics downloaded`: after a valid calendar response is converted to a blob and its browser download link is clicked successfully
+- `api error`: one event per failed request attempt, with endpoint, status group, and error type only; never raw messages. Existing React Query retries are preserved, so a logical query may emit multiple errors. Dashboard insights can count unique sessions when attempt volume is not the desired metric.
+
+There is no WhatsApp share control in the app, so `WhatsApp share clicked` is intentionally not instrumented. Add the event only when that product feature exists. Manual `.ics` feed failures are tracked, but later refresh failures inside external calendar clients are not visible to browser analytics.
+
 **Run locally:**
 
 ```bash

@@ -1,4 +1,5 @@
 import { routes, deploymentEnv, type VercelConfig } from "@vercel/config/v1";
+import { buildContentSecurityPolicy } from "./shared/posthog-config.js";
 
 const isProd = deploymentEnv("VERCEL_ENV") === "production";
 
@@ -22,8 +23,7 @@ if (isProd) {
     routes.header("/(.*)", [
       {
         key: "Content-Security-Policy",
-        value:
-          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'",
+        value: buildContentSecurityPolicy(false, process.env.VITE_POSTHOG_HOST),
       },
     ]),
   );
