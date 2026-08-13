@@ -2,11 +2,11 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULTS } from "../../../shared/constants";
-import { NaturalLanguageBuilder } from "../../../src/components/NaturalLanguageBuilder";
+import { FreeTextConfigBuilder } from "../../../src/components/FreeTextConfigBuilder";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-describe("NaturalLanguageBuilder", () => {
+describe("FreeTextConfigBuilder", () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -32,7 +32,7 @@ describe("NaturalLanguageBuilder", () => {
         json: () => Promise.resolve({ outcome: "configured", message: "Review this.", config }),
       }),
     );
-    await act(async () => root.render(createElement(NaturalLanguageBuilder, { onConfig })));
+    await act(async () => root.render(createElement(FreeTextConfigBuilder, { onConfig })));
 
     const input = container.querySelector("input")!;
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
@@ -49,9 +49,7 @@ describe("NaturalLanguageBuilder", () => {
   it("does not call the server for short input", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    await act(async () =>
-      root.render(createElement(NaturalLanguageBuilder, { onConfig: vi.fn() })),
-    );
+    await act(async () => root.render(createElement(FreeTextConfigBuilder, { onConfig: vi.fn() })));
 
     await act(async () => container.querySelector("form")!.requestSubmit());
     expect(fetchMock).not.toHaveBeenCalled();

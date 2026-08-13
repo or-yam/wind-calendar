@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CalendarConfig, InterpretConfigResponse } from "@shared/types";
 
-interface NaturalLanguageBuilderProps {
+interface FreeTextConfigBuilderProps {
   onConfig: (config: CalendarConfig, message: string) => void;
 }
 
-export function NaturalLanguageBuilder({ onConfig }: NaturalLanguageBuilderProps) {
+export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) {
   const [request, setRequest] = useState("");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string>();
@@ -51,14 +51,14 @@ export function NaturalLanguageBuilder({ onConfig }: NaturalLanguageBuilderProps
   return (
     <form onSubmit={handleSubmit} className="mb-6 grid gap-3" aria-label="Describe conditions">
       <label
-        htmlFor="natural-language-request"
+        htmlFor="free-text-config-request"
         className="text-sm font-bold tracking-[0.09em] uppercase"
       >
         Describe your ideal session
       </label>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
-          id="natural-language-request"
+          id="free-text-config-request"
           value={request}
           onChange={(event) => setRequest(event.target.value.slice(0, 500))}
           maxLength={500}

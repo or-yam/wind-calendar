@@ -1,11 +1,11 @@
 import { defineHandler, HTTPError } from "nitro";
-import { getMethod, readBody } from "nitro/h3";
+import { readBody } from "nitro/h3";
 import { z } from "zod";
-import { interpretNaturalLanguageConfig } from "../natural-language-config.js";
+import { interpretFreeTextConfig } from "../free-text-config.js";
 import { checkRateLimit } from "../utils/rate-limit.js";
 import { getClientIp } from "../utils/api-handler.js";
 
-export const naturalLanguageRequestSchema = z
+export const freeTextRequestSchema = z
   .object({
     request: z
       .string()
@@ -24,7 +24,7 @@ export const naturalLanguageRequestSchema = z
   .strict();
 
 export default defineHandler(async (event) => {
-  if (getMethod(event) !== "POST") {
+  if (event.req.method !== "POST") {
     throw new HTTPError({ statusCode: 405, statusMessage: "Method Not Allowed" });
   }
 
@@ -34,7 +34,7 @@ export default defineHandler(async (event) => {
     throw new HTTPError({ statusCode: 429, statusMessage: "Too Many Requests" });
   }
 
-  const parsed = naturalLanguageRequestSchema.safeParse(await readBody(event));
+  const parsed = freeTextRequestSchema.safeParse(await readBody(event));
   if (!parsed.success) {
     throw new HTTPError({
       statusCode: 400,
@@ -47,16 +47,16 @@ export default defineHandler(async (event) => {
     throw new HTTPError({
       statusCode: 503,
       statusMessage: "AI configuration unavailable",
-      data: { error: "Natural-language configuration is not set up" },
+      data: { error: "Free-text configuration is not set up" },
     });
   }
 
   try {
-    const result = await interpretNaturalLanguageConfig(parsed.data.request);
+    const result = await interpretFreeTextConfig(parsed.data.request);
     event.res.headers.set("Cache-Control", "no-store");
     return result;
   } catch (error) {
-    console.error("Natural-language configuration failed", error);
+    console.error("Free-text configuration failed", error);
     throw new HTTPError({
       statusCode: 502,
       statusMessage: "AI interpretation failed",

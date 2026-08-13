@@ -21,7 +21,7 @@ Subscribe to filtered wind forecasts for your preferred spots and get notificati
 - Session grouping - Automatically merges consecutive forecast hours into surf sessions
 - Calendar integration - Subscribe via standard ICS/webcal protocol (works with all major calendar apps)
 - Israeli surf spots - Pre-configured for Beit Yanai, Bat Galim, Herzliya, and More
-- Natural-language setup - Describe conditions in English or Hebrew, then review and confirm the extracted settings
+- Free-text setup - Describe conditions in English or Hebrew, then review and confirm the extracted settings
 
 ---
 
@@ -138,7 +138,7 @@ pnpm install
 cp .env.example .env
 ```
 
-Set `OPENAI_API_KEY` in `.env` for local natural-language configuration and in the Vercel project environment for deployment. The key is server-only; never expose it through a `VITE_` variable. Manual configuration works without this key.
+Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. The key is server-only; never expose it through a `VITE_` variable. Manual configuration works without this key.
 
 **Run locally:**
 

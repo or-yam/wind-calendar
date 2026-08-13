@@ -21,7 +21,7 @@ vi.mock("../../src/components/Hero", async () => {
     Hero: (props: {
       model: string | number;
       onLocationsChange: (locations: string[]) => void;
-      onNaturalLanguageConfig: (config: unknown, message: string) => void;
+      onFreeTextConfig: (config: unknown, message: string) => void;
     }) =>
       createElement(
         "div",
@@ -39,7 +39,7 @@ vi.mock("../../src/components/Hero", async () => {
           {
             type: "button",
             onClick: () =>
-              props.onNaturalLanguageConfig(
+              props.onFreeTextConfig(
                 {
                   locations: ["tel-aviv"],
                   minSessionHours: 2,

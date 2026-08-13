@@ -2,17 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULTS } from "../../../shared/constants";
 import { callHandler } from "../../helpers/nitro-mocks";
 
-const { interpretNaturalLanguageConfig } = vi.hoisted(() => ({
-  interpretNaturalLanguageConfig: vi.fn(),
+const { interpretFreeTextConfig } = vi.hoisted(() => ({
+  interpretFreeTextConfig: vi.fn(),
 }));
-vi.mock("../../../server/natural-language-config", () => ({ interpretNaturalLanguageConfig }));
+vi.mock("../../../server/free-text-config", () => ({ interpretFreeTextConfig }));
 
 import handler from "../../../server/api/interpret-config";
 
 describe("POST /api/interpret-config", () => {
   beforeEach(() => {
     process.env.OPENAI_API_KEY = "test-key";
-    interpretNaturalLanguageConfig.mockResolvedValue({
+    interpretFreeTextConfig.mockResolvedValue({
       outcome: "configured",
       message: "Found explicit conditions.",
       config: { ...DEFAULTS, locations: ["beit-yanai"], model: "om_gfs" },
@@ -33,7 +33,7 @@ describe("POST /api/interpret-config", () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toMatchObject({ outcome: "configured" });
-    expect(interpretNaturalLanguageConfig).toHaveBeenCalledWith(
+    expect(interpretFreeTextConfig).toHaveBeenCalledWith(
       "Beginner kitesurfing at Beit Yanai, 14-20 knots",
     );
   });
@@ -46,7 +46,7 @@ describe("POST /api/interpret-config", () => {
     });
 
     expect(response.statusCode).toBe(400);
-    expect(interpretNaturalLanguageConfig).not.toHaveBeenCalled();
+    expect(interpretFreeTextConfig).not.toHaveBeenCalled();
   });
 
   it("returns a clear setup error without a server key", async () => {
@@ -58,11 +58,11 @@ describe("POST /api/interpret-config", () => {
     });
 
     expect(response.statusCode).toBe(503);
-    expect(interpretNaturalLanguageConfig).not.toHaveBeenCalled();
+    expect(interpretFreeTextConfig).not.toHaveBeenCalled();
   });
 
   it("hides model errors behind an actionable response", async () => {
-    interpretNaturalLanguageConfig.mockRejectedValue(new Error("provider secret details"));
+    interpretFreeTextConfig.mockRejectedValue(new Error("provider secret details"));
     const response = await callHandler(handler, "/api/interpret-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

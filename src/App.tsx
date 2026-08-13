@@ -168,7 +168,7 @@ function App() {
         onMinSessionHoursChange={(minSessionHours) =>
           updateConfig((c) => ({ ...c, minSessionHours }))
         }
-        onNaturalLanguageConfig={(nextConfig) => {
+        onFreeTextConfig={(nextConfig) => {
           setConfig(calendarConfigSchema.parse(nextConfig));
           setAiConfirmationPending(true);
         }}
