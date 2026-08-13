@@ -40,7 +40,7 @@ export function Hero(props: HeroProps) {
         <div className="content-wrap grid gap-y-3 md:gap-y-4">
           <VHS
             className="h-72 w-full min-[480px]:h-38 md:h-76"
-            speed={1.1}
+            speed={0.7}
             wave={1.8}
             jitter={0.9}
             crease={0.65}
@@ -51,6 +51,7 @@ export function Hero(props: HeroProps) {
             acBeat={1}
             grain={0.22}
             scanlines={0.3}
+            vignette={0.3}
           >
             <div className="grid h-full grid-cols-1 grid-rows-[auto_1fr] items-center px-5 py-5 min-[480px]:grid-cols-[minmax(0,1fr)_100px] min-[480px]:grid-rows-1 min-[480px]:gap-x-4 min-[480px]:px-2 min-[480px]:py-0 md:grid-cols-[minmax(0,1fr)_330px] md:gap-x-13 md:px-6">
               <h1 className="row-start-2 m-0 w-min -rotate-5 font-title text-[clamp(3.25rem,17vw,4.25rem)] leading-[0.82] tracking-[-0.06em] text-primary [-webkit-text-stroke:3px_#080808] [paint-order:stroke_fill] [filter:drop-shadow(4px_5px_0_var(--secondary))] min-[480px]:row-start-1 md:text-[clamp(4rem,9vw,7rem)] md:[-webkit-text-stroke:5px_#080808] md:[filter:drop-shadow(7px_8px_0_var(--secondary))]">
