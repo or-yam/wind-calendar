@@ -111,6 +111,7 @@ export function ConfigForm({
         <Select
           value={model.toString()}
           onValueChange={(v) => {
+            if (v === null) return;
             const num = Number(v);
             onModelChange(Number.isNaN(num) ? v : num);
           }}
@@ -178,7 +179,7 @@ export function ConfigForm({
             <Slider
               value={localWind}
               onValueChange={setLocalWind}
-              onValueCommit={([min, max]) => {
+              onValueCommitted={([min, max]) => {
                 onWindMinChange(min);
                 onWindMaxChange(max);
               }}
@@ -239,7 +240,7 @@ export function ConfigForm({
               <Slider
                 value={localWaveHeight}
                 onValueChange={setLocalWaveHeight}
-                onValueCommit={([min, max]) => {
+                onValueCommitted={([min, max]) => {
                   onWaveHeightMinChange(min);
                   onWaveHeightMaxChange(max);
                 }}
@@ -260,7 +261,7 @@ export function ConfigForm({
                 id="min-period"
                 value={[localWavePeriod]}
                 onValueChange={([v]) => setLocalWavePeriod(v)}
-                onValueCommit={([v]) => onWavePeriodMinChange(v)}
+                onValueCommitted={([v]) => onWavePeriodMinChange(v)}
                 min={0}
                 max={20}
                 step={1}
@@ -288,7 +289,7 @@ export function ConfigForm({
           aria-labelledby="min-session-label"
           value={[localSession]}
           onValueChange={([v]) => setLocalSession(v)}
-          onValueCommit={([v]) => onMinSessionHoursChange(v)}
+          onValueCommitted={([v]) => onMinSessionHoursChange(v)}
           min={0.5}
           max={8}
           step={0.5}

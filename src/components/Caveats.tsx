@@ -10,8 +10,8 @@ export function Caveats() {
     <section className="night-section">
       <div className="content-wrap">
         <h2 className="sticker-heading">Notes &amp; FAQ</h2>
-        <Accordion type="single" collapsible className="flex flex-col gap-3">
-          <AccordionItem value="sync-frequency" className="session-card px-4">
+        <Accordion className="flex flex-col gap-3">
+          <AccordionItem className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Sync Frequency
             </AccordionTrigger>
@@ -22,7 +22,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="forecast-accuracy" className="session-card px-4">
+          <AccordionItem className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Forecast Accuracy
             </AccordionTrigger>
@@ -33,7 +33,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="forecast-data-source" className="session-card px-4">
+          <AccordionItem className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Where does the forecast data come from?
             </AccordionTrigger>
@@ -45,7 +45,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="session-definition" className="session-card px-4">
+          <AccordionItem className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Session Definition
             </AccordionTrigger>
@@ -55,7 +55,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="daylight-hours" className="session-card px-4">
+          <AccordionItem className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Daylight Hours
             </AccordionTrigger>
@@ -65,7 +65,7 @@ export function Caveats() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="timezone" className="session-card px-4">
+          <AccordionItem className="session-card px-4">
             <AccordionTrigger className="text-card-foreground font-medium">
               Timezone
             </AccordionTrigger>
