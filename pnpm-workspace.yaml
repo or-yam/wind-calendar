@@ -1,0 +1,13 @@
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - "@vercel/container@0.2.0"
+  - "@vercel/python@6.56.2"
+  - "@vercel/rust@1.4.2"
+  - "@vercel/vc-native-darwin-arm64@58.10.0"
+  - "@vercel/vc-native-darwin-x64@58.10.0"
+  - "@vercel/vc-native-linux-arm64@58.10.0"
+  - "@vercel/vc-native-linux-x64@58.10.0"
+  - vercel@58.10.0
+  - "@ai-sdk/gateway@4.0.51"
+  - ai@7.0.64
