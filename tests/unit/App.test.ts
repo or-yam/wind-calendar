@@ -2,6 +2,8 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const captureEvent = vi.hoisted(() => vi.fn());
+
 vi.mock("@tanstack/react-query", () => ({
   queryOptions: (options: unknown) => options,
   useQuery: (options: { queryKey: string[] }) =>
@@ -10,9 +12,7 @@ vi.mock("@tanstack/react-query", () => ({
       : { data: { sessions: [] }, isPending: false, error: null },
 }));
 
-vi.mock("@vercel/analytics/react", () => ({
-  Analytics: () => null,
-}));
+vi.mock("../../src/lib/analytics", () => ({ captureEvent }));
 
 vi.mock("../../src/components/Hero", async () => {
   const { createElement } = await import("react");
@@ -71,6 +71,7 @@ describe("App location selection", () => {
   let root: Root;
 
   beforeEach(() => {
+    captureEvent.mockReset();
     window.history.replaceState(null, "", "/?locations=beit-yanai&model=om_gfs");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -93,6 +94,11 @@ describe("App location selection", () => {
     await act(async () => addTelAviv.click());
 
     expect(new URLSearchParams(window.location.search).get("model")).toBe("om_gfs");
+    expect(captureEvent).toHaveBeenCalledWith("configuration changed", {
+      field: "locations",
+      source: "manual",
+    });
+    expect(captureEvent.mock.calls.flat()).not.toContain("tel-aviv");
   });
 
   it("does not update subscription links until AI settings are confirmed", async () => {
@@ -107,6 +113,11 @@ describe("App location selection", () => {
     )!;
     await act(async () => apply.click());
     expect(subscriptionLink().href).toContain("locations=beit-yanai");
+    expect(captureEvent).toHaveBeenCalledWith("configuration changed", {
+      field: "configuration",
+      source: "free text",
+    });
+    expect(captureEvent.mock.calls.flat()).not.toContain("Review this");
 
     const confirm = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Confirm configuration",

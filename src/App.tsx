@@ -1,10 +1,7 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { forecastQueryOptions } from "./lib/forecast-query";
 
-const Analytics = lazy(() =>
-  import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
-);
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
 import { ForecastCards } from "./components/ForecastCards";
@@ -19,6 +16,7 @@ import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { captureEvent } from "./lib/analytics";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -88,10 +86,11 @@ function App() {
   const [confirmationPending, setConfirmationPending] = useState(false);
   const { data: features } = useQuery(featuresQueryOptions);
 
-  const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
+  const updateConfig = (field: string, update: (current: CalendarConfig) => CalendarConfig) => {
     const nextConfig = update(config);
     setConfig(nextConfig);
     if (!confirmationPending) setConfirmedConfig(nextConfig);
+    captureEvent("configuration changed", { field, source: "manual" });
   };
 
   useEffect(() => {
@@ -132,14 +131,14 @@ function App() {
         ? config.model
         : DEFAULTS.model;
 
-    updateConfig((c) => ({ ...c, locations, model: newModel }));
+    updateConfig("locations", (c) => ({ ...c, locations, model: newModel }));
   };
 
   const availableModels = getAvailableModels(config.locations);
 
   // Handler for model change
   const handleModelChange = (model: ModelId) => {
-    updateConfig((c) => ({ ...c, model }));
+    updateConfig("model", (c) => ({ ...c, model }));
   };
 
   return (
@@ -159,20 +158,33 @@ function App() {
         minSessionHours={config.minSessionHours}
         onLocationsChange={handleLocationsChange}
         onModelChange={handleModelChange}
-        onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-        onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
-        onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
-        onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
-        onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-        onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
-        onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
-        onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
+        onWindEnabledChange={(windEnabled) =>
+          updateConfig("wind enabled", (c) => ({ ...c, windEnabled }))
+        }
+        onWindMinChange={(windMin) => updateConfig("wind minimum", (c) => ({ ...c, windMin }))}
+        onWindMaxChange={(windMax) => updateConfig("wind maximum", (c) => ({ ...c, windMax }))}
+        onWaveEnabledChange={(waveEnabled) =>
+          updateConfig("wave enabled", (c) => ({ ...c, waveEnabled }))
+        }
+        onWaveSourceChange={(waveSource) =>
+          updateConfig("wave source", (c) => ({ ...c, waveSource }))
+        }
+        onWaveHeightMinChange={(waveHeightMin) =>
+          updateConfig("wave height minimum", (c) => ({ ...c, waveHeightMin }))
+        }
+        onWaveHeightMaxChange={(waveHeightMax) =>
+          updateConfig("wave height maximum", (c) => ({ ...c, waveHeightMax }))
+        }
+        onWavePeriodMinChange={(wavePeriodMin) =>
+          updateConfig("wave period minimum", (c) => ({ ...c, wavePeriodMin }))
+        }
         onMinSessionHoursChange={(minSessionHours) =>
-          updateConfig((c) => ({ ...c, minSessionHours }))
+          updateConfig("minimum session duration", (c) => ({ ...c, minSessionHours }))
         }
         onFreeTextConfig={(nextConfig) => {
           setConfig(calendarConfigSchema.parse(nextConfig));
           setConfirmationPending(true);
+          captureEvent("configuration changed", { field: "configuration", source: "free text" });
         }}
         freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
       />
@@ -231,9 +243,6 @@ function App() {
         <Caveats />
       </main>
       <Footer />
-      <Suspense fallback={null}>
-        <Analytics />
-      </Suspense>
     </div>
   );
 }

@@ -5,22 +5,48 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { CalendarConfig, InterpretConfigResponse } from "@shared/types";
+import { captureApiError } from "../lib/analytics";
+import { calendarConfigSchema } from "@shared/calendar-config-schema";
 
 interface FreeTextConfigBuilderProps {
   onConfig: (config: CalendarConfig, message: string) => void;
 }
 
 async function interpretConfig(request: string): Promise<InterpretConfigResponse> {
-  const response = await fetch("/api/interpret-config", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ request }),
-  });
-  const body = (await response.json()) as InterpretConfigResponse & {
+  let response: Response;
+  try {
+    response = await fetch("/api/interpret-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ request }),
+    });
+  } catch (error) {
+    captureApiError("interpret config", 0, "network");
+    throw error;
+  }
+  let body: InterpretConfigResponse & {
     data?: { error?: string };
     error?: string;
   };
-  if (!response.ok) throw new Error(body.data?.error ?? body.error ?? "Request failed");
+  try {
+    body = (await response.json()) as typeof body;
+  } catch {
+    captureApiError("interpret config", response.status, "invalid response");
+    throw new Error("API returned an invalid response");
+  }
+  if (!response.ok) {
+    captureApiError("interpret config", response.status, "http");
+    throw new Error(body.data?.error ?? body.error ?? "Request failed");
+  }
+  if (
+    !body ||
+    !["configured", "insufficient", "unsupported"].includes(body.outcome) ||
+    typeof body.message !== "string" ||
+    !calendarConfigSchema.safeParse(body.config).success
+  ) {
+    captureApiError("interpret config", response.status, "invalid response");
+    throw new Error("API returned an invalid response");
+  }
   return body;
 }
 
