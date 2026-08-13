@@ -1,7 +1,7 @@
 import type { CalendarConfig, WaveSource } from "../shared/types";
 import { DEFAULTS } from "../shared/constants";
 import { LOCATIONS } from "../shared/locations";
-import { MODELS, isValidModelId } from "../shared/models";
+import { MODELS, isValidModelId, type ModelId } from "../shared/models";
 
 function parseFloatParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -50,15 +50,16 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
     throw new Error("minSessionHours must be between 0 and 24");
 
   // Model
-  let model: number | string = DEFAULTS.model;
+  let model: ModelId = DEFAULTS.model;
   const modelParam = searchParams.get("model");
   if (modelParam !== null) {
     const numericModel = Number(modelParam);
-    model = Number.isNaN(numericModel) ? modelParam : numericModel;
-    if (!isValidModelId(model)) {
+    const parsedModel = Number.isNaN(numericModel) ? modelParam : numericModel;
+    if (!isValidModelId(parsedModel)) {
       const validModels = Object.keys(MODELS).join(", ");
       throw new Error(`Invalid model: "${modelParam}". Valid models: ${validModels}`);
     }
+    model = parsedModel;
   }
 
   // Wind

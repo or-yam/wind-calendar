@@ -1,22 +1,7 @@
+import type { CalendarConfig } from "./calendar-config-schema";
+
 export type WaveSource = "total" | "swell";
-
-export interface CalendarConfig {
-  locations: string[];
-  minSessionHours: number;
-  model: number | string; // Support both Windguru (number) and Open-Meteo (string)
-
-  // Wind
-  windEnabled: boolean;
-  windMin: number;
-  windMax: number;
-
-  // Waves
-  waveEnabled: boolean;
-  waveSource: WaveSource;
-  waveHeightMin: number;
-  waveHeightMax: number;
-  wavePeriodMin: number;
-}
+export type { CalendarConfig } from "./calendar-config-schema";
 
 export interface InterpretConfigResponse {
   outcome: "configured" | "insufficient" | "unsupported";

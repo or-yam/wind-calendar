@@ -13,13 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MODELS } from "@shared/models";
+import { MODELS, isValidModelId, type ModelId } from "@shared/models";
 import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
 
 interface ConfigFormProps {
   locations: string[];
-  model: number | string;
+  model: ModelId;
   availableModels: number[];
   windEnabled: boolean;
   windMin: number;
@@ -31,7 +31,7 @@ interface ConfigFormProps {
   wavePeriodMin: number;
   minSessionHours: number;
   onLocationsChange: (locations: string[]) => void;
-  onModelChange: (model: number | string) => void;
+  onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
@@ -113,7 +113,8 @@ export function ConfigForm({
           onValueChange={(v) => {
             if (v === null) return;
             const num = Number(v);
-            onModelChange(Number.isNaN(num) ? v : num);
+            const model = Number.isNaN(num) ? v : num;
+            if (isValidModelId(model)) onModelChange(model);
           }}
         >
           <SelectTrigger id="model" className="rounded-sm border-2 border-input bg-transparent">

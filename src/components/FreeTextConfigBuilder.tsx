@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import type { CalendarConfig, InterpretConfigResponse } from "@shared/types";
 
@@ -6,47 +7,45 @@ interface FreeTextConfigBuilderProps {
   onConfig: (config: CalendarConfig, message: string) => void;
 }
 
+async function interpretConfig(request: string): Promise<InterpretConfigResponse> {
+  const response = await fetch("/api/interpret-config", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request }),
+  });
+  const body = (await response.json()) as InterpretConfigResponse & {
+    data?: { error?: string };
+    error?: string;
+  };
+  if (!response.ok) throw new Error(body.data?.error ?? body.error ?? "Request failed");
+  return body;
+}
+
+function resultMessage(result: InterpretConfigResponse): string {
+  if (result.outcome === "configured") return result.message;
+  if (result.outcome === "insufficient") {
+    return `Not enough information to build a specific configuration. Defaults were loaded. ${result.message}`;
+  }
+  return `That request is not supported. Defaults were loaded. ${result.message}`;
+}
+
 export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) {
   const [request, setRequest] = useState("");
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState<string>();
+  const interpretation = useMutation({
+    mutationFn: interpretConfig,
+    onSuccess: (result) => onConfig(result.config, result.message),
+  });
 
-  async function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const normalized = request.trim();
-    if (normalized.length < 10) {
-      setMessage("Add a little more detail (at least 10 characters). ");
-      return;
-    }
-
-    setPending(true);
-    setMessage(undefined);
-    try {
-      const response = await fetch("/api/interpret-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request: normalized }),
-      });
-      const body = (await response.json()) as InterpretConfigResponse & {
-        data?: { error?: string };
-        error?: string;
-      };
-      if (!response.ok) throw new Error(body.data?.error ?? body.error ?? "Request failed");
-
-      onConfig(body.config, body.message);
-      setMessage(
-        body.outcome === "configured"
-          ? body.message
-          : body.outcome === "insufficient"
-            ? `Not enough information to build a specific configuration. Defaults were loaded. ${body.message}`
-            : `That request is not supported. Defaults were loaded. ${body.message}`,
-      );
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not interpret that request.");
-    } finally {
-      setPending(false);
-    }
+    if (normalized.length < 10) return;
+    interpretation.mutate(normalized);
   }
+
+  const message = interpretation.data
+    ? resultMessage(interpretation.data)
+    : interpretation.error?.message;
 
   return (
     <form onSubmit={handleSubmit} className="mb-6 grid gap-3" aria-label="Describe conditions">
@@ -65,10 +64,10 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
           dir="auto"
           placeholder="e.g. Beginner kitesurfing at Beit Yanai, 14-20 knots"
           className="h-11 min-w-0 flex-1 rounded-sm border-2 border-input bg-transparent px-3 text-foreground placeholder:text-muted-foreground"
-          disabled={pending}
+          disabled={interpretation.isPending}
         />
-        <Button type="submit" disabled={pending || request.trim().length < 10}>
-          {pending ? "Interpreting..." : "Build configuration"}
+        <Button type="submit" disabled={interpretation.isPending || request.trim().length < 10}>
+          {interpretation.isPending ? "Interpreting..." : "Build configuration"}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">

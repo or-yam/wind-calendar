@@ -35,3 +35,5 @@ export const calendarConfigSchema = z
   .refine((config) => config.windEnabled || config.waveEnabled, {
     message: "At least one of wind or waves must be enabled",
   });
+
+export type CalendarConfig = z.infer<typeof calendarConfigSchema>;

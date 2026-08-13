@@ -2,11 +2,12 @@ import { ConfigForm } from "./ConfigForm";
 import VHS from "./canvasui/VHS";
 import type { WaveSource } from "@shared/types";
 import type { CalendarConfig } from "@shared/types";
+import type { ModelId } from "@shared/models";
 import { FreeTextConfigBuilder } from "./FreeTextConfigBuilder";
 
 export interface HeroProps {
   locations: string[];
-  model: number | string;
+  model: ModelId;
   availableModels: number[];
   windEnabled: boolean;
   windMin: number;
@@ -18,7 +19,7 @@ export interface HeroProps {
   wavePeriodMin: number;
   minSessionHours: number;
   onLocationsChange: (locations: string[]) => void;
-  onModelChange: (model: number | string) => void;
+  onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;

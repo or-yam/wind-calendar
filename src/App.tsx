@@ -15,6 +15,7 @@ import { useWeekNavigation } from "./hooks/useWeekNavigation";
 import type { CalendarConfig } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
 import { LOCATIONS } from "@shared/locations";
+import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 
@@ -25,11 +26,12 @@ function parseNumParam(params: URLSearchParams, key: string, fallback: number): 
   return Number.isFinite(num) ? num : fallback;
 }
 
-function parseModelParam(params: URLSearchParams, fallback: number | string): number | string {
+function parseModelParam(params: URLSearchParams, fallback: ModelId): ModelId {
   const raw = params.get("model");
   if (raw === null) return fallback;
   const num = Number(raw);
-  return Number.isFinite(num) ? num : raw; // Return string if not a number
+  const model = Number.isFinite(num) ? num : raw;
+  return isValidModelId(model) ? model : fallback;
 }
 
 function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean): boolean {
@@ -47,7 +49,7 @@ function getAvailableModels(locations: string[]): number[] {
   return [...modelLists[0]].filter((model) => modelLists.every((models) => models.includes(model)));
 }
 
-function parseUrlParams(): CalendarConfig {
+function parseUrlParams() {
   const params = new URLSearchParams(window.location.search);
   const rawLocations = (params.get("locations") ?? params.get("location") ?? "")
     .split(",")
@@ -82,17 +84,13 @@ function App() {
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
   );
-  const [aiConfirmationPending, setAiConfirmationPending] = useState(false);
+  const [confirmationPending, setConfirmationPending] = useState(false);
 
   const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
-    setConfig(update);
+    const nextConfig = update(config);
+    setConfig(nextConfig);
+    if (!confirmationPending) setConfirmedConfig(nextConfig);
   };
-
-  useEffect(() => {
-    if (aiConfirmationPending) return;
-    const validated = calendarConfigSchema.safeParse(config);
-    if (validated.success) setConfirmedConfig(validated.data);
-  }, [aiConfirmationPending, config]);
 
   useEffect(() => {
     const params = buildConfigParams(config);
@@ -102,8 +100,10 @@ function App() {
 
   useEffect(() => {
     const handler = () => {
-      setConfig(parseValidatedUrlParams());
-      setAiConfirmationPending(false);
+      const nextConfig = parseValidatedUrlParams();
+      setConfig(nextConfig);
+      setConfirmedConfig(nextConfig);
+      setConfirmationPending(false);
     };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
@@ -136,7 +136,7 @@ function App() {
   const availableModels = getAvailableModels(config.locations);
 
   // Handler for model change
-  const handleModelChange = (model: number | string) => {
+  const handleModelChange = (model: ModelId) => {
     updateConfig((c) => ({ ...c, model }));
   };
 
@@ -170,11 +170,11 @@ function App() {
         }
         onFreeTextConfig={(nextConfig) => {
           setConfig(calendarConfigSchema.parse(nextConfig));
-          setAiConfirmationPending(true);
+          setConfirmationPending(true);
         }}
       />
       <main>
-        {aiConfirmationPending && (
+        {confirmationPending && (
           <section className="night-section pb-0">
             <div className="content-wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="font-bold">
@@ -186,7 +186,7 @@ function App() {
                 onClick={() => {
                   const validated = calendarConfigSchema.parse(config);
                   setConfirmedConfig(validated);
-                  setAiConfirmationPending(false);
+                  setConfirmationPending(false);
                 }}
               >
                 Confirm configuration
