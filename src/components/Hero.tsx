@@ -79,7 +79,7 @@ export function Hero(props: HeroProps) {
 
       <section className="night-section">
         <div className="content-wrap">
-          <h2 className="sticker-heading">Build a session</h2>
+          <h2 className="sticker-heading">Choose your conditions</h2>
           {props.freeTextConfigBuilderEnabled && (
             <FreeTextConfigBuilder onConfig={props.onFreeTextConfig} />
           )}

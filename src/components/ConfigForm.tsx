@@ -101,56 +101,6 @@ export function ConfigForm({
         <p className="text-xs text-muted-foreground">Select up to 3 spots.</p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <Label
-          htmlFor="model"
-          className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
-        >
-          Forecast Model
-        </Label>
-        <Select
-          value={model.toString()}
-          onValueChange={(v) => {
-            if (v === null) return;
-            const num = Number(v);
-            const model = Number.isNaN(num) ? v : num;
-            if (isValidModelId(model)) onModelChange(model);
-          }}
-        >
-          <SelectTrigger id="model" className="rounded-sm border-2 border-input bg-transparent">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="border-2 border-[#04090b] bg-[#c9e4dd] text-[#04090b]">
-            <SelectGroup>
-              <SelectLabel>Open-Meteo (Recommended)</SelectLabel>
-              {Object.values(MODELS)
-                .filter((m) => m.provider === "openmeteo")
-                .map((m) => (
-                  <SelectItem key={m.id} value={m.id.toString()}>
-                    {m.name}
-                  </SelectItem>
-                ))}
-            </SelectGroup>
-            <SelectSeparator />
-            <SelectGroup>
-              <SelectLabel>Windguru</SelectLabel>
-              {Object.values(MODELS)
-                .filter((m) => m.provider === "windguru")
-                .map((m) => (
-                  <SelectItem
-                    key={m.id}
-                    value={m.id.toString()}
-                    disabled={!availableModels.includes(m.id as number)}
-                  >
-                    {m.name}
-                    {!availableModels.includes(m.id as number) && " (unavailable)"}
-                  </SelectItem>
-                ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Wind Section */}
       <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
         <div className="flex items-center justify-between">
@@ -175,6 +125,9 @@ export function ConfigForm({
             </span>
           )}
         </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Show times when wind stays within your preferred speed range.
+        </p>
         {windEnabled && (
           <div aria-label="Wind speed range in knots">
             <Slider
@@ -216,6 +169,9 @@ export function ConfigForm({
             </span>
           )}
         </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Show times when wave height and period match the conditions you want.
+        </p>
         {waveEnabled && (
           <div className="flex flex-col gap-3 pl-1">
             <RadioGroup
@@ -285,6 +241,9 @@ export function ConfigForm({
             {localSession} hrs
           </span>
         </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Ignore short weather windows that do not leave enough time for a session.
+        </p>
         <Slider
           id="min-session"
           aria-labelledby="min-session-label"
@@ -296,6 +255,66 @@ export function ConfigForm({
           step={0.5}
         />
       </div>
+
+      <details className="border-t-2 border-foreground/20 pt-6 md:col-span-2">
+        <summary className="cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
+          Advanced
+        </summary>
+        <div className="mt-4 flex max-w-md flex-col gap-3">
+          <div>
+            <Label
+              htmlFor="model"
+              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+            >
+              Forecast Model
+            </Label>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Open-Meteo GFS is recommended and works for every spot.
+            </p>
+          </div>
+          <Select
+            value={model.toString()}
+            onValueChange={(v) => {
+              if (v === null) return;
+              const num = Number(v);
+              const model = Number.isNaN(num) ? v : num;
+              if (isValidModelId(model)) onModelChange(model);
+            }}
+          >
+            <SelectTrigger id="model" className="rounded-sm border-2 border-input bg-transparent">
+              <SelectValue>{MODELS[model].name}</SelectValue>
+            </SelectTrigger>
+            <SelectContent className="border-2 border-[#04090b] bg-[#c9e4dd] text-[#04090b]">
+              <SelectGroup>
+                <SelectLabel>Open-Meteo (Recommended)</SelectLabel>
+                {Object.values(MODELS)
+                  .filter((m) => m.provider === "openmeteo")
+                  .map((m) => (
+                    <SelectItem key={m.id} value={m.id.toString()}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>Windguru</SelectLabel>
+                {Object.values(MODELS)
+                  .filter((m) => m.provider === "windguru")
+                  .map((m) => (
+                    <SelectItem
+                      key={m.id}
+                      value={m.id.toString()}
+                      disabled={!availableModels.includes(m.id as number)}
+                    >
+                      {m.name}
+                      {!availableModels.includes(m.id as number) && " (unavailable)"}
+                    </SelectItem>
+                  ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </details>
     </form>
   );
 }

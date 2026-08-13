@@ -1,7 +1,7 @@
 export const DEFAULTS = {
   locations: ["beit-yanai"],
   minSessionHours: 2,
-  model: 3,
+  model: "om_gfs",
 
   // Wind
   windEnabled: true,

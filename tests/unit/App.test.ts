@@ -114,4 +114,19 @@ describe("App location selection", () => {
     await act(async () => confirm.click());
     expect(subscriptionLink().href).toContain("locations=tel-aviv");
   });
+
+  it("shows the forecast before subscription actions", async () => {
+    await act(async () => root.render(createElement(App)));
+
+    const forecastHeading = [...container.querySelectorAll("h2")].find(
+      (heading) => heading.textContent === "Upcoming sessions",
+    )!;
+    const subscriptionHeading = [...container.querySelectorAll("h2")].find(
+      (heading) => heading.textContent === "Stick it somewhere",
+    )!;
+
+    expect(forecastHeading.compareDocumentPosition(subscriptionHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
 });
