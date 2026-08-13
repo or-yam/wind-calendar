@@ -1,6 +1,8 @@
 import { routes, deploymentEnv, type VercelConfig } from "@vercel/config/v1";
+import { getSentryOrigin } from "./shared/sentry-config.js";
 
 const isProd = deploymentEnv("VERCEL_ENV") === "production";
+const sentryOrigin = getSentryOrigin(process.env.VITE_SENTRY_DSN);
 
 const headers = [
   routes.header("/(.*)", [
@@ -22,8 +24,7 @@ if (isProd) {
     routes.header("/(.*)", [
       {
         key: "Content-Security-Policy",
-        value:
-          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'",
+        value: `default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com${sentryOrigin ? ` ${sentryOrigin}` : ""}; img-src 'self' data:; frame-ancestors 'none'`,
       },
     ]),
   );

@@ -11,8 +11,8 @@
     "lint:fix": "oxlint --fix && pnpm run lint:effect --fix",
     "lint:ci": "oxlint --format=github && pnpm run lint:effect --format=github",
     "lint:effect": "oxlint --config .oxlintrc.effect.json --disable-nested-config server tests",
-    "fmt": "oxfmt --write .",
-    "fmt:check": "oxfmt --check .",
+    "fmt": "oxfmt --write . '!**/.agents/**'",
+    "fmt:check": "oxfmt --check . '!**/.agents/**'",
     "test": "vitest run",
     "test:production-logs": "pnpm build && node --test tests/production/observability.test.mjs",
     "test:coverage": "vitest run --coverage",
@@ -23,6 +23,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^4.0.83",
     "@base-ui/react": "^1.8.0",
+    "@sentry/nitro": "^10.70.0",
+    "@sentry/react": "^10.70.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.104.1",
     "@vercel/analytics": "^2.0.1",
@@ -43,6 +45,7 @@
   },
   "devDependencies": {
     "@effect/tsgo": "0.53.4",
+    "@sentry/vite-plugin": "^5.4.0",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

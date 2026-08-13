@@ -140,6 +140,8 @@ cp .env.example .env
 
 Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. Create a boolean Vercel Flag named `free-text-config-builder`, then run `vercel link && vercel env pull` to evaluate it locally. The key and flag credentials are server-only; never expose them through a `VITE_` variable. Manual configuration works without either.
 
+Sentry is optional. Set `VITE_SENTRY_DSN` and `SENTRY_DSN` for browser and Nitro errors. Set `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in Vercel to upload hidden browser and server source maps during builds. `SENTRY_ENVIRONMENT` only overrides the event's dashboard environment label; it does not enable or disable reporting. Reporting is gated independently by `VERCEL_ENV` and runs only on Vercel Preview and Production deployments. `SENTRY_RELEASE` is also optional; Vercel's environment and Git commit SHA are used as defaults. The SDKs do not initialize in tests or local development, and request bodies, query strings, headers, cookies, user data, IP addresses, and AI inputs/outputs are not collected.
+
 **Run locally:**
 
 ```bash
