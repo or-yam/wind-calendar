@@ -18,6 +18,7 @@ import { LOCATIONS } from "@shared/locations";
 import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
+import { featuresQueryOptions } from "./lib/features-query";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -85,6 +86,7 @@ function App() {
     parseValidatedUrlParams(),
   );
   const [confirmationPending, setConfirmationPending] = useState(false);
+  const { data: features } = useQuery(featuresQueryOptions);
 
   const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
     const nextConfig = update(config);
@@ -172,6 +174,7 @@ function App() {
           setConfig(calendarConfigSchema.parse(nextConfig));
           setConfirmationPending(true);
         }}
+        freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
       />
       <main>
         {confirmationPending && (

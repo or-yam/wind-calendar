@@ -5,6 +5,7 @@ import { interpretFreeTextConfig } from "../free-text-config.js";
 import { checkRateLimit } from "../utils/rate-limit.js";
 import { getClientIp } from "../utils/api-handler.js";
 import { tryCatch } from "../utils/try-catch.js";
+import { FEATURE_FLAGS, isFeatureEnabled } from "../feature-flags.js";
 
 export const freeTextRequestSchema = z
   .object({
@@ -27,6 +28,10 @@ export const freeTextRequestSchema = z
 export default defineHandler(async (event) => {
   if (event.req.method !== "POST") {
     throw new HTTPError({ statusCode: 405, statusMessage: "Method Not Allowed" });
+  }
+
+  if (!(await isFeatureEnabled(FEATURE_FLAGS.freeTextConfigBuilder))) {
+    throw new HTTPError({ statusCode: 404, statusMessage: "Not Found" });
   }
 
   const rateCheck = checkRateLimit(`ai:${getClientIp(event)}`);

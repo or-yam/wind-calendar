@@ -6,12 +6,18 @@ const { interpretFreeTextConfig } = vi.hoisted(() => ({
   interpretFreeTextConfig: vi.fn(),
 }));
 vi.mock("../../../server/free-text-config", () => ({ interpretFreeTextConfig }));
+const { isFeatureEnabled } = vi.hoisted(() => ({ isFeatureEnabled: vi.fn() }));
+vi.mock("../../../server/feature-flags", () => ({
+  FEATURE_FLAGS: { freeTextConfigBuilder: "free-text-config-builder" },
+  isFeatureEnabled,
+}));
 
 import handler from "../../../server/api/interpret-config";
 
 describe("POST /api/interpret-config", () => {
   beforeEach(() => {
     process.env.OPENAI_API_KEY = "test-key";
+    isFeatureEnabled.mockResolvedValue(true);
     interpretFreeTextConfig.mockResolvedValue({
       outcome: "configured",
       message: "Found explicit conditions.",
@@ -46,6 +52,18 @@ describe("POST /api/interpret-config", () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(interpretFreeTextConfig).not.toHaveBeenCalled();
+  });
+
+  it("hides the endpoint while the feature is disabled", async () => {
+    isFeatureEnabled.mockResolvedValue(false);
+    const response = await callHandler(handler, "/api/interpret-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ request: "Kitesurfing at Beit Yanai with 14-20 knots" }),
+    });
+
+    expect(response.statusCode).toBe(404);
     expect(interpretFreeTextConfig).not.toHaveBeenCalled();
   });
 

@@ -30,6 +30,7 @@ export interface HeroProps {
   onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
   onFreeTextConfig: (config: CalendarConfig, message: string) => void;
+  freeTextConfigBuilderEnabled: boolean;
 }
 
 export function Hero(props: HeroProps) {
@@ -79,7 +80,9 @@ export function Hero(props: HeroProps) {
       <section className="night-section">
         <div className="content-wrap">
           <h2 className="sticker-heading">Build a session</h2>
-          <FreeTextConfigBuilder onConfig={props.onFreeTextConfig} />
+          {props.freeTextConfigBuilderEnabled && (
+            <FreeTextConfigBuilder onConfig={props.onFreeTextConfig} />
+          )}
           <ConfigForm {...props} />
         </div>
       </section>
