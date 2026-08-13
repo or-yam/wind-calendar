@@ -4,6 +4,7 @@ import { z } from "zod";
 import { interpretFreeTextConfig } from "../free-text-config.js";
 import { checkRateLimit } from "../utils/rate-limit.js";
 import { getClientIp } from "../utils/api-handler.js";
+import { tryCatch } from "../utils/try-catch.js";
 
 export const freeTextRequestSchema = z
   .object({
@@ -51,11 +52,8 @@ export default defineHandler(async (event) => {
     });
   }
 
-  try {
-    const result = await interpretFreeTextConfig(parsed.data.request);
-    event.res.headers.set("Cache-Control", "no-store");
-    return result;
-  } catch (error) {
+  const { data: result, error } = await tryCatch(interpretFreeTextConfig(parsed.data.request));
+  if (error) {
     console.error("Free-text configuration failed", error);
     throw new HTTPError({
       statusCode: 502,
@@ -63,4 +61,7 @@ export default defineHandler(async (event) => {
       data: { error: "Could not interpret that request. Try again or use the manual form." },
     });
   }
+
+  event.res.headers.set("Cache-Control", "no-store");
+  return result;
 });
