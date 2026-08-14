@@ -216,8 +216,8 @@ export function ConfigForm({
             <div aria-label="Minimum wave period in seconds">
               <Slider
                 id="min-period"
-                value={[localWavePeriod]}
-                onValueChange={([v]) => {
+                value={localWavePeriod}
+                onValueChange={(v) => {
                   setLocalWavePeriod(v);
                   onWavePeriodMinChange(v);
                 }}
@@ -249,8 +249,8 @@ export function ConfigForm({
         <Slider
           id="min-session"
           aria-labelledby="min-session-label"
-          value={[localSession]}
-          onValueChange={([v]) => {
+          value={localSession}
+          onValueChange={(v) => {
             setLocalSession(v);
             onMinSessionHoursChange(v);
           }}
