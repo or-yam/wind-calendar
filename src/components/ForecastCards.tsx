@@ -117,9 +117,8 @@ export function ForecastCards({
     const today = track?.querySelector<HTMLElement>("[data-today='true']");
     if (!track || !today) return;
     if (focus) today.focus({ preventScroll: true });
-    today.scrollIntoView({
-      block: "nearest",
-      inline: "center",
+    track.scrollTo({
+      left: today.offsetLeft - (track.clientWidth - today.clientWidth) / 2,
       behavior,
     });
   };

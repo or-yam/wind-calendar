@@ -12,7 +12,7 @@ describe("ForecastCards", () => {
   let root: Root;
 
   beforeEach(() => {
-    Element.prototype.scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollTo = vi.fn();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -136,13 +136,12 @@ describe("ForecastCards", () => {
       ),
     );
     const today = container.querySelector<HTMLElement>("[data-today='true']")!;
-    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
-      block: "nearest",
-      inline: "center",
+    expect(HTMLElement.prototype.scrollTo).toHaveBeenCalledWith({
+      left: 0,
       behavior: "auto",
     });
 
-    vi.mocked(Element.prototype.scrollIntoView).mockClear();
+    vi.mocked(HTMLElement.prototype.scrollTo).mockClear();
     const todayButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Today",
     )!;
@@ -150,9 +149,8 @@ describe("ForecastCards", () => {
 
     expect(onToday).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(today);
-    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
-      block: "nearest",
-      inline: "center",
+    expect(HTMLElement.prototype.scrollTo).toHaveBeenCalledWith({
+      left: 0,
       behavior: "smooth",
     });
   });
