@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { windColor, windTextColor } from "@/lib/wind-colors";
 import { waveHeightColor, waveHeightTextColor } from "@/lib/wave-colors";
@@ -104,10 +105,28 @@ export function ForecastCards({
   onNext,
   onToday,
 }: ForecastCardsProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const nextScrollBehaviorRef = useRef<ScrollBehavior>("auto");
   const weekSessions = sessions.filter(
     (s) => new Date(s.start) >= weekStart && new Date(s.start) < addDays(weekStart, 7),
   );
   const groups = groupByDay(weekSessions);
+
+  const scrollToToday = (behavior: ScrollBehavior, focus = false) => {
+    const track = trackRef.current;
+    const today = track?.querySelector<HTMLElement>("[data-today='true']");
+    if (!track || !today) return;
+    if (focus) today.focus({ preventScroll: true });
+    track.scrollTo({
+      left: today.offsetLeft - (track.clientWidth - today.clientWidth) / 2,
+      behavior,
+    });
+  };
+
+  useLayoutEffect(() => {
+    scrollToToday(nextScrollBehaviorRef.current);
+    nextScrollBehaviorRef.current = "auto";
+  }, [weekStart, isPending, sessions]);
 
   return (
     <section className="night-section">
@@ -127,7 +146,15 @@ export function ForecastCards({
           <Button variant="outline" onClick={onNext}>
             Next →
           </Button>
-          <Button variant="ghost" onClick={onToday} className="col-span-3 justify-self-center">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              nextScrollBehaviorRef.current = "smooth";
+              onToday();
+              scrollToToday("smooth", true);
+            }}
+            className="col-span-3 justify-self-center"
+          >
             Today
           </Button>
         </nav>
@@ -151,6 +178,7 @@ export function ForecastCards({
           </p>
         ) : (
           <div
+            ref={trackRef}
             aria-live="polite"
             className="forecast-scroll -mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3"
           >
@@ -162,6 +190,8 @@ export function ForecastCards({
               if (!dayGroup) {
                 return (
                   <div
+                    data-today={isToday}
+                    tabIndex={isToday ? -1 : undefined}
                     key={dayKey}
                     aria-label={`${formatDayLabel(day)}: No sessions`}
                     className={`session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col items-center justify-center p-4 opacity-60${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
@@ -194,6 +224,8 @@ export function ForecastCards({
 
                 return (
                   <div
+                    data-today={isToday}
+                    tabIndex={isToday ? -1 : undefined}
                     key={`${dayKey}-${session.start}`}
                     aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
                     className={`session-card min-h-[180px] w-60 shrink-0 snap-start p-4 text-card-foreground${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}

@@ -12,6 +12,7 @@ describe("ForecastCards", () => {
   let root: Root;
 
   beforeEach(() => {
+    HTMLElement.prototype.scrollTo = vi.fn();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -102,5 +103,55 @@ describe("ForecastCards", () => {
     for (const card of sessionCards) {
       expect(card.parentElement).toBe(sessionTrack);
     }
+  });
+
+  it("focuses and scrolls today into view when Today is clicked", async () => {
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    const session: ForecastSession = {
+      location: { id: "beit-yanai", label: "Beit Yanai" },
+      start: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9).toISOString(),
+      end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12).toISOString(),
+      matchType: "wind",
+      wind: { min: 12, max: 16, gustMax: 20, direction: "W" },
+      wave: { avgHeight: 1.2, avgPeriod: 8, direction: "NW" },
+      swell: { avgHeight: 0.8, avgPeriod: 7 },
+      hourly: [],
+    };
+    const onToday = vi.fn();
+
+    await act(async () =>
+      root.render(
+        createElement(ForecastCards, {
+          sessions: [session],
+          isPending: false,
+          error: null,
+          weekStart,
+          onPrev: vi.fn(),
+          onNext: vi.fn(),
+          onToday,
+        }),
+      ),
+    );
+    const today = container.querySelector<HTMLElement>("[data-today='true']")!;
+    expect(HTMLElement.prototype.scrollTo).toHaveBeenCalledWith({
+      left: 0,
+      behavior: "auto",
+    });
+
+    vi.mocked(HTMLElement.prototype.scrollTo).mockClear();
+    const todayButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Today",
+    )!;
+    await act(async () => todayButton.click());
+
+    expect(onToday).toHaveBeenCalledOnce();
+    expect(document.activeElement).toBe(today);
+    expect(HTMLElement.prototype.scrollTo).toHaveBeenCalledWith({
+      left: 0,
+      behavior: "smooth",
+    });
   });
 });

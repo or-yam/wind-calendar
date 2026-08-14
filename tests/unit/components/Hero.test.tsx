@@ -67,4 +67,12 @@ describe("Hero feature flags", () => {
 
     expect(container.textContent?.includes("Free-text config builder")).toBe(visible);
   });
+
+  it("uses a clear conditions heading", async () => {
+    await act(async () =>
+      root.render(createElement(Hero, { ...props, freeTextConfigBuilderEnabled: false })),
+    );
+
+    expect(container.querySelector("h2")?.textContent).toBe("Choose your conditions");
+  });
 });

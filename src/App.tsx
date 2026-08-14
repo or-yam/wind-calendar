@@ -114,10 +114,7 @@ function App() {
   const { data, isPending, error } = useQuery(forecastQueryOptions(config));
   const sessions = data?.sessions ?? [];
   const forecastConfigKey = buildConfigParams(config).toString();
-  const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(
-    sessions,
-    forecastConfigKey,
-  );
+  const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(forecastConfigKey);
 
   const handleLocationsChange = (locations: string[]) => {
     if (
@@ -197,7 +194,6 @@ function App() {
             </div>
           </section>
         )}
-        <SubscribeButtons config={confirmedConfig} />
         <ErrorBoundary
           fallback={
             <div className="night-section px-5 text-center">
@@ -217,6 +213,7 @@ function App() {
             onToday={goToToday}
           />
         </ErrorBoundary>
+        <SubscribeButtons config={confirmedConfig} />
         <section className="night-section">
           <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
             <h2 className="sticker-heading mb-0">About</h2>
