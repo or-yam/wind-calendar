@@ -176,3 +176,18 @@ describe("buildOutlookUrl", () => {
     expect(decodeURIComponent(url)).toContain("http://localhost:5173");
   });
 });
+
+describe("frontend locale isolation", () => {
+  it("never includes locale in API or subscription URLs", () => {
+    const urls = [
+      buildConfigParams(baseConfig).toString(),
+      buildApiUrl(baseConfig),
+      buildFullUrl(baseConfig),
+      buildWebcalUrl(baseConfig),
+      decodeURIComponent(buildGoogleCalendarUrl(baseConfig)),
+      decodeURIComponent(buildOutlookUrl(baseConfig)),
+    ];
+
+    for (const url of urls) expect(url).not.toContain("lang=");
+  });
+});

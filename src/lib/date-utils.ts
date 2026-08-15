@@ -1,19 +1,6 @@
 // Date utility functions for calendar operations
 
-const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+import { localeMetadata, type Locale } from "@/i18n/locale";
 
 /**
  * Get the start of the week for a given date
@@ -67,42 +54,47 @@ export function isToday(date: Date): boolean {
 /**
  * Format week range (e.g., "Jan 1 – 7, 2026")
  */
-export function formatWeekRange(weekStart: Date): string {
+export function formatWeekRange(weekStart: Date, locale: Locale = "en"): string {
   const weekEnd = addDays(weekStart, 6);
-  const startMonth = MONTH_NAMES[weekStart.getMonth()];
-  const endMonth = MONTH_NAMES[weekEnd.getMonth()];
-  const startYear = weekStart.getFullYear();
-  const endYear = weekEnd.getFullYear();
-
-  if (startYear !== endYear) {
-    return `${startMonth} ${weekStart.getDate()}, ${startYear} – ${endMonth} ${weekEnd.getDate()}, ${endYear}`;
-  }
-  if (weekStart.getMonth() !== weekEnd.getMonth()) {
-    return `${startMonth} ${weekStart.getDate()} – ${endMonth} ${weekEnd.getDate()}, ${startYear}`;
-  }
-  return `${startMonth} ${weekStart.getDate()} – ${weekEnd.getDate()}, ${startYear}`;
+  const formatter = new Intl.DateTimeFormat(localeMetadata[locale].intl, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return typeof formatter.formatRange === "function"
+    ? formatter.formatRange(weekStart, weekEnd)
+    : `${formatter.format(weekStart)} – ${formatter.format(weekEnd)}`;
 }
 
 /**
  * Format time as HH:MM
  */
-export function formatTime(hour: number, minute: number): string {
-  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-  return `${pad(hour)}:${pad(minute)}`;
+export function formatTime(hour: number, minute: number, locale: Locale = "en"): string {
+  const date = new Date(2000, 0, 1, hour, minute);
+  return new Intl.DateTimeFormat(localeMetadata[locale].intl, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
 }
 
 /**
  * Format time from Date object as HH:MM
  */
-export function formatTimeFromDate(date: Date): string {
-  return formatTime(date.getHours(), date.getMinutes());
+export function formatTimeFromDate(date: Date, locale: Locale = "en"): string {
+  return formatTime(date.getHours(), date.getMinutes(), locale);
 }
 
 /**
  * Get day names for a week
  */
-export function getDayNames(weekStartsOnSunday: boolean): string[] {
-  return weekStartsOnSunday
-    ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export function getDayNames(weekStartsOnSunday: boolean, locale: Locale = "en"): string[] {
+  const formatter = new Intl.DateTimeFormat(localeMetadata[locale].intl, { weekday: "short" });
+  const sunday = new Date(2024, 0, 7);
+  const names = Array.from({ length: 7 }, (_, index) => formatter.format(addDays(sunday, index)));
+  return weekStartsOnSunday ? names : [...names.slice(1), names[0]];
+}
+
+export function formatNumber(value: number, locale: Locale, options?: Intl.NumberFormatOptions) {
+  return new Intl.NumberFormat(localeMetadata[locale].intl, options).format(value);
 }

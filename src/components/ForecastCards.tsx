@@ -6,9 +6,13 @@ import { addDays, formatTimeFromDate, formatWeekRange } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WIND_ICON, WAVE_ICON } from "@shared/constants";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { localeMetadata, type Locale } from "@/i18n/locale";
+import { getLocationName } from "@/i18n/locations";
+import { formatNumber } from "@/lib/date-utils";
 
-const DOW_FMT = new Intl.DateTimeFormat("en-US", { weekday: "short" });
-const MON_FMT = new Intl.DateTimeFormat("en-US", { month: "short" });
+const isolate = (value: string) => `\u2068${value}\u2069`;
 
 interface ForecastCardsProps {
   sessions: ForecastSession[];
@@ -20,11 +24,12 @@ interface ForecastCardsProps {
   onToday: () => void;
 }
 
-function formatDayLabel(date: Date): string {
-  const dow = DOW_FMT.format(date).toUpperCase();
-  const mon = MON_FMT.format(date);
-  const day = date.getDate();
-  return `${dow} ${mon} ${day}`;
+function formatDayLabel(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(localeMetadata[locale].intl, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }
 
 interface DayGroup {
@@ -50,13 +55,14 @@ function DirectionIndicator({
   wave = false,
 }: {
   direction: string;
-  label: "Wind" | "Wave";
+  label: string;
   wave?: boolean;
 }) {
   return (
     <span
       role="img"
-      aria-label={`${label} direction ${direction}`}
+      aria-label={label}
+      dir="ltr"
       className="inline-flex items-center gap-0.5 text-sm leading-none text-card-foreground"
     >
       {wave ? <span aria-hidden="true">{WAVE_ICON}</span> : null}
@@ -87,7 +93,10 @@ function groupByDay(sessions: ForecastSession[]): DayGroup[] {
 
 function ForecastCardSkeleton() {
   return (
-    <div className="session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col p-4">
+    <div
+      aria-hidden="true"
+      className="session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col p-4"
+    >
       <Skeleton className="mb-3 h-3 w-16" />
       <Skeleton className="mb-2 h-6 w-24" />
       <Skeleton className="h-3 w-20" />
@@ -105,6 +114,10 @@ export function ForecastCards({
   onNext,
   onToday,
 }: ForecastCardsProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language as Locale;
+  const number = (value: number, digits = 1) =>
+    formatNumber(value, locale, { maximumFractionDigits: digits, minimumFractionDigits: 0 });
   const trackRef = useRef<HTMLDivElement>(null);
   const nextScrollBehaviorRef = useRef<ScrollBehavior>("auto");
   const weekSessions = sessions.filter(
@@ -117,10 +130,16 @@ export function ForecastCards({
     const today = track?.querySelector<HTMLElement>("[data-today='true']");
     if (!track || !today) return;
     if (focus) today.focus({ preventScroll: true });
-    track.scrollTo({
-      left: today.offsetLeft - (track.clientWidth - today.clientWidth) / 2,
+    const pagePosition = { x: window.scrollX, y: window.scrollY };
+    today.scrollIntoView({
       behavior,
-    });
+      block: "nearest",
+      inline: "center",
+      container: "nearest",
+    } as ScrollIntoViewOptions & { container: "nearest" });
+    if (window.scrollX !== pagePosition.x || window.scrollY !== pagePosition.y) {
+      window.scrollTo(pagePosition.x, pagePosition.y);
+    }
   };
 
   useLayoutEffect(() => {
@@ -131,20 +150,22 @@ export function ForecastCards({
   return (
     <section className="night-section">
       <div className="content-wrap">
-        <h2 className="sticker-heading">Upcoming sessions</h2>
+        <h2 className="sticker-heading">{t("upcomingSessions")}</h2>
 
         <nav
-          aria-label="Week navigation"
+          aria-label={t("weekNavigation")}
           className="mb-7 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-center"
         >
           <Button variant="outline" onClick={onPrev}>
-            ← Prev
+            <ArrowLeft aria-hidden="true" className="size-4 rtl:rotate-180" />
+            {t("previous")}
           </Button>
           <span className="min-w-0 text-center text-sm font-bold tracking-wide text-foreground/80 uppercase">
-            {formatWeekRange(weekStart)}
+            <bdi>{formatWeekRange(weekStart, locale)}</bdi>
           </span>
           <Button variant="outline" onClick={onNext}>
-            Next →
+            {t("next")}
+            <ArrowRight aria-hidden="true" className="size-4 rtl:rotate-180" />
           </Button>
           <Button
             variant="ghost"
@@ -155,26 +176,28 @@ export function ForecastCards({
             }}
             className="col-span-3 justify-self-center"
           >
-            Today
+            {t("today")}
           </Button>
         </nav>
 
         {isPending ? (
           <div
+            role="status"
             aria-live="polite"
             className="forecast-scroll -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3"
           >
+            <span className="sr-only">{t("forecastLoading")}</span>
             {Array.from({ length: 7 }, (_, i) => (
               <ForecastCardSkeleton key={i} />
             ))}
           </div>
         ) : error ? (
           <p aria-live="polite" className="text-red-400 text-sm text-center py-8">
-            {error.message}
+            {t("forecastError")}
           </p>
         ) : weekSessions.length === 0 ? (
           <p aria-live="polite" className="text-foreground/80 text-sm text-center py-8">
-            No sessions match your filters this week
+            {t("noSessionsWeek")}
           </p>
         ) : (
           <div
@@ -193,14 +216,14 @@ export function ForecastCards({
                     data-today={isToday}
                     tabIndex={isToday ? -1 : undefined}
                     key={dayKey}
-                    aria-label={`${formatDayLabel(day)}: No sessions`}
+                    aria-label={`${formatDayLabel(day, locale)}: ${t("noSessions")}`}
                     className={`session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col items-center justify-center p-4 opacity-60${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
                   >
                     <p className="mb-2 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
-                      {formatDayLabel(day)}
+                      {formatDayLabel(day, locale)}
                     </p>
                     <p className="text-3xl text-card-foreground/70">―</p>
-                    <p className="text-sm text-card-foreground/60">No match</p>
+                    <p className="text-sm text-card-foreground/60">{t("noMatch")}</p>
                   </div>
                 );
               }
@@ -214,41 +237,79 @@ export function ForecastCards({
 
                 const windSpeedLabel =
                   session.wind.min === session.wind.max
-                    ? `${session.wind.min} kn`
-                    : `${session.wind.min}–${session.wind.max} kn`;
-                const waveLabel = `${session.wave.avgHeight.toFixed(1)}m${session.wave.avgPeriod > 0 ? ` ${session.wave.avgPeriod}s` : ""}`;
+                    ? `${number(session.wind.min)} ${t("unitKnots")}`
+                    : `${number(session.wind.min)}–${number(session.wind.max)} ${t("unitKnots")}`;
+                const waveLabel = `${number(session.wave.avgHeight)}${t("unitMeters")}${session.wave.avgPeriod > 0 ? ` ${number(session.wave.avgPeriod)}${t("unitSeconds")}` : ""}`;
 
                 const start = new Date(session.start);
                 const end = new Date(session.end);
-                const timeRange = `${formatTimeFromDate(start)} – ${formatTimeFromDate(end)}`;
+                const timeRange = `${formatTimeFromDate(start, locale)} – ${formatTimeFromDate(end, locale)}`;
+                const locationName = getLocationName(
+                  session.location.id,
+                  locale,
+                  session.location.label,
+                );
+                const details =
+                  session.matchType === "wind"
+                    ? t("windDetails", {
+                        speed: isolate(windSpeedLabel),
+                        direction: isolate(session.wind.direction),
+                      })
+                    : session.matchType === "wave"
+                      ? t("waveDetails", {
+                          wave: isolate(waveLabel),
+                          direction: isolate(session.wave.direction),
+                        })
+                      : t("bothDetails", {
+                          speed: isolate(windSpeedLabel),
+                          windDirection: isolate(session.wind.direction),
+                          wave: isolate(waveLabel),
+                          waveDirection: isolate(session.wave.direction),
+                        });
 
                 return (
                   <div
                     data-today={isToday}
                     tabIndex={isToday ? -1 : undefined}
                     key={`${dayKey}-${session.start}`}
-                    aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
+                    aria-label={t("sessionLabel", {
+                      date: formatDayLabel(start, locale),
+                      location: locationName,
+                      details: `${isolate(timeRange)}, ${details}`,
+                    })}
                     className={`session-card min-h-[180px] w-60 shrink-0 snap-start p-4 text-card-foreground${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
                     style={{ borderColor }}
                   >
                     <p className="mb-1 text-xs font-bold tracking-[0.08em] text-card-foreground uppercase">
-                      {formatDayLabel(start)}
+                      {formatDayLabel(start, locale)}
                     </p>
-                    <p className="truncate text-sm text-card-foreground/70">
-                      {session.location.label}
-                    </p>
+                    <p className="truncate text-sm text-card-foreground/70">{locationName}</p>
                     <div className="mt-3 mb-1 flex items-center gap-1.5">
                       {session.matchType !== "wave" ? (
-                        <DirectionIndicator direction={session.wind.direction} label="Wind" />
+                        <DirectionIndicator
+                          direction={session.wind.direction}
+                          label={t("windDirection", {
+                            direction: isolate(session.wind.direction),
+                          })}
+                        />
                       ) : null}
                       {session.matchType !== "wind" ? (
-                        <DirectionIndicator direction={session.wave.direction} label="Wave" wave />
+                        <DirectionIndicator
+                          direction={session.wave.direction}
+                          label={t("waveDirection", {
+                            direction: isolate(session.wave.direction),
+                          })}
+                          wave
+                        />
                       ) : null}
                     </div>
-                    <p className="text-xl font-bold text-card-foreground">{timeRange}</p>
+                    <p dir="ltr" className="text-xl font-bold text-card-foreground">
+                      {timeRange}
+                    </p>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {session.matchType !== "wind" ? (
                         <span
+                          dir="ltr"
                           className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
                           style={{
                             backgroundColor: waveHeightColor(session.wave.avgHeight),
@@ -260,6 +321,7 @@ export function ForecastCards({
                       ) : null}
                       {session.matchType !== "wave" ? (
                         <span
+                          dir="ltr"
                           className="inline-block rounded px-2 py-0.5 text-xs font-bold tabular-nums"
                           style={{
                             backgroundColor: windColor(midKnots),

@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HeroProps } from "../../../src/components/Hero";
+import i18n from "../../../src/i18n";
 
 vi.mock("../../../src/components/canvasui/VHS", () => ({
   default: ({ children }: { children: React.ReactNode }) => children,
@@ -68,11 +69,16 @@ describe("Hero feature flags", () => {
     expect(container.textContent?.includes("Free-text config builder")).toBe(visible);
   });
 
-  it("uses a clear conditions heading", async () => {
+  it.each([
+    ["en", "Choose your conditions"],
+    ["he", "בחירת תנאים"],
+  ] as const)("uses a localized conditions heading in %s", async (locale, heading) => {
+    await i18n.changeLanguage(locale);
     await act(async () =>
       root.render(createElement(Hero, { ...props, freeTextConfigBuilderEnabled: false })),
     );
 
-    expect(container.querySelector("h2")?.textContent).toBe("Choose your conditions");
+    expect(container.querySelector("h2")?.textContent).toBe(heading);
+    expect(container.querySelector("h1")?.dir).toBe("ltr");
   });
 });

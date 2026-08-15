@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { CalendarConfig, InterpretConfigResponse } from "@shared/types";
+import { useTranslation } from "react-i18next";
 
 interface FreeTextConfigBuilderProps {
   onConfig: (config: CalendarConfig, message: string) => void;
@@ -25,6 +26,7 @@ async function interpretConfig(request: string): Promise<InterpretConfigResponse
 }
 
 export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) {
+  const { t } = useTranslation();
   const [request, setRequest] = useState("");
   const interpretation = useMutation({
     mutationFn: interpretConfig,
@@ -39,12 +41,12 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 grid gap-3" aria-label="Describe conditions">
+    <form onSubmit={handleSubmit} className="mb-6 grid gap-3" aria-label={t("describeConditions")}>
       <label
         htmlFor="free-text-config-request"
-        className="text-sm font-bold tracking-[0.09em] uppercase"
+        className="localized-label text-sm font-bold tracking-[0.09em] uppercase"
       >
-        Describe your ideal session
+        {t("describeSession")}
       </label>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
@@ -53,42 +55,40 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
           onChange={(event) => setRequest(event.target.value.slice(0, 500))}
           maxLength={500}
           dir="auto"
-          placeholder="e.g. Beginner kitesurfing at Beit Yanai, 14-20 knots"
+          placeholder={t("describePlaceholder")}
           className="h-11 min-w-0 flex-1 rounded-sm border-2 border-input bg-transparent px-3 text-foreground placeholder:text-muted-foreground"
           disabled={interpretation.isPending}
         />
         <Button type="submit" disabled={interpretation.isPending || request.trim().length < 10}>
-          {interpretation.isPending && <Spinner />}
-          {interpretation.isPending ? "Interpreting..." : "Build configuration"}
+          {interpretation.isPending && <Spinner aria-label={t("loading")} />}
+          {interpretation.isPending ? t("interpreting") : t("buildConfiguration")}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        English and Hebrew supported. Do not include personal information.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("freeTextHelp")}</p>
       {interpretation.data?.outcome === "configured" && (
         <Alert variant="success">
           <CheckCircle2 aria-hidden="true" />
-          <AlertTitle>Configuration ready</AlertTitle>
-          <AlertDescription>{interpretation.data.message}</AlertDescription>
+          <AlertTitle>{t("configurationReady")}</AlertTitle>
+          <AlertDescription dir="auto">{interpretation.data.message}</AlertDescription>
         </Alert>
       )}
       {interpretation.data && interpretation.data.outcome !== "configured" && (
         <Alert variant="warning">
           <TriangleAlert aria-hidden="true" />
-          <AlertTitle>Defaults loaded</AlertTitle>
+          <AlertTitle>{t("defaultsLoaded")}</AlertTitle>
           <AlertDescription>
             {interpretation.data.outcome === "insufficient"
-              ? "There was not enough information to build a specific configuration. "
-              : "That request is not supported. "}
-            {interpretation.data.message}
+              ? t("insufficientRequest")
+              : t("unsupportedRequest")}{" "}
+            <span dir="auto">{interpretation.data.message}</span>
           </AlertDescription>
         </Alert>
       )}
       {interpretation.error && (
         <Alert variant="destructive">
           <AlertCircle aria-hidden="true" />
-          <AlertTitle>Could not build configuration</AlertTitle>
-          <AlertDescription>{interpretation.error.message}</AlertDescription>
+          <AlertTitle>{t("configurationError")}</AlertTitle>
+          <AlertDescription>{t("genericRequestError")}</AlertDescription>
         </Alert>
       )}
     </form>
