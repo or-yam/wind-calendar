@@ -19,6 +19,11 @@ import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { Trans, useTranslation } from "react-i18next";
+import { DirectionProvider } from "./components/ui/direction";
+import { LanguagePicker } from "./components/LanguagePicker";
+import { addLocaleParam, localeMetadata, resolveLocale, type Locale } from "./i18n/locale";
+import { applyDocumentLocale } from "./i18n";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -81,6 +86,8 @@ function parseValidatedUrlParams(): CalendarConfig {
 }
 
 function App() {
+  const { t, i18n } = useTranslation();
+  const [locale, setLocale] = useState<Locale>(() => resolveLocale(window.location.search));
   const [config, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
@@ -94,22 +101,30 @@ function App() {
     if (!confirmationPending) setConfirmedConfig(nextConfig);
   };
 
+  const changeLocale = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    void i18n.changeLanguage(nextLocale);
+    applyDocumentLocale(nextLocale);
+  };
+
   useEffect(() => {
-    const params = buildConfigParams(config);
+    const params = addLocaleParam(buildConfigParams(config), locale);
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", newUrl);
-  }, [config]);
+  }, [config, locale]);
 
   useEffect(() => {
     const handler = () => {
+      const nextLocale = resolveLocale(window.location.search);
       const nextConfig = parseValidatedUrlParams();
+      changeLocale(nextLocale);
       setConfig(nextConfig);
       setConfirmedConfig(nextConfig);
       setConfirmationPending(false);
     };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, []);
+  }, [i18n]);
 
   const { data, isPending, error } = useQuery(forecastQueryOptions(config));
   const sessions = data?.sessions ?? [];
@@ -140,98 +155,94 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col text-foreground">
-      <Hero
-        locations={config.locations}
-        model={config.model}
-        availableModels={availableModels}
-        windEnabled={config.windEnabled}
-        windMin={config.windMin}
-        windMax={config.windMax}
-        waveEnabled={config.waveEnabled}
-        waveSource={config.waveSource}
-        waveHeightMin={config.waveHeightMin}
-        waveHeightMax={config.waveHeightMax}
-        wavePeriodMin={config.wavePeriodMin}
-        minSessionHours={config.minSessionHours}
-        onLocationsChange={handleLocationsChange}
-        onModelChange={handleModelChange}
-        onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-        onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
-        onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
-        onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
-        onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-        onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
-        onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
-        onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
-        onMinSessionHoursChange={(minSessionHours) =>
-          updateConfig((c) => ({ ...c, minSessionHours }))
-        }
-        onFreeTextConfig={(nextConfig) => {
-          setConfig(calendarConfigSchema.parse(nextConfig));
-          setConfirmationPending(true);
-        }}
-        freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
-      />
-      <main>
-        {confirmationPending && (
-          <section className="night-section pb-0">
-            <div className="content-wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-bold">
-                Review the extracted settings above before updating subscription links.
+    <DirectionProvider direction={localeMetadata[locale].direction}>
+      <div className="flex min-h-screen flex-col text-foreground">
+        <LanguagePicker locale={locale} onChange={changeLocale} />
+        <Hero
+          locations={config.locations}
+          model={config.model}
+          availableModels={availableModels}
+          windEnabled={config.windEnabled}
+          windMin={config.windMin}
+          windMax={config.windMax}
+          waveEnabled={config.waveEnabled}
+          waveSource={config.waveSource}
+          waveHeightMin={config.waveHeightMin}
+          waveHeightMax={config.waveHeightMax}
+          wavePeriodMin={config.wavePeriodMin}
+          minSessionHours={config.minSessionHours}
+          onLocationsChange={handleLocationsChange}
+          onModelChange={handleModelChange}
+          onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
+          onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
+          onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
+          onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
+          onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
+          onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
+          onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
+          onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
+          onMinSessionHoursChange={(minSessionHours) =>
+            updateConfig((c) => ({ ...c, minSessionHours }))
+          }
+          onFreeTextConfig={(nextConfig) => {
+            setConfig(calendarConfigSchema.parse(nextConfig));
+            setConfirmationPending(true);
+          }}
+          freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
+        />
+        <main>
+          {confirmationPending && (
+            <section className="night-section pb-0">
+              <div className="content-wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="font-bold">{t("reviewConfiguration")}</p>
+                <button
+                  type="button"
+                  className="rounded-sm bg-primary px-5 py-3 font-bold text-primary-foreground"
+                  onClick={() => {
+                    const validated = calendarConfigSchema.parse(config);
+                    setConfirmedConfig(validated);
+                    setConfirmationPending(false);
+                  }}
+                >
+                  {t("confirmConfiguration")}
+                </button>
+              </div>
+            </section>
+          )}
+          <ErrorBoundary
+            fallback={
+              <div className="night-section px-5 text-center">
+                <p className="text-red-400 text-sm">{t("genericError")}</p>
+              </div>
+            }
+          >
+            <ForecastCards
+              sessions={sessions}
+              isPending={isPending}
+              error={error}
+              weekStart={weekStart}
+              onPrev={goToPrev}
+              onNext={goToNext}
+              onToday={goToToday}
+            />
+          </ErrorBoundary>
+          <SubscribeButtons config={confirmedConfig} />
+          <section className="night-section">
+            <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
+              <h2 className="sticker-heading mb-0">{t("about")}</h2>
+              <p className="max-w-2xl text-lg leading-relaxed text-foreground/80">
+                <Trans i18nKey="aboutBody" components={{ brand: <bdi dir="ltr" /> }} />
               </p>
-              <button
-                type="button"
-                className="rounded-sm bg-primary px-5 py-3 font-bold text-primary-foreground"
-                onClick={() => {
-                  const validated = calendarConfigSchema.parse(config);
-                  setConfirmedConfig(validated);
-                  setConfirmationPending(false);
-                }}
-              >
-                Confirm configuration
-              </button>
             </div>
           </section>
-        )}
-        <ErrorBoundary
-          fallback={
-            <div className="night-section px-5 text-center">
-              <p className="text-red-400 text-sm">
-                Something went wrong. Please try refreshing the page.
-              </p>
-            </div>
-          }
-        >
-          <ForecastCards
-            sessions={sessions}
-            isPending={isPending}
-            error={error}
-            weekStart={weekStart}
-            onPrev={goToPrev}
-            onNext={goToNext}
-            onToday={goToToday}
-          />
-        </ErrorBoundary>
-        <SubscribeButtons config={confirmedConfig} />
-        <section className="night-section">
-          <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
-            <h2 className="sticker-heading mb-0">About</h2>
-            <p className="max-w-2xl text-lg leading-relaxed text-foreground/80">
-              Wind Calendar exists to give surfers a rough sense of when conditions might be worth
-              checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
-              view into your regular calendar so promising days are visible alongside everything
-              else in your life.
-            </p>
-          </div>
-        </section>
-        <Caveats />
-      </main>
-      <Footer />
-      <Suspense fallback={null}>
-        <Analytics />
-      </Suspense>
-    </div>
+          <Caveats />
+        </main>
+        <Footer />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
+      </div>
+    </DirectionProvider>
   );
 }
 

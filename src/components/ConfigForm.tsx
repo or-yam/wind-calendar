@@ -16,6 +16,10 @@ import {
 import { MODELS, isValidModelId, type ModelId } from "@shared/models";
 import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
+import { useTranslation } from "react-i18next";
+import type { Locale } from "@/i18n/locale";
+import { localeMetadata } from "@/i18n/locale";
+import { formatNumber } from "@/lib/date-utils";
 
 interface ConfigFormProps {
   locations: string[];
@@ -68,6 +72,10 @@ export function ConfigForm({
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language as Locale;
+  const intlLocale = localeMetadata[locale].intl;
+  const number = (value: number) => formatNumber(value, locale, { maximumFractionDigits: 1 });
   const [localWind, setLocalWind] = useState([windMin, windMax]);
   const [localSession, setLocalSession] = useState(minSessionHours);
   const [localWaveHeight, setLocalWaveHeight] = useState([waveHeightMin, waveHeightMax]);
@@ -94,11 +102,11 @@ export function ConfigForm({
   return (
     <form className="config-panel grid grid-cols-1 gap-x-10 gap-y-7 p-6 md:grid-cols-2 md:p-8">
       <div className="flex flex-col gap-3">
-        <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
-          Spots
+        <Label className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase">
+          {t("spots")}
         </Label>
         <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
-        <p className="text-xs text-muted-foreground">Select up to 3 spots.</p>
+        <p className="text-xs text-muted-foreground">{t("spotsHelp")}</p>
       </div>
 
       {/* Wind Section */}
@@ -107,30 +115,31 @@ export function ConfigForm({
           <div className="flex items-center gap-2">
             <Switch
               id="wind-toggle"
-              aria-label="Toggle wind forecast"
+              aria-label={t("toggleWind")}
               checked={windEnabled}
               onCheckedChange={onWindEnabledChange}
               disabled={isOnlyActive("wind")}
             />
             <Label
               htmlFor="wind-toggle"
-              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+              className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
-              Wind
+              {t("wind")}
             </Label>
           </div>
           {windEnabled && (
-            <span className="text-foreground text-base font-bold tabular-nums">
-              {localWind[0]} – {localWind[1]} kn
+            <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
+              {number(localWind[0])} – {number(localWind[1])} {t("unitKnots")}
             </span>
           )}
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Show times when wind stays within your preferred speed range.
-        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{t("windHelp")}</p>
         {windEnabled && (
-          <div aria-label="Wind speed range in knots">
+          <div aria-label={t("windRange")}>
             <Slider
+              locale={intlLocale}
+              getAriaLabel={(index) => t(index === 0 ? "windMinimum" : "windMaximum")}
+              getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitKnots")}`}
               value={localWind}
               onValueChange={setLocalWind}
               onValueCommitted={([min, max]) => {
@@ -151,29 +160,27 @@ export function ConfigForm({
           <div className="flex items-center gap-2">
             <Switch
               id="wave-toggle"
-              aria-label="Toggle wave forecast"
+              aria-label={t("toggleWaves")}
               checked={waveEnabled}
               onCheckedChange={onWaveEnabledChange}
               disabled={isOnlyActive("wave")}
             />
             <Label
               htmlFor="wave-toggle"
-              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+              className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
-              Waves
+              {t("waves")}
             </Label>
           </div>
           {waveEnabled && (
-            <span className="text-foreground text-base font-bold tabular-nums">
-              {localWaveHeight[0]} – {localWaveHeight[1]} m
+            <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
+              {number(localWaveHeight[0])} – {number(localWaveHeight[1])} {t("unitMeters")}
             </span>
           )}
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Show times when wave height and period match the conditions you want.
-        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{t("wavesHelp")}</p>
         {waveEnabled && (
-          <div className="flex flex-col gap-3 pl-1">
+          <div className="flex flex-col gap-3 ps-1">
             <RadioGroup
               value={waveSource}
               onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
@@ -182,19 +189,22 @@ export function ConfigForm({
               <div className="flex items-center gap-1.5">
                 <RadioGroupItem value="total" id="wave-total" />
                 <Label htmlFor="wave-total" className="text-sm text-foreground/80">
-                  Total
+                  {t("total")}
                 </Label>
               </div>
               <div className="flex items-center gap-1.5">
                 <RadioGroupItem value="swell" id="wave-swell" />
                 <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
-                  Swell
+                  {t("swell")}
                 </Label>
               </div>
             </RadioGroup>
 
-            <div aria-label="Wave height range in meters">
+            <div aria-label={t("waveRange")}>
               <Slider
+                locale={intlLocale}
+                getAriaLabel={(index) => t(index === 0 ? "waveMinimum" : "waveMaximum")}
+                getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitMeters")}`}
                 value={localWaveHeight}
                 onValueChange={setLocalWaveHeight}
                 onValueCommitted={([min, max]) => {
@@ -209,12 +219,17 @@ export function ConfigForm({
 
             <div className="flex items-center justify-between">
               <Label htmlFor="min-period" className="text-foreground/80 text-sm">
-                Min Period
+                {t("minPeriod")}
               </Label>
-              <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
+              <span dir="ltr" className="text-foreground text-sm tabular-nums">
+                {number(localWavePeriod)} {t("unitSeconds")}
+              </span>
             </div>
-            <div aria-label="Minimum wave period in seconds">
+            <div aria-label={t("minPeriodA11y")}>
               <Slider
+                locale={intlLocale}
+                getAriaLabel={() => t("minPeriod")}
+                getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitSeconds")}`}
                 id="min-period"
                 value={localWavePeriod}
                 onValueChange={(v) => {
@@ -235,18 +250,21 @@ export function ConfigForm({
           <Label
             id="min-session-label"
             htmlFor="min-session"
-            className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+            className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
           >
-            Min Session
+            {t("minSession")}
           </Label>
-          <span className="text-foreground text-base font-bold tabular-nums">
-            {localSession} hrs
+          <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
+            {number(localSession)} {t("unitHours", { count: localSession })}
           </span>
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Ignore short weather windows that do not leave enough time for a session.
-        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{t("minSessionHelp")}</p>
         <Slider
+          locale={intlLocale}
+          getAriaLabel={() => t("minSession")}
+          getAriaValueText={(_formatted, value) =>
+            `${number(value)} ${t("unitHours", { count: value })}`
+          }
           id="min-session"
           aria-labelledby="min-session-label"
           value={localSession}
@@ -261,20 +279,18 @@ export function ConfigForm({
       </div>
 
       <details className="border-t-2 border-foreground/20 pt-6 md:col-span-2">
-        <summary className="cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
-          Advanced
+        <summary className="localized-label cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
+          {t("advanced")}
         </summary>
         <div className="mt-4 flex max-w-md flex-col gap-3">
           <div>
             <Label
               htmlFor="model"
-              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+              className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
-              Forecast Model
+              {t("forecastModel")}
             </Label>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Open-Meteo GFS is recommended and works for every spot.
-            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t("modelHelp")}</p>
           </div>
           <Select
             value={model.toString()}
@@ -286,22 +302,26 @@ export function ConfigForm({
             }}
           >
             <SelectTrigger id="model" className="rounded-sm border-2 border-input bg-transparent">
-              <SelectValue>{MODELS[model].name}</SelectValue>
+              <SelectValue>
+                <bdi>{MODELS[model].name}</bdi>
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="border-2 border-[#04090b] bg-[#c9e4dd] text-[#04090b]">
               <SelectGroup>
-                <SelectLabel>Open-Meteo (Recommended)</SelectLabel>
+                <SelectLabel>{t("openMeteoRecommended")}</SelectLabel>
                 {Object.values(MODELS)
                   .filter((m) => m.provider === "openmeteo")
                   .map((m) => (
                     <SelectItem key={m.id} value={m.id.toString()}>
-                      {m.name}
+                      <bdi>{m.name}</bdi>
                     </SelectItem>
                   ))}
               </SelectGroup>
               <SelectSeparator />
               <SelectGroup>
-                <SelectLabel>Windguru</SelectLabel>
+                <SelectLabel>
+                  <bdi>Windguru</bdi>
+                </SelectLabel>
                 {Object.values(MODELS)
                   .filter((m) => m.provider === "windguru")
                   .map((m) => (
@@ -310,8 +330,8 @@ export function ConfigForm({
                       value={m.id.toString()}
                       disabled={!availableModels.includes(m.id as number)}
                     >
-                      {m.name}
-                      {!availableModels.includes(m.id as number) && " (unavailable)"}
+                      <bdi>{m.name}</bdi>
+                      {!availableModels.includes(m.id as number) && ` (${t("unavailable")})`}
                     </SelectItem>
                   ))}
               </SelectGroup>

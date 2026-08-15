@@ -8,12 +8,14 @@ import {
 } from "../lib/subscribe-urls";
 import { cn } from "../lib/utils";
 import type { CalendarConfig } from "@shared/types";
+import { useTranslation } from "react-i18next";
 
 interface SubscribeButtonsProps {
   config: CalendarConfig;
 }
 
 export function SubscribeButtons({ config }: SubscribeButtonsProps) {
+  const { t } = useTranslation();
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
   const timeoutRef = useRef<number | undefined>(undefined);
 
@@ -58,25 +60,27 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
   }[copyState];
 
   const copyText = {
-    idle: "Copy URL",
-    success: "Copied!",
-    error: "Copy failed",
+    idle: t("copyUrl"),
+    success: t("copied"),
+    error: t("copyFailed"),
   }[copyState];
 
   return (
     <section className="night-section">
       <div className="content-wrap">
-        <h2 className="sticker-heading">Sync with your calendar</h2>
+        <h2 className="sticker-heading">{t("syncCalendar")}</h2>
 
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <a href={webcalUrl} className="action-card flex items-center gap-3 p-4">
               <img
-                alt="macOS Calendar logo"
+                alt=""
                 src="/macos-calendar_logo.png"
                 className="size-6 shrink-0 object-contain"
               />
-              <strong className="text-base font-bold text-card-foreground">Apple Calendar</strong>
+              <strong dir="ltr" className="text-base font-bold text-card-foreground">
+                {t("appleCalendar")}
+              </strong>
             </a>
 
             <a
@@ -86,11 +90,13 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
               className="action-card flex items-center gap-3 p-4"
             >
               <img
-                alt="google calendar logo"
+                alt=""
                 src="/google_calendar_logo.svg"
                 className="size-6 shrink-0 object-contain"
               />
-              <strong className="text-base font-bold text-card-foreground">Google Calendar</strong>
+              <strong dir="ltr" className="text-base font-bold text-card-foreground">
+                {t("googleCalendar")}
+              </strong>
             </a>
 
             <a
@@ -100,11 +106,13 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
               className="action-card flex items-center gap-3 p-4"
             >
               <img
-                alt="Microsoft Outlook calendar logo"
+                alt=""
                 src="/outlook-calendar_logo.svg"
                 className="size-6 shrink-0 object-contain"
               />
-              <strong className="text-base font-bold text-card-foreground">Outlook</strong>
+              <strong dir="ltr" className="text-base font-bold text-card-foreground">
+                {t("outlook")}
+              </strong>
             </a>
           </div>
 
@@ -112,7 +120,7 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
             <button
               type="button"
               onClick={handleCopyUrl}
-              className="action-card flex w-full items-center gap-3 p-4 text-left"
+              className="action-card flex w-full items-center gap-3 p-4 text-start"
             >
               <Copy className={cn("size-6 shrink-0", copyIconColor)} />
               <strong className="text-base font-bold text-card-foreground">{copyText}</strong>
@@ -124,10 +132,12 @@ export function SubscribeButtons({ config }: SubscribeButtonsProps) {
             <button
               type="button"
               onClick={handleDownloadIcs}
-              className="action-card flex w-full items-center gap-3 p-4 text-left"
+              className="action-card flex w-full items-center gap-3 p-4 text-start"
             >
               <Download className="size-6 shrink-0 text-primary" />
-              <strong className="text-base font-bold text-card-foreground">Download .ics</strong>
+              <strong className="text-base font-bold text-card-foreground">
+                {t("downloadIcs")} <bdi dir="ltr">.ics</bdi>
+              </strong>
             </button>
           </div>
         </div>

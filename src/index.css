@@ -75,6 +75,16 @@
   font-size: 18px;
 }
 
+:root:lang(he) {
+  font-family: Arial, "Noto Sans Hebrew", "Rubik", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root:lang(he) .localized-label,
+:root:lang(he) .sticker-heading {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 @layer components {
   .font-title {
     font-family: "Permanent Marker", cursive;

@@ -2,6 +2,8 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConfigForm } from "../../../src/components/ConfigForm";
+import { DirectionProvider } from "../../../src/components/ui/direction";
+import i18n, { applyDocumentLocale } from "../../../src/i18n";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -76,10 +78,10 @@ describe("ConfigForm", () => {
 
     const ranges = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
     const waveMax = ranges.find(
-      (range) => range.max === "3" && range.getAttribute("aria-valuetext")?.includes("end"),
+      (range) => range.max === "3" && range.getAttribute("aria-label") === "Maximum wave height",
     );
     const minPeriod = ranges.find((range) => range.max === "20");
-    const minSession = ranges.find((range) => range.getAttribute("aria-labelledby"));
+    const minSession = ranges.find((range) => range.max === "8");
 
     expect(waveMax?.max).toBe("3");
     await act(async () => {
@@ -89,5 +91,65 @@ describe("ConfigForm", () => {
     });
     expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
     expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
+
+  it("localizes Base UI controls and reverses horizontal slider keys in RTL", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    await i18n.changeLanguage("he");
+    applyDocumentLocale("he");
+    await act(async () =>
+      root.render(
+        createElement(
+          DirectionProvider,
+          { direction: "rtl" },
+          createElement(ConfigForm, { ...props, onMinSessionHoursChange }),
+        ),
+      ),
+    );
+
+    const minSession = [
+      ...container.querySelectorAll<HTMLInputElement>('input[type="range"]'),
+    ].find((range) => range.getAttribute("aria-label") === "משך גלישה מינימלי")!;
+    expect(minSession.getAttribute("aria-valuetext")).toContain("שעות");
+    await act(async () =>
+      minSession.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })),
+    );
+    expect(onMinSessionHoursChange).toHaveBeenCalledWith(1.5);
+    expect(container.querySelector("[data-checked] > span")?.className).toContain(
+      "rtl:data-checked:-translate-x-[20px]",
+    );
+  });
+
+  it("opens and operates the portaled model select in RTL", async () => {
+    const onModelChange = vi.fn();
+    await i18n.changeLanguage("he");
+    applyDocumentLocale("he");
+    await act(async () =>
+      root.render(
+        createElement(
+          DirectionProvider,
+          { direction: "rtl" },
+          createElement(ConfigForm, { ...props, onModelChange }),
+        ),
+      ),
+    );
+
+    container.querySelector("details")!.open = true;
+    await act(async () => container.querySelector<HTMLElement>("#model")!.click());
+    const listbox = document.body.querySelector<HTMLElement>('[role="listbox"]')!;
+    expect(listbox).not.toBeNull();
+    expect(getComputedStyle(listbox).direction).toBe("rtl");
+
+    await act(async () =>
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }),
+      ),
+    );
+    await act(async () => {
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      );
+    });
+    expect(onModelChange).toHaveBeenCalledWith("om_icon");
   });
 });

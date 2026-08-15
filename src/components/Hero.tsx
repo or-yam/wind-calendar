@@ -4,6 +4,7 @@ import type { WaveSource } from "@shared/types";
 import type { CalendarConfig } from "@shared/types";
 import type { ModelId } from "@shared/models";
 import { FreeTextConfigBuilder } from "./FreeTextConfigBuilder";
+import { useTranslation } from "react-i18next";
 
 export interface HeroProps {
   locations: string[];
@@ -34,6 +35,7 @@ export interface HeroProps {
 }
 
 export function Hero(props: HeroProps) {
+  const { t } = useTranslation();
   return (
     <>
       <header className="min-h-170 flex items-center py-20 md:py-24">
@@ -54,7 +56,10 @@ export function Hero(props: HeroProps) {
             vignette={0.3}
           >
             <div className="grid h-full grid-cols-1 grid-rows-[auto_1fr] items-center px-5 py-5 min-[480px]:grid-cols-[minmax(0,1fr)_100px] min-[480px]:grid-rows-1 min-[480px]:gap-x-4 min-[480px]:px-2 min-[480px]:py-0 md:grid-cols-[minmax(0,1fr)_330px] md:gap-x-13 md:px-6">
-              <h1 className="row-start-2 m-0 w-min -rotate-5 font-title text-[clamp(3.25rem,17vw,4.25rem)] leading-[0.82] tracking-[-0.06em] text-primary [-webkit-text-stroke:3px_#080808] [paint-order:stroke_fill] [filter:drop-shadow(4px_5px_0_var(--secondary))] min-[480px]:row-start-1 md:text-[clamp(4rem,9vw,7rem)] md:[-webkit-text-stroke:5px_#080808] md:[filter:drop-shadow(7px_8px_0_var(--secondary))]">
+              <h1
+                dir="ltr"
+                className="row-start-2 m-0 w-min -rotate-5 font-title text-[clamp(3.25rem,17vw,4.25rem)] leading-[0.82] tracking-[-0.06em] text-primary [-webkit-text-stroke:3px_#080808] [paint-order:stroke_fill] [filter:drop-shadow(4px_5px_0_var(--secondary))] min-[480px]:row-start-1 md:text-[clamp(4rem,9vw,7rem)] md:[-webkit-text-stroke:5px_#080808] md:[filter:drop-shadow(7px_8px_0_var(--secondary))]"
+              >
                 <span className="grit-text block">
                   Wind
                   <br />
@@ -65,22 +70,20 @@ export function Hero(props: HeroProps) {
                 <div className="relative size-full overflow-hidden rounded-full border-2 border-[#080808] after:pointer-events-none after:absolute after:inset-0 after:bg-[url('/grit-texture.svg')] after:bg-[length:160px_90px] after:opacity-20 after:content-[''] md:border-4">
                   <img
                     src="/android-chrome-512x512.png"
-                    alt="Wind Calendar windsurf icon"
+                    alt={t("heroAlt")}
                     className="block size-full object-cover"
                   />
                 </div>
               </div>
             </div>
           </VHS>
-          <p className="mt-4 max-w-xl text-xl font-bold leading-snug">
-            Only the days worth surfing. No doom-scrolling the forecast.
-          </p>
+          <p className="mt-4 max-w-xl text-xl font-bold leading-snug">{t("heroTagline")}</p>
         </div>
       </header>
 
       <section className="night-section">
         <div className="content-wrap">
-          <h2 className="sticker-heading">Choose your conditions</h2>
+          <h2 className="sticker-heading">{t("chooseConditions")}</h2>
           {props.freeTextConfigBuilderEnabled && (
             <FreeTextConfigBuilder onConfig={props.onFreeTextConfig} />
           )}
