@@ -19,13 +19,17 @@ vi.mock("../../src/components/Hero", async () => {
   return {
     Hero: (props: {
       model: string | number;
+      windDirections: string[];
       onLocationsChange: (locations: string[]) => void;
       onFreeTextConfig: (config: unknown, message: string) => void;
       freeTextConfigBuilderEnabled: boolean;
     }) =>
       createElement(
         "div",
-        { "data-free-text-config-enabled": props.freeTextConfigBuilderEnabled },
+        {
+          "data-free-text-config-enabled": props.freeTextConfigBuilderEnabled,
+          "data-wind-directions": props.windDirections.join(","),
+        },
         createElement(
           "button",
           {
@@ -47,6 +51,7 @@ vi.mock("../../src/components/Hero", async () => {
                   windEnabled: true,
                   windMin: 12,
                   windMax: 20,
+                  windDirections: ["N", "NE"],
                   waveEnabled: false,
                   waveSource: "total",
                   waveHeightMin: 0.5,
@@ -93,6 +98,16 @@ describe("App location selection", () => {
     await act(async () => addTelAviv.click());
 
     expect(new URLSearchParams(window.location.search).get("model")).toBe("om_gfs");
+  });
+
+  it("canonicalizes wind directions from the page URL", async () => {
+    window.history.replaceState(null, "", "/?windDirections=NW,N,NE");
+    await act(async () => root.render(createElement(App)));
+
+    expect(new URLSearchParams(window.location.search).get("windDirections")).toBe("N,NE,NW");
+    expect(
+      container.querySelector("[data-wind-directions]")?.getAttribute("data-wind-directions"),
+    ).toBe("N,NE,NW");
   });
 
   it("does not update subscription links until AI settings are confirmed", async () => {

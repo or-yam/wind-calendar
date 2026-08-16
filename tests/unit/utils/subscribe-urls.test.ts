@@ -8,6 +8,7 @@ import {
   buildOutlookUrl,
 } from "../../../src/lib/subscribe-urls";
 import type { CalendarConfig } from "../../../shared/types";
+import { WIND_DIRECTIONS } from "../../../shared/wind-directions";
 
 const baseConfig: CalendarConfig = {
   locations: ["tel-aviv"],
@@ -16,6 +17,7 @@ const baseConfig: CalendarConfig = {
   windEnabled: true,
   windMin: 14,
   windMax: 30,
+  windDirections: [...WIND_DIRECTIONS],
   waveEnabled: false,
   waveSource: "total",
   waveHeightMin: 0,
@@ -43,6 +45,16 @@ describe("buildConfigParams", () => {
     expect(params.get("waveHeightMin")).toBeNull();
     expect(params.get("waveHeightMax")).toBeNull();
     expect(params.get("wavePeriodMin")).toBeNull();
+  });
+
+  it("serializes enabled wind directions in canonical order", () => {
+    const params = buildConfigParams({ ...baseConfig, windDirections: ["NW", "N", "NE"] });
+    expect(params.get("windDirections")).toBe("N,NE,NW");
+  });
+
+  it("omits wind directions when wind is disabled", () => {
+    const params = buildConfigParams({ ...baseConfig, windEnabled: false, waveEnabled: true });
+    expect(params.get("windDirections")).toBeNull();
   });
 
   it("includes wave params when waveEnabled=true", () => {

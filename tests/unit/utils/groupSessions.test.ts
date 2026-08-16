@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { groupSessions, degreesToCardinal } from "../../../server/utils/groupSessions";
+import { groupSessions } from "../../../server/utils/groupSessions";
+import { degreesToCardinal } from "../../../shared/wind-directions";
 import type { WindConditionRaw } from "../../../server/types/wind-conditions";
 import type { MatchReason } from "../../../server/utils/filterEvents";
 
@@ -337,4 +338,17 @@ describe("degreesToCardinal", () => {
       expect(degreesToCardinal(deg)).toBe(expected);
     });
   }
+
+  it("uses the existing half-sector boundaries and north wrap", () => {
+    expect(degreesToCardinal(22.49)).toBe("N");
+    expect(degreesToCardinal(22.5)).toBe("NE");
+    expect(degreesToCardinal(337.49)).toBe("NW");
+    expect(degreesToCardinal(337.5)).toBe("N");
+  });
+
+  it("normalizes finite degrees and rejects non-finite values", () => {
+    expect(degreesToCardinal(-45)).toBe("NW");
+    expect(degreesToCardinal(405)).toBe("NE");
+    expect(degreesToCardinal(Number.NaN)).toBeNull();
+  });
 });

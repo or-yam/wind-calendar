@@ -17,6 +17,7 @@ const interpretationSchema = z
 const defaults = JSON.stringify({
   ...DEFAULTS,
   locations: [...DEFAULTS.locations],
+  windDirections: [...DEFAULTS.windDirections],
 });
 const locations = Object.entries(LOCATIONS)
   .map(([id, location]) => `${id} (${location.label})`)
@@ -25,6 +26,7 @@ const locations = Object.entries(LOCATIONS)
 const instructions = `Convert requests into a wind forecast calendar configuration.
 - Supported location IDs and labels: ${locations}. Use only those location IDs. Use om_gfs unless the user explicitly requests another supported model.
 - Defaults: ${defaults}.
+- windDirections contains meteorological directions the wind comes from. Allowed values are N, NE, E, SE, S, SW, W, and NW. Preserve all eight defaults when direction is omitted. For ranges crossing north, such as "northwest through northeast", use N, NE, and NW. Never infer safe directions from a spot, sport, skill level, or equipment.
 - The configuration filters deterministic forecast data; do not claim to forecast weather.
 - If the request is unrelated to wind, waves, or water sports, return outcome unsupported and defaults.
 - If the request is relevant but lacks enough concrete information to safely choose conditions, especially a location or meaningful wind/wave criteria, return outcome insufficient and defaults. Kite size and skill level alone are not enough to infer safe wind thresholds.

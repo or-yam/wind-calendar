@@ -1,4 +1,5 @@
 import type { CalendarConfig } from "@shared/types";
+import { canonicalizeWindDirections } from "@shared/wind-directions";
 
 /**
  * Build URLSearchParams from config (shared by calendar and forecast endpoints)
@@ -13,6 +14,9 @@ export function buildConfigParams(config: CalendarConfig): URLSearchParams {
     windMax: config.windMax.toString(),
     waveEnabled: config.waveEnabled.toString(),
   });
+  if (config.windEnabled) {
+    params.set("windDirections", canonicalizeWindDirections(config.windDirections).join(","));
+  }
   if (config.waveEnabled) {
     params.set("waveSource", config.waveSource);
     params.set("waveHeightMin", config.waveHeightMin.toString());

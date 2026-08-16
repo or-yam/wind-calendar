@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CalendarConfig } from "../../../shared/types";
 import type { LocationSession } from "../../../server/utils/location-sessions";
 import { selectBestLocationSessions } from "../../../server/utils/location-sessions";
+import { WIND_DIRECTIONS } from "../../../shared/wind-directions";
 
 const config: CalendarConfig = {
   locations: ["tel-aviv", "herzliya"],
@@ -10,6 +11,7 @@ const config: CalendarConfig = {
   windEnabled: true,
   windMin: 10,
   windMax: 35,
+  windDirections: [...WIND_DIRECTIONS],
   waveEnabled: true,
   waveSource: "total",
   waveHeightMin: 0.5,
