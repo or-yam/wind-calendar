@@ -1,7 +1,8 @@
-import type { CalendarConfig, WaveSource } from "../shared/types";
-import { DEFAULTS } from "../shared/constants";
-import { LOCATIONS } from "../shared/locations";
-import { MODELS, isValidModelId, type ModelId } from "../shared/models";
+import type { CalendarConfig, WaveSource } from "../shared/types.js";
+import { DEFAULTS } from "../shared/constants.js";
+import { LOCATIONS } from "../shared/locations.js";
+import { MODELS, isValidModelId, type ModelId } from "../shared/models.js";
+import { parseWindDirections } from "../shared/wind-directions.js";
 
 function parseFloatParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -66,6 +67,11 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
   const windEnabled = parseBoolParam(searchParams, "windEnabled", DEFAULTS.windEnabled);
   const windMin = parseFloatParam(searchParams, "windMin", DEFAULTS.windMin);
   const windMax = parseFloatParam(searchParams, "windMax", DEFAULTS.windMax);
+  const windDirectionParams = searchParams.getAll("windDirections");
+  if (windDirectionParams.length > 1) {
+    throw new Error("windDirections must be provided once");
+  }
+  const windDirections = parseWindDirections(windDirectionParams[0] ?? null);
   if (windMin < 0) throw new Error("windMin must be >= 0");
   if (windMax > 200) throw new Error("windMax must be <= 200");
   if (windMin >= windMax) throw new Error("windMin must be less than windMax");
@@ -92,6 +98,7 @@ export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig 
     windEnabled,
     windMin,
     windMax,
+    windDirections,
     waveEnabled,
     waveSource,
     waveHeightMin,

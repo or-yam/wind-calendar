@@ -108,6 +108,22 @@ describe("forecast API handler", () => {
     expect(body.sessions).toHaveLength(0);
   });
 
+  it("filters sessions by wind direction and preserves legacy defaults", async () => {
+    const rejected = await callHandler(handler, "/api/forecast?windDirections=E");
+    const accepted = await callHandler(handler, "/api/forecast?windDirections=W");
+    const legacy = await callHandler(handler, "/api/forecast");
+
+    expect((JSON.parse(rejected.body) as ForecastResponse).sessions).toHaveLength(0);
+    expect((JSON.parse(accepted.body) as ForecastResponse).sessions.length).toBeGreaterThan(0);
+    expect((JSON.parse(legacy.body) as ForecastResponse).sessions.length).toBeGreaterThan(0);
+  });
+
+  it("rejects invalid wind directions", async () => {
+    const res = await callHandler(handler, "/api/forecast?windDirections=NORTH");
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).data?.error).toContain("Invalid windDirections");
+  });
+
   it("returns multi-location metadata and only one overlapping winner", async () => {
     const res = await callHandler(handler, "/api/forecast?locations=beit-yanai,tel-aviv");
 

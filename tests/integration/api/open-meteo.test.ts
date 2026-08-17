@@ -168,6 +168,20 @@ describe("Open-Meteo provider integration", () => {
     expect(res.body.includes("BEGIN:VEVENT")).toBe(false);
   });
 
+  it("applies wind direction filters to Open-Meteo data", async () => {
+    const rejected = await callHandler(
+      handler,
+      "/api/calendar?location=tel-aviv&model=om_gfs&windDirections=E",
+    );
+    const accepted = await callHandler(
+      handler,
+      "/api/calendar?location=tel-aviv&model=om_gfs&windDirections=W",
+    );
+
+    expect(rejected.body).not.toContain("BEGIN:VEVENT");
+    expect(accepted.body).toContain("BEGIN:VEVENT");
+  });
+
   it("returns correct cache headers for Open-Meteo responses", async () => {
     const res = await callHandler(
       handler,

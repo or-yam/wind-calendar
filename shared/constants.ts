@@ -1,3 +1,5 @@
+import { WIND_DIRECTIONS } from "./wind-directions";
+
 export const DEFAULTS = {
   locations: ["beit-yanai"],
   minSessionHours: 2,
@@ -7,6 +9,7 @@ export const DEFAULTS = {
   windEnabled: true,
   windMin: 14,
   windMax: 35,
+  windDirections: [...WIND_DIRECTIONS],
 
   // Waves
   waveEnabled: false,

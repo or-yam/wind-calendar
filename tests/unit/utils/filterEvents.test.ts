@@ -1,11 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { filterEvents, type FilterConfig } from "../../../server/utils/filterEvents";
 import type { WindConditionRaw } from "../../../server/types/wind-conditions";
+import { WIND_DIRECTIONS } from "../../../shared/wind-directions";
 
 const baseConfig: FilterConfig = {
   windEnabled: true,
   windMin: 10,
   windMax: 30,
+  windDirections: [...WIND_DIRECTIONS],
   waveEnabled: false,
   waveSource: "total",
   waveHeightMin: 0.5,
@@ -81,6 +83,36 @@ describe("filterEvents", () => {
     const events = [makeEvent({ windSpeed: null })];
     const { conditions } = filterEvents(events, baseConfig);
     expect(conditions.length).toBe(0);
+  });
+
+  it("keeps only selected wind directions", () => {
+    const config: FilterConfig = { ...baseConfig, windDirections: ["N", "NW"] };
+    const north = makeEvent({ windDirection: 360 });
+    const northwest = makeEvent({ windDirection: 337.4 });
+    const south = makeEvent({ windDirection: 180 });
+
+    const { conditions } = filterEvents([north, northwest, south], config);
+    expect(conditions).toEqual([north, northwest]);
+  });
+
+  it("allows missing direction only when direction is unrestricted", () => {
+    const event = makeEvent({ windDirection: null });
+
+    expect(filterEvents([event], baseConfig).conditions).toEqual([event]);
+    expect(filterEvents([event], { ...baseConfig, windDirections: ["N"] }).conditions).toEqual([]);
+  });
+
+  it("keeps a wave match when wind direction is rejected", () => {
+    const event = makeEvent({ windDirection: 180, waveHeight: 1.5, wavePeriod: 10 });
+    const config: FilterConfig = {
+      ...baseConfig,
+      windDirections: ["N"],
+      waveEnabled: true,
+    };
+
+    const { conditions, matchReasons } = filterEvents([event], config);
+    expect(conditions).toEqual([event]);
+    expect(matchReasons.get(event)).toBe("wave");
   });
 
   it("keeps events where windSpeed equals windMin", () => {

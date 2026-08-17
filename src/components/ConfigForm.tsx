@@ -14,8 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MODELS, isValidModelId, type ModelId } from "@shared/models";
-import type { WaveSource } from "@shared/types";
+import type { WaveSource, WindDirection } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
+import { WindDirectionPicker } from "./WindDirectionPicker";
 
 interface ConfigFormProps {
   locations: string[];
@@ -24,6 +25,7 @@ interface ConfigFormProps {
   windEnabled: boolean;
   windMin: number;
   windMax: number;
+  windDirections: WindDirection[];
   waveEnabled: boolean;
   waveSource: WaveSource;
   waveHeightMin: number;
@@ -35,6 +37,7 @@ interface ConfigFormProps {
   onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
+  onWindDirectionsChange: (directions: WindDirection[]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
   onWaveHeightMinChange: (value: number) => void;
@@ -50,6 +53,7 @@ export function ConfigForm({
   windEnabled,
   windMin,
   windMax,
+  windDirections,
   waveEnabled,
   waveSource,
   waveHeightMin,
@@ -61,6 +65,7 @@ export function ConfigForm({
   onWindEnabledChange,
   onWindMinChange,
   onWindMaxChange,
+  onWindDirectionsChange,
   onWaveEnabledChange,
   onWaveSourceChange,
   onWaveHeightMinChange,
@@ -129,18 +134,21 @@ export function ConfigForm({
           Show times when wind stays within your preferred speed range.
         </p>
         {windEnabled && (
-          <div aria-label="Wind speed range in knots">
-            <Slider
-              value={localWind}
-              onValueChange={setLocalWind}
-              onValueCommitted={([min, max]) => {
-                onWindMinChange(min);
-                onWindMaxChange(max);
-              }}
-              min={5}
-              max={50}
-              step={1}
-            />
+          <div className="flex flex-col gap-3">
+            <div aria-label="Wind speed range in knots">
+              <Slider
+                value={localWind}
+                onValueChange={setLocalWind}
+                onValueCommitted={([min, max]) => {
+                  onWindMinChange(min);
+                  onWindMaxChange(max);
+                }}
+                min={5}
+                max={50}
+                step={1}
+              />
+            </div>
+            <WindDirectionPicker value={windDirections} onChange={onWindDirectionsChange} />
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HeroProps } from "../../../src/components/Hero";
+import { WIND_DIRECTIONS } from "../../../shared/wind-directions";
 
 vi.mock("../../../src/components/canvasui/VHS", () => ({
   default: ({ children }: { children: React.ReactNode }) => children,
@@ -22,6 +23,7 @@ const props = {
   windEnabled: true,
   windMin: 14,
   windMax: 35,
+  windDirections: [...WIND_DIRECTIONS],
   waveEnabled: false,
   waveSource: "total",
   waveHeightMin: 0.5,
@@ -33,6 +35,7 @@ const props = {
   onWindEnabledChange: vi.fn(),
   onWindMinChange: vi.fn(),
   onWindMaxChange: vi.fn(),
+  onWindDirectionsChange: vi.fn(),
   onWaveEnabledChange: vi.fn(),
   onWaveSourceChange: vi.fn(),
   onWaveHeightMinChange: vi.fn(),

@@ -1,6 +1,7 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
-import type { WaveSource } from "../../shared/types";
-import { getLocalHour } from "./timezone";
+import type { WindConditionRaw } from "../types/wind-conditions.js";
+import type { WaveSource, WindDirection } from "../../shared/types.js";
+import { WIND_DIRECTIONS, degreesToCardinal } from "../../shared/wind-directions.js";
+import { getLocalHour } from "./timezone.js";
 
 export type MatchReason = "wind" | "wave" | "both";
 
@@ -8,6 +9,7 @@ export interface FilterConfig {
   windEnabled: boolean;
   windMin: number;
   windMax: number;
+  windDirections: WindDirection[];
   waveEnabled: boolean;
   waveSource: WaveSource;
   waveHeightMin: number;
@@ -32,6 +34,8 @@ export const filterEvents = (events: WindConditionRaw[], config: FilterConfig): 
   const sunriseHour = parseTimeString(config.sunrise);
   const sunsetHour = parseTimeString(config.sunset);
   const now = Date.now();
+  const acceptedDirections = new Set(config.windDirections);
+  const directionUnrestricted = acceptedDirections.size === WIND_DIRECTIONS.length;
 
   const conditions: WindConditionRaw[] = [];
   const matchReasons = new Map<WindConditionRaw, MatchReason>();
@@ -45,11 +49,16 @@ export const filterEvents = (events: WindConditionRaw[], config: FilterConfig): 
     if (hour < sunriseHour || hour >= sunsetHour) continue;
 
     // Wind qualification
+    const cardinalDirection = c.windDirection === null ? null : degreesToCardinal(c.windDirection);
+    const passesDirection =
+      directionUnrestricted ||
+      (cardinalDirection !== null && acceptedDirections.has(cardinalDirection));
     const passesWind =
       config.windEnabled &&
       c.windSpeed !== null &&
       c.windSpeed >= config.windMin &&
-      c.windSpeed <= config.windMax;
+      c.windSpeed <= config.windMax &&
+      passesDirection;
 
     // Wave qualification — resolve values based on source
     const height = config.waveSource === "swell" ? c.swellHeight : c.waveHeight;

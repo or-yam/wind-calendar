@@ -1,5 +1,6 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
-import type { MatchReason } from "./filterEvents";
+import type { WindConditionRaw } from "../types/wind-conditions.js";
+import type { MatchReason } from "./filterEvents.js";
+import { degreesToCardinal } from "../../shared/wind-directions.js";
 
 export type Session = {
   start: Date;
@@ -17,13 +18,8 @@ export type Session = {
   conditions: WindConditionRaw[];
 };
 
-const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] as const;
 const ONE_HOUR = 3_600_000;
 const THREE_HOURS = 3 * ONE_HOUR;
-
-export function degreesToCardinal(degrees: number): string {
-  return CARDINALS[Math.round(degrees / 45) % 8];
-}
 
 function getDominantDirection(
   conditions: WindConditionRaw[],
@@ -34,6 +30,7 @@ function getDominantDirection(
     const deg = c[directionKey];
     if (deg == null) continue;
     const cardinal = degreesToCardinal(deg);
+    if (cardinal === null) continue;
     counts.set(cardinal, (counts.get(cardinal) ?? 0) + 1);
   }
 

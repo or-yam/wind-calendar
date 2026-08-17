@@ -12,13 +12,14 @@ import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
 import { useWeekNavigation } from "./hooks/useWeekNavigation";
-import type { CalendarConfig } from "@shared/types";
+import type { CalendarConfig, WindDirection } from "@shared/types";
 import { DEFAULTS } from "@shared/constants";
 import { LOCATIONS } from "@shared/locations";
 import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { parseWindDirections } from "@shared/wind-directions";
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -58,6 +59,8 @@ function parseUrlParams() {
     .filter((location) => VALID_LOCATIONS.has(location));
   const locations = [...new Set(rawLocations)].slice(0, 3);
   const waveSource = params.get("waveSource");
+  const windDirectionParams = params.getAll("windDirections");
+  if (windDirectionParams.length > 1) throw new Error("windDirections must be provided once");
   return {
     locations: locations.length > 0 ? locations : [...DEFAULTS.locations],
     minSessionHours: parseNumParam(params, "minSessionHours", DEFAULTS.minSessionHours),
@@ -65,6 +68,7 @@ function parseUrlParams() {
     windEnabled: parseBoolParam(params, "windEnabled", DEFAULTS.windEnabled),
     windMin: parseNumParam(params, "windMin", DEFAULTS.windMin),
     windMax: parseNumParam(params, "windMax", DEFAULTS.windMax),
+    windDirections: parseWindDirections(windDirectionParams[0] ?? null),
     waveEnabled: parseBoolParam(params, "waveEnabled", DEFAULTS.waveEnabled),
     waveSource: waveSource === "swell" ? "swell" : "total",
     waveHeightMin: parseNumParam(params, "waveHeightMin", DEFAULTS.waveHeightMin),
@@ -74,10 +78,18 @@ function parseUrlParams() {
 }
 
 function parseValidatedUrlParams(): CalendarConfig {
-  const parsed = calendarConfigSchema.safeParse(parseUrlParams());
-  return parsed.success
-    ? parsed.data
-    : { ...DEFAULTS, locations: [...DEFAULTS.locations], model: DEFAULTS.model };
+  try {
+    const parsed = calendarConfigSchema.safeParse(parseUrlParams());
+    if (parsed.success) return parsed.data;
+  } catch {
+    // Invalid page configuration falls back to the complete defaults.
+  }
+  return {
+    ...DEFAULTS,
+    locations: [...DEFAULTS.locations],
+    windDirections: [...DEFAULTS.windDirections],
+    model: DEFAULTS.model,
+  };
 }
 
 function App() {
@@ -148,6 +160,7 @@ function App() {
         windEnabled={config.windEnabled}
         windMin={config.windMin}
         windMax={config.windMax}
+        windDirections={config.windDirections}
         waveEnabled={config.waveEnabled}
         waveSource={config.waveSource}
         waveHeightMin={config.waveHeightMin}
@@ -159,6 +172,9 @@ function App() {
         onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
         onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
         onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
+        onWindDirectionsChange={(windDirections: WindDirection[]) =>
+          updateConfig((c) => ({ ...c, windDirections }))
+        }
         onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
         onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
         onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}

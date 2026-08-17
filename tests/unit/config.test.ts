@@ -9,6 +9,7 @@ describe("parseQueryParams", () => {
 
     expect(config.windMin).toBe(DEFAULTS.windMin);
     expect(config.windMax).toBe(DEFAULTS.windMax);
+    expect(config.windDirections).toEqual(DEFAULTS.windDirections);
     expect(config.minSessionHours).toBe(DEFAULTS.minSessionHours);
     expect(config.model).toBe(DEFAULTS.model);
     expect(config.locations).toEqual(["beit-yanai"]);
@@ -25,6 +26,21 @@ describe("parseQueryParams", () => {
     const config = parseQueryParams(params);
 
     expect(config.windMin).toBe(15);
+  });
+
+  it("parses and canonicalizes wind directions", () => {
+    const config = parseQueryParams(new URLSearchParams("windDirections=NW,N,NE"));
+    expect(config.windDirections).toEqual(["N", "NE", "NW"]);
+  });
+
+  it.each([
+    ["windDirections=NORTH", /Invalid windDirections/],
+    ["windDirections=", /at least one direction/],
+    ["windDirections=N,N", /must not contain duplicates/],
+    ["windDirections=N,,NE", /Invalid windDirections/],
+    ["windDirections=N&windDirections=NE", /must be provided once/],
+  ])("rejects malformed wind directions: %s", (query, message) => {
+    expect(() => parseQueryParams(new URLSearchParams(query))).toThrow(message);
   });
 
   it("rejects unknown location", () => {

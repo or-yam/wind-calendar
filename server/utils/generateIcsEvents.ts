@@ -1,8 +1,8 @@
 import { createEvents, type DateArray, type EventAttributes } from "ics";
-import type { LocationSession } from "./location-sessions";
-import { degreesToCardinal } from "./groupSessions";
-import { toLocalTimeString } from "./timezone";
-import { WIND_ICON, WAVE_ICON } from "../../shared/constants";
+import type { LocationSession } from "./location-sessions.js";
+import { degreesToCardinal } from "../../shared/wind-directions.js";
+import { toLocalTimeString } from "./timezone.js";
+import { WIND_ICON, WAVE_ICON } from "../../shared/constants.js";
 
 export function dateToTuple(date: Date, tz: string): [number, number, number, number, number] {
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -61,7 +61,7 @@ function formatDescription(session: LocationSession): string {
       const time = toLocalTimeString(c.date, session.location.tz);
       const speed = c.windSpeed != null ? `${c.windSpeed}kn` : "?kn";
       const gusts = c.windGusts != null ? `gusts ${c.windGusts}kn` : "";
-      const dir = c.windDirection != null ? degreesToCardinal(c.windDirection) : "?";
+      const dir = c.windDirection != null ? (degreesToCardinal(c.windDirection) ?? "?") : "?";
       const wave =
         c.waveHeight != null
           ? `  waves ${c.waveHeight.toFixed(1)}m${c.wavePeriod != null ? ` ${Math.round(c.wavePeriod)}s` : ""}`

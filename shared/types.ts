@@ -2,6 +2,7 @@ import type { CalendarConfig } from "./calendar-config-schema";
 
 export type WaveSource = CalendarConfig["waveSource"];
 export type { CalendarConfig } from "./calendar-config-schema";
+export type { WindDirection } from "./wind-directions";
 
 export interface InterpretConfigResponse {
   outcome: "configured" | "insufficient" | "unsupported";

@@ -104,6 +104,15 @@ describe("calendar API handler", () => {
     expect(res.body.includes("BEGIN:VEVENT")).toBe(false);
   });
 
+  it("filters calendar sessions by wind direction", async () => {
+    const rejected = await callHandler(handler, "/api/calendar?windDirections=E");
+    const accepted = await callHandler(handler, "/api/calendar?windDirections=W");
+
+    expect(rejected.statusCode).toBe(200);
+    expect(rejected.body).not.toContain("BEGIN:VEVENT");
+    expect(accepted.body).toContain("BEGIN:VEVENT");
+  });
+
   it("ICS contains calendar events for valid wind data", async () => {
     const res = await callHandler(handler, "/api/calendar");
 

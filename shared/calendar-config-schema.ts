@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { LOCATIONS } from "./locations";
+import { WIND_DIRECTIONS, canonicalizeWindDirections } from "./wind-directions";
 
 const locationIds = Object.keys(LOCATIONS) as [string, ...string[]];
 
@@ -17,6 +18,13 @@ export const calendarConfigSchema = z
     windEnabled: z.boolean(),
     windMin: z.number().min(0),
     windMax: z.number().max(200),
+    windDirections: z
+      .array(z.enum(WIND_DIRECTIONS))
+      .min(1)
+      .max(WIND_DIRECTIONS.length)
+      .refine((directions) => new Set(directions).size === directions.length, {
+        message: "windDirections must not contain duplicates",
+      }),
     waveEnabled: z.boolean(),
     waveSource: z.enum(["total", "swell"]),
     waveHeightMin: z.number().min(0),
@@ -34,6 +42,10 @@ export const calendarConfigSchema = z
   })
   .refine((config) => config.windEnabled || config.waveEnabled, {
     message: "At least one of wind or waves must be enabled",
-  });
+  })
+  .transform((config) => ({
+    ...config,
+    windDirections: canonicalizeWindDirections(config.windDirections),
+  }));
 
 export type CalendarConfig = z.infer<typeof calendarConfigSchema>;

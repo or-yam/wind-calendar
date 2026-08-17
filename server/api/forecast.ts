@@ -1,19 +1,19 @@
 import { defineHandler, HTTPError } from "nitro";
 import { getQuery } from "nitro/h3";
 
-import type { CalendarConfig } from "../../shared/types";
+import type { CalendarConfig } from "../../shared/types.js";
 import type {
   HourlyCondition,
   ForecastSession,
   ForecastResponse,
-} from "../../shared/forecast-types";
-import { parseQueryParams } from "../config";
-import { degreesToCardinal } from "../utils/groupSessions";
-import { checkRateLimit } from "../utils/rate-limit";
-import { isDev, getClientIp } from "../utils/api-handler";
-import { buildLocationSessions, type LocationSession } from "../utils/location-sessions";
+} from "../../shared/forecast-types.js";
+import { degreesToCardinal } from "../../shared/wind-directions.js";
+import { parseQueryParams } from "../config.js";
+import { checkRateLimit } from "../utils/rate-limit.js";
+import { isDev, getClientIp } from "../utils/api-handler.js";
+import { buildLocationSessions, type LocationSession } from "../utils/location-sessions.js";
 import { queryToSearchParams } from "../utils/query-params.js";
-import type { WindConditionRaw } from "../types/wind-conditions";
+import type { WindConditionRaw } from "../types/wind-conditions.js";
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
   return {

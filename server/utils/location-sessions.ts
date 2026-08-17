@@ -1,9 +1,9 @@
-import type { CalendarConfig } from "../../shared/types";
-import type { Provider } from "../../shared/models";
-import { resolveLocation } from "../config";
-import { filterEvents } from "./filterEvents";
-import { groupSessions } from "./groupSessions";
-import { resolveForecastData, type ErrorResponse } from "./api-handler";
+import type { CalendarConfig } from "../../shared/types.js";
+import type { Provider } from "../../shared/models.js";
+import { resolveLocation } from "../config.js";
+import { filterEvents } from "./filterEvents.js";
+import { groupSessions } from "./groupSessions.js";
+import { resolveForecastData, type ErrorResponse } from "./api-handler.js";
 import { selectBestLocationSessions, type LocationSession } from "./select-location-sessions.js";
 
 export { selectBestLocationSessions, type LocationSession } from "./select-location-sessions.js";
@@ -45,6 +45,7 @@ export async function buildLocationSessions(
       windEnabled: config.windEnabled,
       windMin: config.windMin,
       windMax: config.windMax,
+      windDirections: config.windDirections,
       waveEnabled: config.waveEnabled,
       waveSource: config.waveSource,
       waveHeightMin: config.waveHeightMin,

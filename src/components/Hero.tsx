@@ -1,6 +1,6 @@
 import { ConfigForm } from "./ConfigForm";
 import VHS from "./canvasui/VHS";
-import type { WaveSource } from "@shared/types";
+import type { WaveSource, WindDirection } from "@shared/types";
 import type { CalendarConfig } from "@shared/types";
 import type { ModelId } from "@shared/models";
 import { FreeTextConfigBuilder } from "./FreeTextConfigBuilder";
@@ -12,6 +12,7 @@ export interface HeroProps {
   windEnabled: boolean;
   windMin: number;
   windMax: number;
+  windDirections: WindDirection[];
   waveEnabled: boolean;
   waveSource: WaveSource;
   waveHeightMin: number;
@@ -23,6 +24,7 @@ export interface HeroProps {
   onWindEnabledChange: (enabled: boolean) => void;
   onWindMinChange: (value: number) => void;
   onWindMaxChange: (value: number) => void;
+  onWindDirectionsChange: (directions: WindDirection[]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
   onWaveHeightMinChange: (value: number) => void;

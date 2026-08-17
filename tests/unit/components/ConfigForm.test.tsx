@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConfigForm } from "../../../src/components/ConfigForm";
+import { WIND_DIRECTIONS } from "../../../shared/wind-directions";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -12,6 +13,7 @@ const props = {
   windEnabled: true,
   windMin: 14,
   windMax: 35,
+  windDirections: [...WIND_DIRECTIONS],
   waveEnabled: false,
   waveSource: "total" as const,
   waveHeightMin: 0.5,
@@ -23,6 +25,7 @@ const props = {
   onWindEnabledChange: vi.fn(),
   onWindMinChange: vi.fn(),
   onWindMaxChange: vi.fn(),
+  onWindDirectionsChange: vi.fn(),
   onWaveEnabledChange: vi.fn(),
   onWaveSourceChange: vi.fn(),
   onWaveHeightMinChange: vi.fn(),
@@ -89,5 +92,47 @@ describe("ConfigForm", () => {
     });
     expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
     expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
+
+  it("renders an accessible direction picker and emits canonical selections", async () => {
+    const onWindDirectionsChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          windDirections: ["N", "NW"],
+          onWindDirectionsChange,
+        }),
+      ),
+    );
+
+    const east = container.querySelector<HTMLButtonElement>('button[aria-label="East"]')!;
+    expect(container.querySelectorAll('button[aria-pressed="true"]')).toHaveLength(2);
+    await act(async () => east.click());
+    expect(onWindDirectionsChange).toHaveBeenCalledWith(["N", "E", "NW"]);
+    expect(container.textContent).toContain("Applies to all selected spots");
+  });
+
+  it("prevents removing the final direction and can restore all", async () => {
+    const onWindDirectionsChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          windDirections: ["W"],
+          onWindDirectionsChange,
+        }),
+      ),
+    );
+
+    expect(container.querySelector<HTMLButtonElement>('button[aria-label="West"]')?.disabled).toBe(
+      true,
+    );
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('button[aria-label="Select all wind directions"]')!
+        .click(),
+    );
+    expect(onWindDirectionsChange).toHaveBeenCalledWith(WIND_DIRECTIONS);
   });
 });
