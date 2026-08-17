@@ -7,6 +7,7 @@ export interface InterpretConfigResponse {
   outcome: "configured" | "insufficient" | "unsupported";
   message: string;
   config: CalendarConfig;
+  feedbackToken?: string;
 }
 
 export interface LocationConfig {

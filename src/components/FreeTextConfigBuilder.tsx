@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { CalendarConfig, InterpretConfigResponse } from "@shared/types";
 
 interface FreeTextConfigBuilderProps {
-  onConfig: (config: CalendarConfig, message: string) => void;
+  onConfig: (config: CalendarConfig, message: string, feedbackToken?: string) => void;
 }
 
 async function interpretConfig(request: string): Promise<InterpretConfigResponse> {
@@ -28,7 +28,7 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
   const [request, setRequest] = useState("");
   const interpretation = useMutation({
     mutationFn: interpretConfig,
-    onSuccess: (result) => onConfig(result.config, result.message),
+    onSuccess: (result) => onConfig(result.config, result.message, result.feedbackToken),
   });
 
   function handleSubmit(event: React.FormEvent) {
@@ -63,7 +63,8 @@ export function FreeTextConfigBuilder({ onConfig }: FreeTextConfigBuilderProps) 
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        English and Hebrew supported. Do not include personal information.
+        English and Hebrew supported. AI requests may be stored for quality monitoring; do not
+        include personal information.
       </p>
       {interpretation.data?.outcome === "configured" && (
         <Alert variant="success">

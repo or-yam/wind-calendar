@@ -2,6 +2,9 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const { sendConfigFeedback } = vi.hoisted(() => ({ sendConfigFeedback: vi.fn() }));
+vi.mock("../../src/lib/config-feedback", () => ({ sendConfigFeedback }));
+
 vi.mock("@tanstack/react-query", () => ({
   queryOptions: (options: unknown) => options,
   useQuery: (options: { queryKey: string[] }) =>
@@ -20,7 +23,7 @@ vi.mock("../../src/components/Hero", async () => {
     Hero: (props: {
       model: string | number;
       onLocationsChange: (locations: string[]) => void;
-      onFreeTextConfig: (config: unknown, message: string) => void;
+      onFreeTextConfig: (config: unknown, message: string, feedbackToken?: string) => void;
       freeTextConfigBuilderEnabled: boolean;
     }) =>
       createElement(
@@ -54,6 +57,7 @@ vi.mock("../../src/components/Hero", async () => {
                   wavePeriodMin: 0,
                 },
                 "Review this",
+                "opaque-feedback-token",
               ),
           },
           "Apply AI config",
@@ -71,6 +75,8 @@ describe("App location selection", () => {
   let root: Root;
 
   beforeEach(() => {
+    sendConfigFeedback.mockReset();
+    sendConfigFeedback.mockResolvedValue(true);
     window.history.replaceState(null, "", "/?locations=beit-yanai&model=om_gfs");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -113,6 +119,10 @@ describe("App location selection", () => {
     )!;
     await act(async () => confirm.click());
     expect(subscriptionLink().href).toContain("locations=tel-aviv");
+    expect(sendConfigFeedback).toHaveBeenCalledWith(
+      "opaque-feedback-token",
+      expect.objectContaining({ locations: ["tel-aviv"] }),
+    );
   });
 
   it("shows the forecast before subscription actions", async () => {
