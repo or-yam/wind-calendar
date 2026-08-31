@@ -6,8 +6,12 @@ export default defineHandler(async (event) => {
     throw new HTTPError({ statusCode: 405, statusMessage: "Method Not Allowed" });
   }
 
-  const freeTextConfigBuilder = await isFeatureEnabled(FEATURE_FLAGS.freeTextConfigBuilder);
+  const [freeTextConfigBuilder, wavesForecast, windguruForecastModels] = await Promise.all([
+    isFeatureEnabled(FEATURE_FLAGS.freeTextConfigBuilder),
+    isFeatureEnabled(FEATURE_FLAGS.wavesForecast),
+    isFeatureEnabled(FEATURE_FLAGS.windguruForecastModels),
+  ]);
   event.res.headers.set("Cache-Control", "private, max-age=15");
 
-  return { freeTextConfigBuilder };
+  return { freeTextConfigBuilder, wavesForecast, windguruForecastModels };
 });

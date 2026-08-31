@@ -6,7 +6,15 @@ vi.mock("@tanstack/react-query", () => ({
   queryOptions: (options: unknown) => options,
   useQuery: (options: { queryKey: string[] }) =>
     options.queryKey[0] === "features"
-      ? { data: { freeTextConfigBuilder: true }, isPending: false, error: null }
+      ? {
+          data: {
+            freeTextConfigBuilder: true,
+            wavesForecast: true,
+            windguruForecastModels: true,
+          },
+          isPending: false,
+          error: null,
+        }
       : { data: { sessions: [] }, isPending: false, error: null },
 }));
 
@@ -22,10 +30,16 @@ vi.mock("../../src/components/Hero", async () => {
       onLocationsChange: (locations: string[]) => void;
       onFreeTextConfig: (config: unknown, message: string) => void;
       freeTextConfigBuilderEnabled: boolean;
+      wavesForecastEnabled: boolean;
+      windguruForecastModelsEnabled: boolean;
     }) =>
       createElement(
         "div",
-        { "data-free-text-config-enabled": props.freeTextConfigBuilderEnabled },
+        {
+          "data-free-text-config-enabled": props.freeTextConfigBuilderEnabled,
+          "data-waves-enabled": props.wavesForecastEnabled,
+          "data-windguru-models-enabled": props.windguruForecastModelsEnabled,
+        },
         createElement(
           "button",
           {
@@ -93,6 +107,9 @@ describe("App location selection", () => {
     await act(async () => addTelAviv.click());
 
     expect(new URLSearchParams(window.location.search).get("model")).toBe("om_gfs");
+    const hero = container.querySelector("[data-waves-enabled]")!;
+    expect(hero.getAttribute("data-waves-enabled")).toBe("true");
+    expect(hero.getAttribute("data-windguru-models-enabled")).toBe("true");
   });
 
   it("does not update subscription links until AI settings are confirmed", async () => {
