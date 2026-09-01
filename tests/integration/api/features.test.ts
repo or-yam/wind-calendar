@@ -1,33 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { callHandler } from "../../helpers/nitro-mocks";
 
-const { isFeatureEnabled } = vi.hoisted(() => ({ isFeatureEnabled: vi.fn() }));
+const { getFeatureFlags } = vi.hoisted(() => ({ getFeatureFlags: vi.fn() }));
 vi.mock("../../../server/feature-flags", () => ({
-  FEATURE_FLAGS: { freeTextConfigBuilder: "free-text-config-builder" },
-  isFeatureEnabled,
+  getFeatureFlags,
 }));
 
-import handler from "../../../server/api/features";
+import handler from "../../../server/api/features.get";
 
 describe("GET /api/features", () => {
   beforeEach(() => {
-    isFeatureEnabled.mockReset();
+    getFeatureFlags.mockReset();
   });
 
-  it("returns client-safe feature availability", async () => {
-    isFeatureEnabled.mockResolvedValue(true);
+  it("returns the evaluated feature flags", async () => {
+    const features = {
+      freeTextConfigBuilder: true,
+      wavesForecast: false,
+      windguruForecastModels: true,
+    };
+    getFeatureFlags.mockResolvedValue(features);
 
     const response = await callHandler(handler, "/api/features");
 
     expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual({ freeTextConfigBuilder: true });
-    expect(isFeatureEnabled).toHaveBeenCalledWith("free-text-config-builder");
-  });
-
-  it("rejects unsupported methods", async () => {
-    const response = await callHandler(handler, "/api/features", { method: "POST" });
-
-    expect(response.statusCode).toBe(405);
-    expect(isFeatureEnabled).not.toHaveBeenCalled();
+    expect(response.headers["cache-control"]).toBe("private, max-age=15");
+    expect(JSON.parse(response.body)).toEqual(features);
+    expect(getFeatureFlags).toHaveBeenCalledOnce();
   });
 });

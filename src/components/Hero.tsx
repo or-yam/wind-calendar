@@ -31,6 +31,8 @@ export interface HeroProps {
   onMinSessionHoursChange: (value: number) => void;
   onFreeTextConfig: (config: CalendarConfig, message: string) => void;
   freeTextConfigBuilderEnabled: boolean;
+  wavesForecastEnabled: boolean;
+  windguruForecastModelsEnabled: boolean;
 }
 
 export function Hero(props: HeroProps) {
@@ -40,7 +42,7 @@ export function Hero(props: HeroProps) {
         <div className="content-wrap grid gap-y-3 md:gap-y-4">
           <VHS
             className="h-72 w-full min-[480px]:h-38 md:h-76"
-            speed={0.7}
+            speed={0.3}
             wave={1.8}
             jitter={0.9}
             crease={0.65}
@@ -73,7 +75,7 @@ export function Hero(props: HeroProps) {
             </div>
           </VHS>
           <p className="mt-4 max-w-xl text-xl font-bold leading-snug">
-            Only the days worth surfing. No doom-scrolling the forecast.
+            Only the days worth surfing.
           </p>
         </div>
       </header>

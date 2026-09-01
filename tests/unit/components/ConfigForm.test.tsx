@@ -18,6 +18,8 @@ const props = {
   waveHeightMax: 5,
   wavePeriodMin: 0,
   minSessionHours: 2,
+  wavesForecastEnabled: true,
+  windguruForecastModelsEnabled: true,
   onLocationsChange: vi.fn(),
   onModelChange: vi.fn(),
   onWindEnabledChange: vi.fn(),
@@ -89,5 +91,27 @@ describe("ConfigForm", () => {
     });
     expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
     expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
+
+  it("hides wave controls when the Waves forecast flag is disabled", async () => {
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, wavesForecastEnabled: false })),
+    );
+
+    expect(container.textContent).not.toContain("Waves");
+    expect(container.querySelector('[aria-label="Toggle wave forecast"]')).toBeNull();
+  });
+
+  it("hides Windguru models when their feature flag is disabled", async () => {
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, windguruForecastModelsEnabled: false })),
+    );
+
+    const advanced = container.querySelector("details")!;
+    advanced.open = true;
+    const trigger = advanced.querySelector<HTMLButtonElement>("button")!;
+    await act(async () => trigger.click());
+
+    expect(document.body.textContent).not.toContain("Windguru");
   });
 });

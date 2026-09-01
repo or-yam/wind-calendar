@@ -172,6 +172,8 @@ function App() {
           setConfirmationPending(true);
         }}
         freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
+        wavesForecastEnabled={features?.wavesForecast ?? false}
+        windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
       />
       <main>
         {confirmationPending && (

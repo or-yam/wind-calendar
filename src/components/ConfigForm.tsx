@@ -30,6 +30,8 @@ interface ConfigFormProps {
   waveHeightMax: number;
   wavePeriodMin: number;
   minSessionHours: number;
+  wavesForecastEnabled: boolean;
+  windguruForecastModelsEnabled: boolean;
   onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
@@ -56,6 +58,8 @@ export function ConfigForm({
   waveHeightMax,
   wavePeriodMin,
   minSessionHours,
+  wavesForecastEnabled,
+  windguruForecastModelsEnabled,
   onLocationsChange,
   onModelChange,
   onWindEnabledChange,
@@ -146,89 +150,91 @@ export function ConfigForm({
       </div>
 
       {/* Wave Section */}
-      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="wave-toggle"
-              aria-label="Toggle wave forecast"
-              checked={waveEnabled}
-              onCheckedChange={onWaveEnabledChange}
-              disabled={isOnlyActive("wave")}
-            />
-            <Label
-              htmlFor="wave-toggle"
-              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
-            >
-              Waves
-            </Label>
+      {wavesForecastEnabled && (
+        <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="wave-toggle"
+                aria-label="Toggle wave forecast"
+                checked={waveEnabled}
+                onCheckedChange={onWaveEnabledChange}
+                disabled={isOnlyActive("wave")}
+              />
+              <Label
+                htmlFor="wave-toggle"
+                className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+              >
+                Waves
+              </Label>
+            </div>
+            {waveEnabled && (
+              <span className="text-foreground text-base font-bold tabular-nums">
+                {localWaveHeight[0]} – {localWaveHeight[1]} m
+              </span>
+            )}
           </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Show times when wave height and period match the conditions you want.
+          </p>
           {waveEnabled && (
-            <span className="text-foreground text-base font-bold tabular-nums">
-              {localWaveHeight[0]} – {localWaveHeight[1]} m
-            </span>
+            <div className="flex flex-col gap-3 pl-1">
+              <RadioGroup
+                value={waveSource}
+                onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
+                className="flex gap-4"
+              >
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="total" id="wave-total" />
+                  <Label htmlFor="wave-total" className="text-sm text-foreground/80">
+                    Total
+                  </Label>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="swell" id="wave-swell" />
+                  <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
+                    Swell
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              <div aria-label="Wave height range in meters">
+                <Slider
+                  value={localWaveHeight}
+                  onValueChange={setLocalWaveHeight}
+                  onValueCommitted={([min, max]) => {
+                    onWaveHeightMinChange(min);
+                    onWaveHeightMaxChange(max);
+                  }}
+                  min={0}
+                  max={3}
+                  step={0.1}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="min-period" className="text-foreground/80 text-sm">
+                  Min Period
+                </Label>
+                <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
+              </div>
+              <div aria-label="Minimum wave period in seconds">
+                <Slider
+                  id="min-period"
+                  value={localWavePeriod}
+                  onValueChange={(v) => {
+                    setLocalWavePeriod(v);
+                    onWavePeriodMinChange(v);
+                  }}
+                  min={0}
+                  max={20}
+                  step={1}
+                />
+              </div>
+            </div>
           )}
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Show times when wave height and period match the conditions you want.
-        </p>
-        {waveEnabled && (
-          <div className="flex flex-col gap-3 pl-1">
-            <RadioGroup
-              value={waveSource}
-              onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
-              className="flex gap-4"
-            >
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value="total" id="wave-total" />
-                <Label htmlFor="wave-total" className="text-sm text-foreground/80">
-                  Total
-                </Label>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value="swell" id="wave-swell" />
-                <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
-                  Swell
-                </Label>
-              </div>
-            </RadioGroup>
-
-            <div aria-label="Wave height range in meters">
-              <Slider
-                value={localWaveHeight}
-                onValueChange={setLocalWaveHeight}
-                onValueCommitted={([min, max]) => {
-                  onWaveHeightMinChange(min);
-                  onWaveHeightMaxChange(max);
-                }}
-                min={0}
-                max={3}
-                step={0.1}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="min-period" className="text-foreground/80 text-sm">
-                Min Period
-              </Label>
-              <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
-            </div>
-            <div aria-label="Minimum wave period in seconds">
-              <Slider
-                id="min-period"
-                value={localWavePeriod}
-                onValueChange={(v) => {
-                  setLocalWavePeriod(v);
-                  onWavePeriodMinChange(v);
-                }}
-                min={0}
-                max={20}
-                step={1}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:col-span-2">
         <div className="flex items-center justify-between">
@@ -299,22 +305,26 @@ export function ConfigForm({
                     </SelectItem>
                   ))}
               </SelectGroup>
-              <SelectSeparator />
-              <SelectGroup>
-                <SelectLabel>Windguru</SelectLabel>
-                {Object.values(MODELS)
-                  .filter((m) => m.provider === "windguru")
-                  .map((m) => (
-                    <SelectItem
-                      key={m.id}
-                      value={m.id.toString()}
-                      disabled={!availableModels.includes(m.id as number)}
-                    >
-                      {m.name}
-                      {!availableModels.includes(m.id as number) && " (unavailable)"}
-                    </SelectItem>
-                  ))}
-              </SelectGroup>
+              {windguruForecastModelsEnabled && (
+                <>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Windguru</SelectLabel>
+                    {Object.values(MODELS)
+                      .filter((m) => m.provider === "windguru")
+                      .map((m) => (
+                        <SelectItem
+                          key={m.id}
+                          value={m.id.toString()}
+                          disabled={!availableModels.includes(m.id as number)}
+                        >
+                          {m.name}
+                          {!availableModels.includes(m.id as number) && " (unavailable)"}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>
