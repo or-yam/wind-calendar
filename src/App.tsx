@@ -157,8 +157,9 @@ function App() {
         onLocationsChange={handleLocationsChange}
         onModelChange={handleModelChange}
         onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-        onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
-        onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
+        onWindRangeChange={([windMin, windMax]) =>
+          updateConfig((c) => ({ ...c, windMin, windMax }))
+        }
         onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
         onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
         onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}

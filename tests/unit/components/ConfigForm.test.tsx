@@ -23,8 +23,7 @@ const props = {
   onLocationsChange: vi.fn(),
   onModelChange: vi.fn(),
   onWindEnabledChange: vi.fn(),
-  onWindMinChange: vi.fn(),
-  onWindMaxChange: vi.fn(),
+  onWindRangeChange: vi.fn(),
   onWaveEnabledChange: vi.fn(),
   onWaveSourceChange: vi.fn(),
   onWaveHeightMinChange: vi.fn(),
@@ -91,6 +90,23 @@ describe("ConfigForm", () => {
     });
     expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
     expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
+
+  it("commits wind range changes as an atomic pair", async () => {
+    const onWindRangeChange = vi.fn();
+    await act(async () => root.render(createElement(ConfigForm, { ...props, onWindRangeChange })));
+
+    const minimum = container.querySelector<HTMLInputElement>("#wind-min")!;
+    const maximum = container.querySelector<HTMLInputElement>("#wind-max")!;
+    await act(async () => {
+      minimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    });
+    await act(async () => {
+      maximum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    });
+
+    expect(onWindRangeChange).toHaveBeenNthCalledWith(1, [13, 35]);
+    expect(onWindRangeChange).toHaveBeenNthCalledWith(2, [13, 36]);
   });
 
   it("hides wave controls when the Waves forecast flag is disabled", async () => {
