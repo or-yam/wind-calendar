@@ -28,6 +28,7 @@ vi.mock("../../src/components/Hero", async () => {
     Hero: (props: {
       model: string | number;
       onLocationsChange: (locations: string[]) => void;
+      onWindRangeChange: (range: [number, number]) => void;
       onFreeTextConfig: (config: unknown, message: string) => void;
       freeTextConfigBuilderEnabled: boolean;
       wavesForecastEnabled: boolean;
@@ -47,6 +48,14 @@ vi.mock("../../src/components/Hero", async () => {
             onClick: () => props.onLocationsChange(["beit-yanai", "tel-aviv"]),
           },
           `Add Tel Aviv (${props.model})`,
+        ),
+        createElement(
+          "button",
+          {
+            type: "button",
+            onClick: () => props.onWindRangeChange([10, 40]),
+          },
+          "Set wind range",
         ),
         createElement(
           "button",
@@ -110,6 +119,19 @@ describe("App location selection", () => {
     const hero = container.querySelector("[data-waves-enabled]")!;
     expect(hero.getAttribute("data-waves-enabled")).toBe("true");
     expect(hero.getAttribute("data-windguru-models-enabled")).toBe("true");
+  });
+
+  it("updates both wind range boundaries atomically", async () => {
+    await act(async () => root.render(createElement(App)));
+
+    const setWindRange = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Set wind range",
+    )!;
+    await act(async () => setWindRange.click());
+
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get("windMin")).toBe("10");
+    expect(params.get("windMax")).toBe("40");
   });
 
   it("does not update subscription links until AI settings are confirmed", async () => {

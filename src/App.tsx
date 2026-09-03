@@ -19,6 +19,9 @@ import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { useDebouncedValue } from "./hooks/useDebouncedValue";
+
+const FORECAST_DEBOUNCE_MS = 500;
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -111,7 +114,8 @@ function App() {
     return () => window.removeEventListener("popstate", handler);
   }, []);
 
-  const { data, isPending, error } = useQuery(forecastQueryOptions(config));
+  const forecastConfig = useDebouncedValue(config, FORECAST_DEBOUNCE_MS);
+  const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));
   const sessions = data?.sessions ?? [];
   const forecastConfigKey = buildConfigParams(config).toString();
   const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(forecastConfigKey);
@@ -157,8 +161,9 @@ function App() {
         onLocationsChange={handleLocationsChange}
         onModelChange={handleModelChange}
         onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-        onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
-        onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
+        onWindRangeChange={([windMin, windMax]) =>
+          updateConfig((c) => ({ ...c, windMin, windMax }))
+        }
         onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
         onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
         onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}

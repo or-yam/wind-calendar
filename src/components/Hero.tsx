@@ -21,8 +21,7 @@ export interface HeroProps {
   onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
-  onWindMinChange: (value: number) => void;
-  onWindMaxChange: (value: number) => void;
+  onWindRangeChange: (range: [number, number]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
   onWaveHeightMinChange: (value: number) => void;

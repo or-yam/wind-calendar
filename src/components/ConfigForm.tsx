@@ -16,6 +16,7 @@ import {
 import { MODELS, isValidModelId, type ModelId } from "@shared/models";
 import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
+import { WindRangeField } from "./WindRangeField";
 
 interface ConfigFormProps {
   locations: string[];
@@ -35,8 +36,7 @@ interface ConfigFormProps {
   onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
-  onWindMinChange: (value: number) => void;
-  onWindMaxChange: (value: number) => void;
+  onWindRangeChange: (range: [number, number]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
   onWaveHeightMinChange: (value: number) => void;
@@ -63,8 +63,7 @@ export function ConfigForm({
   onLocationsChange,
   onModelChange,
   onWindEnabledChange,
-  onWindMinChange,
-  onWindMaxChange,
+  onWindRangeChange,
   onWaveEnabledChange,
   onWaveSourceChange,
   onWaveHeightMinChange,
@@ -72,14 +71,10 @@ export function ConfigForm({
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
-  const [localWind, setLocalWind] = useState([windMin, windMax]);
   const [localSession, setLocalSession] = useState(minSessionHours);
   const [localWaveHeight, setLocalWaveHeight] = useState([waveHeightMin, waveHeightMax]);
   const [localWavePeriod, setLocalWavePeriod] = useState(wavePeriodMin);
 
-  useEffect(() => {
-    setLocalWind([windMin, windMax]);
-  }, [windMin, windMax]);
   useEffect(() => {
     setLocalSession(minSessionHours);
   }, [minSessionHours]);
@@ -125,28 +120,14 @@ export function ConfigForm({
           </div>
           {windEnabled && (
             <span className="text-foreground text-base font-bold tabular-nums">
-              {localWind[0]} – {localWind[1]} kn
+              {windMin} – {windMax} kn
             </span>
           )}
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">
           Show times when wind stays within your preferred speed range.
         </p>
-        {windEnabled && (
-          <div aria-label="Wind speed range in knots">
-            <Slider
-              value={localWind}
-              onValueChange={setLocalWind}
-              onValueCommitted={([min, max]) => {
-                onWindMinChange(min);
-                onWindMaxChange(max);
-              }}
-              min={5}
-              max={50}
-              step={1}
-            />
-          </div>
-        )}
+        {windEnabled && <WindRangeField min={windMin} max={windMax} onChange={onWindRangeChange} />}
       </div>
 
       {/* Wave Section */}
