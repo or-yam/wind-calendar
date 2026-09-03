@@ -23,6 +23,30 @@ describe("ForecastCards", () => {
     container.remove();
   });
 
+  it("renders seven empty day cards when the selected week has no sessions", async () => {
+    await act(async () =>
+      root.render(
+        createElement(ForecastCards, {
+          sessions: [],
+          isPending: false,
+          error: null,
+          weekStart: new Date(2026, 6, 26),
+          canGoPrev: false,
+          onPrev: vi.fn(),
+          onNext: vi.fn(),
+          onToday: vi.fn(),
+        }),
+      ),
+    );
+
+    expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(7);
+    expect(container.textContent).not.toContain("No sessions match your filters this week");
+    const previous = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "← Prev",
+    )!;
+    expect(previous.disabled).toBe(true);
+  });
+
   it("renders same-day sessions with directions in one horizontal track", async () => {
     const weekStart = new Date(2026, 6, 27);
     const session: ForecastSession = {
@@ -60,6 +84,7 @@ describe("ForecastCards", () => {
           isPending: false,
           error: null,
           weekStart,
+          canGoPrev: true,
           onPrev: vi.fn(),
           onNext: vi.fn(),
           onToday: vi.fn(),
@@ -129,6 +154,7 @@ describe("ForecastCards", () => {
           isPending: false,
           error: null,
           weekStart,
+          canGoPrev: false,
           onPrev: vi.fn(),
           onNext: vi.fn(),
           onToday,

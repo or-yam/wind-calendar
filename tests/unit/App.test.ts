@@ -94,6 +94,7 @@ describe("App location selection", () => {
   let root: Root;
 
   beforeEach(() => {
+    HTMLElement.prototype.scrollTo = vi.fn();
     window.history.replaceState(null, "", "/?locations=beit-yanai&model=om_gfs");
     container = document.createElement("div");
     document.body.appendChild(container);

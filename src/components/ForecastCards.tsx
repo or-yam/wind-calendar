@@ -15,6 +15,7 @@ interface ForecastCardsProps {
   isPending: boolean;
   error: Error | null;
   weekStart: Date;
+  canGoPrev: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -101,6 +102,7 @@ export function ForecastCards({
   isPending,
   error,
   weekStart,
+  canGoPrev,
   onPrev,
   onNext,
   onToday,
@@ -137,7 +139,7 @@ export function ForecastCards({
           aria-label="Week navigation"
           className="mb-7 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-center"
         >
-          <Button variant="outline" onClick={onPrev}>
+          <Button variant="outline" onClick={onPrev} disabled={!canGoPrev}>
             ← Prev
           </Button>
           <span className="min-w-0 text-center text-sm font-bold tracking-wide text-foreground/80 uppercase">
@@ -171,10 +173,6 @@ export function ForecastCards({
         ) : error ? (
           <p aria-live="polite" className="text-red-400 text-sm text-center py-8">
             {error.message}
-          </p>
-        ) : weekSessions.length === 0 ? (
-          <p aria-live="polite" className="text-foreground/80 text-sm text-center py-8">
-            No sessions match your filters this week
           </p>
         ) : (
           <div

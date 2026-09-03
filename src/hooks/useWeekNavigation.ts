@@ -3,6 +3,7 @@ import { getWeekStart, addDays } from "../lib/date-utils";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
+  canGoPrev: boolean;
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
@@ -25,12 +26,18 @@ export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
   }, []);
 
   const goToPrev = useCallback(() => {
-    setWeekStart((prev) => addDays(prev, -7));
+    setWeekStart((prev) => {
+      const currentWeekStart = getWeekStart(new Date(), START_ON_SUNDAY);
+      const previousWeekStart = addDays(prev, -7);
+      return previousWeekStart < currentWeekStart ? currentWeekStart : previousWeekStart;
+    });
   }, []);
 
   const goToNext = useCallback(() => {
     setWeekStart((prev) => addDays(prev, 7));
   }, []);
 
-  return { weekStart, goToToday, goToPrev, goToNext };
+  const canGoPrev = weekStart > getWeekStart(new Date(), START_ON_SUNDAY);
+
+  return { weekStart, canGoPrev, goToToday, goToPrev, goToNext };
 }
