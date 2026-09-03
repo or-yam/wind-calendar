@@ -12,12 +12,14 @@ function WeekStart() {
 }
 
 function Navigation({ resetKey = "default" }: { resetKey?: string }) {
-  const { weekStart, goToNext } = useWeekNavigation(resetKey);
+  const { weekStart, canGoPrev, goToPrev, goToNext } = useWeekNavigation(resetKey);
   return createElement(
     "div",
     null,
     createElement("span", null, weekStart.getDate()),
     createElement("button", { onClick: goToNext }, "Next"),
+    createElement("button", { onClick: goToPrev, disabled: !canGoPrev }, "Previous"),
+    createElement("button", { onClick: goToPrev }, "Force previous"),
   );
 }
 
@@ -56,6 +58,36 @@ describe("useWeekNavigation", () => {
 
     await act(async () => root.render(createElement(Navigation)));
     expect(container.querySelector("span")?.textContent).toBe("2");
+  });
+
+  it("does not navigate before the current week", async () => {
+    await act(async () => root.render(createElement(Navigation)));
+
+    const previous = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Previous",
+    )!;
+    expect(previous.disabled).toBe(true);
+
+    const forcePrevious = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Force previous",
+    )!;
+    await act(async () => forcePrevious.click());
+
+    expect(container.querySelector("span")?.textContent).toBe("26");
+  });
+
+  it("allows returning from a future week to the current week", async () => {
+    await act(async () => root.render(createElement(Navigation)));
+
+    const buttons = [...container.querySelectorAll("button")];
+    const next = buttons.find((button) => button.textContent === "Next")!;
+    const previous = buttons.find((button) => button.textContent === "Previous")!;
+    await act(async () => next.click());
+    expect(previous.disabled).toBe(false);
+
+    await act(async () => previous.click());
+    expect(container.querySelector("span")?.textContent).toBe("26");
+    expect(previous.disabled).toBe(true);
   });
 
   it("repositions to today when forecast configuration changes", async () => {
