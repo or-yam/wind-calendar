@@ -169,7 +169,7 @@ export function ForecastCards({
 
         {isPending ? (
           <div
-            aria-live="polite"
+            aria-hidden="true"
             className="forecast-scroll -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3"
           >
             {Array.from({ length: 7 }, (_, i) => (
@@ -177,13 +177,13 @@ export function ForecastCards({
             ))}
           </div>
         ) : error ? (
-          <p aria-live="polite" className="text-red-400 text-sm text-center py-8">
-            {error.message}
-          </p>
+          <p className="text-red-400 text-sm text-center py-8">{error.message}</p>
         ) : (
           <div
             ref={trackRef}
-            aria-live="polite"
+            role="group"
+            tabIndex={0}
+            aria-label="Forecast days, scroll horizontally"
             className="forecast-scroll -mx-4 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3"
           >
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
@@ -197,6 +197,7 @@ export function ForecastCards({
                     data-today={isToday}
                     tabIndex={isToday ? -1 : undefined}
                     key={dayKey}
+                    role="group"
                     aria-label={`${formatDayLabel(day)}: No sessions`}
                     className={`session-card flex min-h-[180px] w-60 shrink-0 snap-start flex-col items-center justify-center p-4 opacity-60${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
                   >
@@ -231,6 +232,7 @@ export function ForecastCards({
                     data-today={isToday}
                     tabIndex={isToday ? -1 : undefined}
                     key={`${dayKey}-${session.start}`}
+                    role="group"
                     aria-label={`${formatDayLabel(start)} at ${session.location.label}: ${timeRange}, ${session.matchType === "wind" ? `Wind ${windSpeedLabel} ${session.wind.direction}` : session.matchType === "wave" ? `Wave ${waveLabel} ${session.wave.direction}` : `Wind ${windSpeedLabel} ${session.wind.direction}, Wave ${waveLabel} ${session.wave.direction}`}`}
                     className={`session-card min-h-[180px] w-60 shrink-0 snap-start p-4 text-card-foreground${isToday ? " bg-primary/15 ring-2 ring-primary" : ""}`}
                     style={{ borderColor }}
@@ -280,6 +282,16 @@ export function ForecastCards({
             })}
           </div>
         )}
+
+        <p className="sr-only" role="status">
+          {isPending
+            ? "Loading the forecast"
+            : error
+              ? error.message
+              : sessions.length === 0
+                ? "No sessions match this week"
+                : ""}
+        </p>
       </div>
     </section>
   );
