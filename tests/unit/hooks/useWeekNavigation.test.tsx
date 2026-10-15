@@ -98,4 +98,77 @@ describe("useWeekNavigation", () => {
 
     expect(container.querySelector("span")?.textContent).toBe("26");
   });
+
+  it("advances a stale selection at Sunday midnight without user interaction", async () => {
+    vi.setSystemTime(new Date(2026, 7, 1, 23, 59, 59));
+    await act(async () => root.render(createElement(Navigation)));
+
+    await act(async () => vi.advanceTimersByTime(1000));
+
+    expect(container.querySelector("span")?.textContent).toBe("2");
+  });
+
+  it("clamps a stale selection when rerendering after multiple idle weeks", async () => {
+    await act(async () => root.render(createElement(Navigation)));
+    vi.setSystemTime(new Date(2026, 7, 9, 12));
+
+    await act(async () => root.render(createElement(Navigation)));
+
+    expect(container.querySelector("span")?.textContent).toBe("9");
+  });
+
+  it("navigates Next from the current week after multiple idle weeks", async () => {
+    await act(async () => root.render(createElement(Navigation)));
+    vi.setSystemTime(new Date(2026, 7, 9, 12));
+
+    await act(async () => container.querySelector("button")?.click());
+
+    expect(container.querySelector("span")?.textContent).toBe("16");
+  });
+
+  it.each(["focus", "visibilitychange"])("refreshes a stale week on %s", async (event) => {
+    await act(async () => root.render(createElement(Navigation)));
+    vi.setSystemTime(new Date(2026, 7, 9, 12));
+
+    await act(async () => (event === "focus" ? window : document).dispatchEvent(new Event(event)));
+
+    expect(container.querySelector("span")?.textContent).toBe("9");
+  });
+
+  it("preserves a future selection when Sunday passes", async () => {
+    vi.setSystemTime(new Date(2026, 7, 1, 23, 59, 59));
+    await act(async () => root.render(createElement(Navigation)));
+    await act(async () => container.querySelector("button")?.click());
+    await act(async () => container.querySelector("button")?.click());
+
+    await act(async () => vi.advanceTimersByTime(1000));
+
+    expect(container.querySelector("span")?.textContent).toBe("9");
+  });
+
+  it("disables Previous when the selected future week becomes the current week", async () => {
+    vi.setSystemTime(new Date(2026, 7, 1, 23, 59, 59));
+    await act(async () => root.render(createElement(Navigation)));
+    await act(async () => container.querySelector("button")?.click());
+
+    await act(async () => vi.advanceTimersByTime(1000));
+
+    const previous = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Previous",
+    )!;
+    expect(previous.disabled).toBe(true);
+  });
+
+  it("clears the rollover timer and resume listeners on unmount", async () => {
+    await act(async () => root.render(createElement(Navigation)));
+    expect(vi.getTimerCount()).toBe(1);
+
+    await act(async () => root.render(null));
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
