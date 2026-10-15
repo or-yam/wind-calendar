@@ -15,6 +15,7 @@ interface ForecastCardsProps {
   isPending: boolean;
   error: Error | null;
   weekStart: Date;
+  today?: Date;
   canGoPrev: boolean;
   onPrev: () => void;
   onNext: () => void;
@@ -102,6 +103,7 @@ export function ForecastCards({
   isPending,
   error,
   weekStart,
+  today,
   canGoPrev,
   onPrev,
   onNext,
@@ -109,6 +111,8 @@ export function ForecastCards({
 }: ForecastCardsProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const nextScrollBehaviorRef = useRef<ScrollBehavior>("auto");
+  const focusTodayRef = useRef(false);
+  const currentDay = (today ?? new Date()).toDateString();
   const weekSessions = sessions.filter(
     (s) => new Date(s.start) >= weekStart && new Date(s.start) < addDays(weekStart, 7),
   );
@@ -126,7 +130,9 @@ export function ForecastCards({
   };
 
   useLayoutEffect(() => {
-    scrollToToday(nextScrollBehaviorRef.current);
+    const shouldFocus = focusTodayRef.current;
+    focusTodayRef.current = false;
+    scrollToToday(shouldFocus ? "smooth" : nextScrollBehaviorRef.current, shouldFocus);
     nextScrollBehaviorRef.current = "auto";
   }, [weekStart, isPending, sessions]);
 
@@ -152,8 +158,8 @@ export function ForecastCards({
             variant="ghost"
             onClick={() => {
               nextScrollBehaviorRef.current = "smooth";
+              focusTodayRef.current = true;
               onToday();
-              scrollToToday("smooth", true);
             }}
             className="col-span-3 justify-self-center"
           >
@@ -183,7 +189,7 @@ export function ForecastCards({
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).map((day) => {
               const dayKey = day.toDateString();
               const dayGroup = groups.find((g) => g.key === dayKey);
-              const isToday = day.toDateString() === new Date().toDateString();
+              const isToday = day.toDateString() === currentDay;
 
               if (!dayGroup) {
                 return (

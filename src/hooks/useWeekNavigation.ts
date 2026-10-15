@@ -3,6 +3,7 @@ import { getWeekStart, addDays } from "../lib/date-utils";
 
 interface UseWeekNavigationResult {
   weekStart: Date;
+  today: Date;
   canGoPrev: boolean;
   goToToday: () => void;
   goToPrev: () => void;
@@ -18,6 +19,7 @@ function clampToCurrentWeek(weekStart: Date): Date {
 
 export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), START_ON_SUNDAY));
+  const [today, setToday] = useState(() => new Date());
   const previousResetKeyRef = useRef(resetKey);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
     const refresh = () => {
       clearTimeout(timer);
       const now = new Date();
+      setToday(new Date(now));
       const nextWeek = getWeekStart(now, START_ON_SUNDAY).getTime();
       if (nextWeek !== currentWeek) {
         currentWeek = nextWeek;
@@ -53,7 +56,9 @@ export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
   }, []);
 
   const goToToday = useCallback(() => {
-    setWeekStart(getWeekStart(new Date(), START_ON_SUNDAY));
+    const now = new Date();
+    setToday(new Date(now));
+    setWeekStart(getWeekStart(now, START_ON_SUNDAY));
   }, []);
 
   const goToPrev = useCallback(() => {
@@ -67,5 +72,5 @@ export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
   const visibleWeekStart = clampToCurrentWeek(weekStart);
   const canGoPrev = visibleWeekStart > getWeekStart(new Date(), START_ON_SUNDAY);
 
-  return { weekStart: visibleWeekStart, canGoPrev, goToToday, goToPrev, goToNext };
+  return { weekStart: visibleWeekStart, today, canGoPrev, goToToday, goToPrev, goToNext };
 }
