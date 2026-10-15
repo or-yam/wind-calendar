@@ -167,8 +167,9 @@ function App() {
         }
         onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
         onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-        onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
-        onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
+        onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
+          updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
+        }
         onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
         onMinSessionHoursChange={(minSessionHours) =>
           updateConfig((c) => ({ ...c, minSessionHours }))

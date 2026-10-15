@@ -39,8 +39,7 @@ interface ConfigFormProps {
   onWindRangeChange: (range: [number, number]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
-  onWaveHeightMinChange: (value: number) => void;
-  onWaveHeightMaxChange: (value: number) => void;
+  onWaveHeightRangeChange: (range: [number, number]) => void;
   onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
 }
@@ -66,8 +65,7 @@ export function ConfigForm({
   onWindRangeChange,
   onWaveEnabledChange,
   onWaveSourceChange,
-  onWaveHeightMinChange,
-  onWaveHeightMaxChange,
+  onWaveHeightRangeChange,
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
@@ -183,10 +181,7 @@ export function ConfigForm({
                 <Slider
                   value={localWaveHeight}
                   onValueChange={setLocalWaveHeight}
-                  onValueCommitted={([min, max]) => {
-                    onWaveHeightMinChange(min);
-                    onWaveHeightMaxChange(max);
-                  }}
+                  onValueCommitted={([min, max]) => onWaveHeightRangeChange([min, max])}
                   min={0}
                   max={3}
                   step={0.1}
