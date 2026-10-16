@@ -74,6 +74,7 @@ function formatDescription(session: LocationSession): string {
 
 export function generateIcsEvents(sessions: LocationSession[], _tz?: string): string {
   const events: EventAttributes[] = sessions.map((session) => ({
+    uid: `wind-calendar-v1/${encodeURIComponent(session.location.id)}/${session.start.getTime()}/${session.end.getTime()}@wind-calendar.vercel.app`,
     title: formatTitle(session),
     start: dateToTuple(session.start, "UTC") as DateArray,
     startInputType: "utc" as const,
