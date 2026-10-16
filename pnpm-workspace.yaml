@@ -1,8 +1,6 @@
 allowBuilds:
   esbuild: true
-# Narrow, advisory-scoped pins. Each entry replaces a resolved version that is
-# still inside a vulnerable range of its upstream request; see
-# qa-assets/dependency-review-2026-10-15.md.
+# Targeted security patches for vulnerable resolved dependency versions.
 overrides:
   esbuild@0.27.7: 0.28.1
   undici@6.28.0: 6.28.1
