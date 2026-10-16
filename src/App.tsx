@@ -118,7 +118,7 @@ function App() {
   const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));
   const sessions = data?.sessions ?? [];
   const forecastConfigKey = buildConfigParams(config).toString();
-  const { weekStart, canGoPrev, goToToday, goToPrev, goToNext } =
+  const { weekStart, today, canGoPrev, goToToday, goToPrev, goToNext } =
     useWeekNavigation(forecastConfigKey);
 
   const handleLocationsChange = (locations: string[]) => {
@@ -167,8 +167,9 @@ function App() {
         }
         onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
         onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-        onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
-        onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
+        onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
+          updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
+        }
         onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
         onMinSessionHoursChange={(minSessionHours) =>
           updateConfig((c) => ({ ...c, minSessionHours }))
@@ -216,6 +217,7 @@ function App() {
             isPending={isPending}
             error={error}
             weekStart={weekStart}
+            today={today}
             canGoPrev={canGoPrev}
             onPrev={goToPrev}
             onNext={goToNext}

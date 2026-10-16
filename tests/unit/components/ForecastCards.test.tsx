@@ -171,7 +171,23 @@ describe("ForecastCards", () => {
     const todayButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Today",
     )!;
-    await act(async () => todayButton.click());
+    // Focus is applied after the parent commits the current week, so re-render
+    // the way the real caller does before asserting focus.
+    await act(async () => {
+      todayButton.click();
+      root.render(
+        createElement(ForecastCards, {
+          sessions: [session],
+          isPending: false,
+          error: null,
+          weekStart,
+          canGoPrev: false,
+          onPrev: vi.fn(),
+          onNext: vi.fn(),
+          onToday,
+        }),
+      );
+    });
 
     expect(onToday).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(today);
@@ -179,5 +195,32 @@ describe("ForecastCards", () => {
       left: 0,
       behavior: "smooth",
     });
+  });
+
+  it("does not focus or scroll when the day changes without user interaction", async () => {
+    const weekStart = new Date(2026, 11, 27);
+    const noSessions: ForecastSession[] = [];
+    const renderCards = (today: Date) =>
+      createElement(ForecastCards, {
+        sessions: noSessions,
+        isPending: false,
+        error: null,
+        weekStart,
+        today,
+        canGoPrev: false,
+        onPrev: vi.fn(),
+        onNext: vi.fn(),
+        onToday: vi.fn(),
+      });
+
+    await act(async () => root.render(renderCards(new Date(2026, 11, 31))));
+    vi.mocked(HTMLElement.prototype.scrollTo).mockClear();
+
+    await act(async () => root.render(renderCards(new Date(2027, 0, 1))));
+
+    expect(container.querySelector("[data-today='true']")?.getAttribute("aria-label")).toBe(
+      "FRI Jan 1: No sessions",
+    );
+    expect(HTMLElement.prototype.scrollTo).not.toHaveBeenCalled();
   });
 });

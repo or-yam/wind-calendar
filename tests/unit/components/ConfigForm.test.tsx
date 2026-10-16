@@ -26,8 +26,7 @@ const props = {
   onWindRangeChange: vi.fn(),
   onWaveEnabledChange: vi.fn(),
   onWaveSourceChange: vi.fn(),
-  onWaveHeightMinChange: vi.fn(),
-  onWaveHeightMaxChange: vi.fn(),
+  onWaveHeightRangeChange: vi.fn(),
   onWavePeriodMinChange: vi.fn(),
   onMinSessionHoursChange: vi.fn(),
 };
@@ -64,6 +63,7 @@ describe("ConfigForm", () => {
   it("updates single-value ranges while they move and caps waves at 3 meters", async () => {
     const onWavePeriodMinChange = vi.fn();
     const onMinSessionHoursChange = vi.fn();
+    const onWaveHeightRangeChange = vi.fn();
     await act(async () =>
       root.render(
         createElement(ConfigForm, {
@@ -71,6 +71,7 @@ describe("ConfigForm", () => {
           waveEnabled: true,
           onWavePeriodMinChange,
           onMinSessionHoursChange,
+          onWaveHeightRangeChange,
         }),
       ),
     );
@@ -107,6 +108,32 @@ describe("ConfigForm", () => {
 
     expect(onWindRangeChange).toHaveBeenNthCalledWith(1, [13, 35]);
     expect(onWindRangeChange).toHaveBeenNthCalledWith(2, [13, 36]);
+  });
+
+  it("commits wave height changes as an atomic pair", async () => {
+    const onWaveHeightRangeChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          waveEnabled: true,
+          waveHeightMax: 3,
+          onWaveHeightRangeChange,
+        }),
+      ),
+    );
+
+    const group = container.querySelector('[aria-label="Wave height range in meters"]')!;
+    const [minimum, maximum] = [...group.querySelectorAll<HTMLInputElement>('input[type="range"]')];
+    await act(async () => {
+      minimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    await act(async () => {
+      maximum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    });
+
+    expect(onWaveHeightRangeChange).toHaveBeenNthCalledWith(1, [0.6, 3]);
+    expect(onWaveHeightRangeChange).toHaveBeenNthCalledWith(2, [0.6, 2.9]);
   });
 
   it("hides wave controls when the Waves forecast flag is disabled", async () => {
