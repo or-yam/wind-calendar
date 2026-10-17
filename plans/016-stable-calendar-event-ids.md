@@ -85,7 +85,10 @@ Checked [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545): sections 3.8.4.7 and
 - `pnpm build`: passed (includes TypeScript). Existing large-client-chunk/bundler warnings remain.
 - `pnpm lint --ignore-pattern 'qa-assets/**'`: passed. Formatting checks passed for all eight changed/new TypeScript files.
 - Unscoped `pnpm test` and `pnpm lint` fail on pre-existing, untracked QA assets: two supplemental suites have broken imports; saved deployed JS triggers lint errors. No old QA files or check configuration were modified.
-- User approved deleting the untracked `qa-assets/` folder and pushing this branch for Vercel preview QA by DeepSeek V4.1. The folder is removed; preview QA and final validation results will be recorded separately. Real calendar-client validation and the random-to-stable migration test remain pending.
+- User approved deleting the untracked `qa-assets/` folder and pushing this branch for Vercel preview QA by DeepSeek V4.1. Branch pushed as `01aa25b`; preview `wind-calendar-4ubwhrewn-...` verified READY at that SHA.
+- Independent preview QA passed every automatable check; the full report is kept locally (not committed, per user decision). Production still serves random, changing UIDs; preview serves stable, correctly-formatted, unique, spot-scoped UIDs.
+- QA side finding (pre-existing, unrelated to this fix): deployed `Cache-Control` is `public, max-age=21600` on both prod and preview; the `stale-while-revalidate`/`stale-if-error` directives from `server/api/calendar.ts` are not present in the response.
+- Real calendar-client validation and the random-to-stable migration test remain pending.
 
 ## Release checks
 
