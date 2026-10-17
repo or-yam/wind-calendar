@@ -143,14 +143,20 @@ Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Verc
 **Run locally:**
 
 ```bash
-# Frontend only (port 5173)
+# Fullstack dev server (Vite + API routes)
 pnpm dev
-
-# Fullstack (Vite + API functions)
-pnpm dev:api
 
 # Check everything (format + lint + typecheck + test)
 pnpm check
+```
+
+`pnpm dev` serves the frontend and the API routes from one server (Vite plus the Nitro plugin). It prints its URL on startup, which `portless` may set per task.
+
+To run the built output instead:
+
+```bash
+pnpm build
+pnpm preview
 ```
 
 **Tooling:**
