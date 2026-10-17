@@ -1,10 +1,11 @@
 import { defineHandler, HTTPError } from "nitro";
 import { readBody } from "nitro/h3";
 import { z } from "zod";
+import { Effect } from "effect";
 import { interpretFreeTextConfig } from "../free-text-config.js";
-import { checkRateLimit } from "../utils/rate-limit.js";
+import { checkRateLimit } from "../utils/rate-limit";
 import { getClientIp } from "../utils/api-handler.js";
-import { tryCatch } from "../utils/try-catch.js";
+import { ExternalError } from "../errors.js";
 import { FEATURE_FLAGS, isFeatureEnabled } from "../feature-flags.js";
 
 export const freeTextRequestSchema = z
@@ -57,15 +58,22 @@ export default defineHandler(async (event) => {
     });
   }
 
-  const { data: result, error } = await tryCatch(interpretFreeTextConfig(parsed.data.request));
-  if (error) {
-    console.error("Free-text configuration failed", error);
-    throw new HTTPError({
-      statusCode: 502,
-      statusMessage: "AI interpretation failed",
-      data: { error: "Could not interpret that request. Try again or use the manual form." },
-    });
-  }
+  const result = await Effect.runPromise(
+    Effect.tryPromise({
+      try: () => interpretFreeTextConfig(parsed.data.request),
+      catch: (cause) => new ExternalError({ message: "Free-text configuration failed", cause }),
+    }).pipe(
+      Effect.tapError((error) => Effect.sync(() => console.error(error.message, error.cause))),
+      Effect.mapError(
+        () =>
+          new HTTPError({
+            statusCode: 502,
+            statusMessage: "AI interpretation failed",
+            data: { error: "Could not interpret that request. Try again or use the manual form." },
+          }),
+      ),
+    ),
+  );
 
   event.res.headers.set("Cache-Control", "no-store");
   return result;

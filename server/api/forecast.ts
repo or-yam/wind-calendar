@@ -1,18 +1,16 @@
 import { defineHandler, HTTPError } from "nitro";
 import { getQuery } from "nitro/h3";
+import { Effect } from "effect";
 
-import type { CalendarConfig } from "../../shared/types";
 import type {
   HourlyCondition,
   ForecastSession,
   ForecastResponse,
 } from "../../shared/forecast-types";
-import { parseQueryParams } from "../config";
 import { degreesToCardinal } from "../utils/groupSessions";
 import { checkRateLimit } from "../utils/rate-limit";
-import { isDev, getClientIp } from "../utils/api-handler";
+import { isDev, getClientIp, parseConfig, toHttpError } from "../utils/api-handler";
 import { buildLocationSessions, type LocationSession } from "../utils/location-sessions";
-import { queryToSearchParams } from "../utils/query-params.js";
 import type { WindConditionRaw } from "../types/wind-conditions";
 
 function serializeCondition(c: WindConditionRaw): HourlyCondition {
@@ -75,28 +73,13 @@ export default defineHandler(async (event) => {
     });
   }
 
-  let config: CalendarConfig;
-  try {
-    const searchParams = queryToSearchParams(getQuery(event));
-    config = parseQueryParams(searchParams);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new HTTPError({
-      statusCode: 400,
-      statusMessage: "Bad Request",
-      data: { error: message },
-    });
-  }
+  const program = Effect.gen(function* () {
+    const config = yield* parseConfig(getQuery(event));
+    const result = yield* buildLocationSessions(config, dev);
+    return { config, result };
+  }).pipe(Effect.mapError(toHttpError));
 
-  const result = await buildLocationSessions(config, dev);
-
-  if (result.success === false) {
-    throw new HTTPError({
-      statusCode: result.status,
-      statusMessage: result.body.error,
-      data: result.body,
-    });
-  }
+  const { config, result } = await Effect.runPromise(program);
 
   const { sessions, dataSources, fallbackUsed } = result;
   const dataSource = [...new Set(Object.values(dataSources))].join(",");

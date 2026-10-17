@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { Effect } from "effect";
 import { getForecast } from "../../server/windguru/forecast";
 import type { SpotInfo, ModelForecast } from "../../server/types/forecast";
 
@@ -113,7 +114,7 @@ describe("getForecast", () => {
         throw new Error(`Unexpected URL: ${url}`);
       };
 
-      const result = await getForecast("771", 1);
+      const result = await Effect.runPromise(getForecast("771", 1));
       expect(result.id_model).toBe(1);
       expect("source_models" in result).toBe(false);
     } finally {
@@ -136,7 +137,9 @@ describe("getForecast", () => {
         throw new Error(`Unexpected URL: ${url}`);
       };
 
-      await expect(() => getForecast("771", 999)).rejects.toThrow(/Model 999 not available/);
+      await expect(Effect.runPromise(getForecast("771", 999))).rejects.toThrow(
+        /Model 999 not available/,
+      );
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -187,7 +190,9 @@ describe("getForecast", () => {
         return new Response("Error", { status: 500 });
       };
 
-      await expect(() => getForecast("771", 1)).rejects.toThrow(/Failed to fetch model 1/);
+      await expect(Effect.runPromise(getForecast("771", 1))).rejects.toThrow(
+        /Failed to fetch model 1/,
+      );
     } finally {
       globalThis.fetch = originalFetch;
     }

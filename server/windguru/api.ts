@@ -1,20 +1,29 @@
+import { Effect, Option } from "effect";
 import type { APIRoot } from "../types/api-response";
-import type { WindConditionRaw } from "../types/wind-conditions";
-import { tryCatch } from "../utils/try-catch";
+import type { ProviderWindData, WindConditionRaw } from "../types/wind-conditions";
+import { ProviderDataError, type ProviderError } from "../errors";
 import { getForecast } from "./forecast";
 
-type Forecast = Awaited<ReturnType<typeof getForecast>>;
+const WAVE_MODEL_ID = 84;
+const GFS_MODEL_ID = 3;
 
 const TIME_RGX = /^\d{2}:\d{2}$/;
 
-function validateTimeString(value: unknown, label: string): string {
+function validateTimeString(
+  value: unknown,
+  label: string,
+): Effect.Effect<string, ProviderDataError> {
   if (typeof value !== "string" || !TIME_RGX.test(value)) {
-    throw new Error(`Invalid ${label} value from Windguru: ${JSON.stringify(value)}`);
+    return Effect.fail(
+      new ProviderDataError({
+        message: `Invalid ${label} value from Windguru: ${JSON.stringify(value)}`,
+      }),
+    );
   }
-  return value;
+  return Effect.succeed(value);
 }
 
-function extractWindData(forecast: Forecast, spotId: string): WindConditionRaw[] {
+function extractWindData(forecast: APIRoot, spotId: string): WindConditionRaw[] {
   const fcst = forecast.fcst;
 
   if (!fcst?.WINDSPD) {
@@ -31,7 +40,7 @@ function extractWindData(forecast: Forecast, spotId: string): WindConditionRaw[]
     const timestamp = initstamp + fcst.hours[i] * 3600;
     const date = new Date(timestamp * 1000);
 
-    const windCondition: WindConditionRaw = {
+    windData.push({
       date,
       windSpeed: fcst.WINDSPD[i] ?? null,
       windGusts: fcst.GUST?.[i] ?? null,
@@ -42,16 +51,14 @@ function extractWindData(forecast: Forecast, spotId: string): WindConditionRaw[]
       swellHeight: null,
       swellPeriod: null,
       swellDirection: null,
-    };
-
-    windData.push(windCondition);
+    });
   }
 
   return windData;
 }
 
 /** Merges wave height data into wind data in place. */
-function mergeWaveData(windData: WindConditionRaw[], waveForecast: Forecast): void {
+function mergeWaveData(windData: WindConditionRaw[], waveForecast: APIRoot): void {
   const waveFcst = waveForecast.fcst as APIRoot["fcst"] & { HTSGW?: number[] };
   if (!waveFcst?.HTSGW) return;
 
@@ -75,58 +82,54 @@ function mergeWaveData(windData: WindConditionRaw[], waveForecast: Forecast): vo
   }
 }
 
-export async function fetchWindData(
+/** Fetch the wind model, falling back to GFS (model 3) if a different model fails. */
+function fetchWithGfsFallback(
   locationCode: string,
   modelId: number,
-): Promise<{
-  windData: WindConditionRaw[];
-  sunrise: string;
-  sunset: string;
-}> {
-  // Fetch wind and wave models independently — wave failure is non-fatal
-  const [windResult, waveResult] = await Promise.all([
-    tryCatch(getForecast(locationCode, modelId)),
-    tryCatch(getForecast(locationCode, 84)),
-  ]);
+): Effect.Effect<APIRoot, ProviderError> {
+  const primary = getForecast(locationCode, modelId);
 
-  if (windResult.error) {
-    // Try to fallback to GFS (model 3) if a different model was requested
-    if (modelId !== 3) {
-      console.error(
-        `Model ${modelId} fetch failed for spot ${locationCode}, falling back to GFS (model 3): ${windResult.error.message}`,
-      );
-      const fallbackResult = await tryCatch(getForecast(locationCode, 3));
-      if (fallbackResult.error) {
-        throw fallbackResult.error; // Both failed, propagate fallback error
-      }
-      // Use fallback data
-      const sunrise = validateTimeString(fallbackResult.data.sunrise, "sunrise");
-      const sunset = validateTimeString(fallbackResult.data.sunset, "sunset");
-      const windData = extractWindData(fallbackResult.data, locationCode);
-      if (waveResult.error) {
-        console.error(
-          `Wave model fetch failed for spot ${locationCode} (non-fatal): ${waveResult.error.message}`,
+  if (modelId === GFS_MODEL_ID) return primary;
+
+  return primary.pipe(
+    Effect.catch((error) =>
+      Effect.gen(function* () {
+        yield* Effect.logError(
+          `Model ${modelId} fetch failed for spot ${locationCode}, falling back to GFS (model ${GFS_MODEL_ID}): ${error.message}`,
         );
-      } else {
-        mergeWaveData(windData, waveResult.data);
-      }
-      return { windData, sunrise, sunset };
+        return yield* getForecast(locationCode, GFS_MODEL_ID);
+      }),
+    ),
+  );
+}
+
+export function fetchWindData(
+  locationCode: string,
+  modelId: number,
+): Effect.Effect<ProviderWindData, ProviderError> {
+  const wind = fetchWithGfsFallback(locationCode, modelId);
+  const wave = getForecast(locationCode, WAVE_MODEL_ID).pipe(
+    Effect.tapError((error) =>
+      Effect.logError(
+        `Wave model fetch failed for spot ${locationCode} (non-fatal): ${error.message}`,
+      ),
+    ),
+    Effect.option,
+  );
+
+  return Effect.gen(function* () {
+    const [windForecast, waveForecast] = yield* Effect.all([wind, wave], {
+      concurrency: "unbounded",
+    });
+
+    const sunrise = yield* validateTimeString(windForecast.sunrise, "sunrise");
+    const sunset = yield* validateTimeString(windForecast.sunset, "sunset");
+    const windData = extractWindData(windForecast, locationCode);
+
+    if (Option.isSome(waveForecast)) {
+      mergeWaveData(windData, waveForecast.value);
     }
-    throw windResult.error; // GFS itself failed — propagate original error
-  }
 
-  const sunrise = validateTimeString(windResult.data.sunrise, "sunrise");
-  const sunset = validateTimeString(windResult.data.sunset, "sunset");
-
-  const windData = extractWindData(windResult.data, locationCode);
-
-  if (waveResult.error) {
-    console.error(
-      `Wave model fetch failed for spot ${locationCode} (non-fatal): ${waveResult.error.message}`,
-    );
-  } else {
-    mergeWaveData(windData, waveResult.data);
-  }
-
-  return { windData, sunrise, sunset };
+    return { windData, sunrise, sunset };
+  });
 }
