@@ -1,18 +1,21 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
+import { Effect, Option } from "effect";
+import type { ProviderWindData, WindConditionRaw } from "../types/wind-conditions";
+import { ProviderDataError, type ProviderError } from "../errors";
 import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
 import { fetchForecast, fetchMarine } from "./fetch";
-import { tryCatch } from "../utils/try-catch";
 
 /**
  * Parse ISO 8601 timestamp to "HH:MM" string.
  * Example: "2026-03-03T06:15" → "06:15"
  */
-function extractTime(isoTimestamp: string): string {
+function extractTime(isoTimestamp: string): Effect.Effect<string, ProviderDataError> {
   const match = isoTimestamp.match(/T(\d{2}:\d{2})/);
   if (!match) {
-    throw new Error(`Invalid ISO timestamp format: ${isoTimestamp}`);
+    return Effect.fail(
+      new ProviderDataError({ message: `Invalid ISO timestamp format: ${isoTimestamp}` }),
+    );
   }
-  return match[1];
+  return Effect.succeed(match[1]);
 }
 
 /**
@@ -39,11 +42,15 @@ function parseOpenMeteoTimestamp(isoString: string, utcOffsetSeconds: number): D
 /**
  * Convert Open-Meteo forecast response to WindConditionRaw[].
  */
-function extractWindData(forecast: OpenMeteoForecastResponse): WindConditionRaw[] {
+function extractWindData(
+  forecast: OpenMeteoForecastResponse,
+): Effect.Effect<WindConditionRaw[], ProviderDataError> {
   const { time, wind_speed_10m, wind_direction_10m, wind_gusts_10m } = forecast.hourly;
 
   if (!time || !wind_speed_10m) {
-    throw new Error("Missing required forecast data (time or wind_speed_10m)");
+    return Effect.fail(
+      new ProviderDataError({ message: "Missing required forecast data (time or wind_speed_10m)" }),
+    );
   }
 
   const utcOffset = forecast.utc_offset_seconds;
@@ -64,7 +71,7 @@ function extractWindData(forecast: OpenMeteoForecastResponse): WindConditionRaw[
     });
   }
 
-  return windData;
+  return Effect.succeed(windData);
 }
 
 type MarineDataPoint = {
@@ -133,47 +140,39 @@ function mergeWaveData(
  * @param tz Timezone (e.g. "Asia/Jerusalem")
  * @returns Wind data + sunrise/sunset in "HH:MM" format
  */
-export async function fetchOpenMeteoData(
+export function fetchOpenMeteoData(
   lat: number,
   lon: number,
   model: string,
   tz: string,
-): Promise<{
-  windData: WindConditionRaw[];
-  sunrise: string;
-  sunset: string;
-}> {
+): Effect.Effect<ProviderWindData, ProviderError> {
   // Fetch wind and wave models in parallel — wave failure is non-fatal
-  const [windResult, waveResult] = await Promise.all([
-    tryCatch(fetchForecast(lat, lon, model, tz)),
-    tryCatch(fetchMarine(lat, lon, tz)),
-  ]);
+  const wind = fetchForecast(lat, lon, model, tz);
+  const wave = fetchMarine(lat, lon, tz).pipe(
+    Effect.tapError((error) =>
+      Effect.logError(`Wave data fetch failed for ${lat},${lon} (non-fatal): ${error.message}`),
+    ),
+    Effect.option,
+  );
 
-  if (windResult.error) {
-    throw windResult.error;
-  }
+  return Effect.gen(function* () {
+    const [forecast, waveResult] = yield* Effect.all([wind, wave], { concurrency: "unbounded" });
 
-  const forecast = windResult.data;
+    // Extract sunrise/sunset from daily data
+    if (!forecast.daily?.sunrise?.[0] || !forecast.daily?.sunset?.[0]) {
+      return yield* new ProviderDataError({
+        message: "Missing sunrise/sunset data in forecast response",
+      });
+    }
 
-  // Extract sunrise/sunset from daily data
-  if (!forecast.daily?.sunrise?.[0] || !forecast.daily?.sunset?.[0]) {
-    throw new Error("Missing sunrise/sunset data in forecast response");
-  }
+    const sunrise = yield* extractTime(forecast.daily.sunrise[0]);
+    const sunset = yield* extractTime(forecast.daily.sunset[0]);
+    const windData = yield* extractWindData(forecast);
 
-  const sunrise = extractTime(forecast.daily.sunrise[0]);
-  const sunset = extractTime(forecast.daily.sunset[0]);
+    if (Option.isSome(waveResult)) {
+      mergeWaveData(windData, waveResult.value);
+    }
 
-  // Convert forecast to WindConditionRaw[]
-  const windData = extractWindData(forecast);
-
-  // Merge wave data if available
-  if (waveResult.error) {
-    console.error(
-      `Wave data fetch failed for ${lat},${lon} (non-fatal): ${waveResult.error.message}`,
-    );
-  } else {
-    mergeWaveData(windData, waveResult.data);
-  }
-
-  return { windData, sunrise, sunset };
+    return { windData, sunrise, sunset };
+  });
 }

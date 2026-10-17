@@ -1,38 +1,47 @@
-import { fetchSpotInfo, fetchModelForecast, ApiError } from "./fetch";
-import { tryCatch } from "../utils/try-catch";
+import { Effect } from "effect";
+import type { APIRoot } from "../types/api-response";
+import { ProviderDataError, type ProviderError } from "../errors";
+import { fetchSpotInfo, fetchModelForecast } from "./fetch";
 
-export async function getForecast(spotId: string, modelId: number) {
-  const { data: spotInfo, error: spotError } = await tryCatch(fetchSpotInfo(spotId));
+export function getForecast(
+  spotId: string,
+  modelId: number,
+): Effect.Effect<APIRoot, ProviderError> {
+  return Effect.gen(function* () {
+    const spotInfo = yield* fetchSpotInfo(spotId);
 
-  if (spotError) {
-    if (spotError instanceof ApiError) throw spotError;
-    throw new Error(`Failed to get spot info for ${spotId}: ${spotError.message}`);
-  }
+    const models = spotInfo.spots[spotId]?.models;
 
-  const models = spotInfo.spots[spotId].models;
+    if (!models?.length) {
+      return yield* new ProviderDataError({
+        message: `No forecast models available for spot ${spotId}`,
+      });
+    }
 
-  if (!models?.length) {
-    throw new Error(`No forecast models available for spot ${spotId}`);
-  }
+    if (!models.some((m) => m === modelId)) {
+      return yield* new ProviderDataError({
+        message: `Model ${modelId} not available for spot ${spotId}`,
+      });
+    }
 
-  if (!models.some((m) => m === modelId)) {
-    throw new Error(`Model ${modelId} not available for spot ${spotId}`);
-  }
+    // Find the tab that contains the model information
+    const modelInfo = spotInfo.tabs
+      .flatMap((tab) => tab.id_model_arr)
+      .find((info) => info.id_model === modelId);
 
-  // Find the tab that contains the model information
-  const modelInfo = spotInfo.tabs
-    .flatMap((tab) => tab.id_model_arr)
-    .find((info) => info.id_model === modelId);
+    if (!modelInfo) {
+      return yield* new ProviderDataError({
+        message: `Model info not found for model ${modelId} in spot ${spotId}`,
+      });
+    }
 
-  if (!modelInfo) {
-    throw new Error(`Model info not found for model ${modelId} in spot ${spotId}`);
-  }
-
-  const { data, error } = await tryCatch(fetchModelForecast(spotId, modelId, modelInfo.rundef));
-
-  if (error) {
-    throw new Error(`Failed to fetch model ${modelId} for spot ${spotId}: ${error.message}`);
-  }
-
-  return data;
+    return yield* fetchModelForecast(spotId, modelId, modelInfo.rundef).pipe(
+      Effect.mapError(
+        (error) =>
+          new ProviderDataError({
+            message: `Failed to fetch model ${modelId} for spot ${spotId}: ${error.message}`,
+          }),
+      ),
+    );
+  });
 }

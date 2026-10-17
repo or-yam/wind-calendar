@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Effect } from "effect";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockSpotInfo, mockAPIRoot, mockWindData } from "../../helpers/windguru-mocks";
 
@@ -39,9 +40,8 @@ vi.mock("../../../server/utils/api-handler", async () => {
   const actual = await vi.importActual("../../../server/utils/api-handler");
   return {
     ...actual,
-    resolveForecastData: vi.fn().mockImplementation(async () => {
-      return {
-        success: true,
+    resolveForecastData: vi.fn().mockImplementation(() =>
+      Effect.succeed({
         fetchResult: {
           windData: mockWindData.fcst.WINDSPD.map((windSpeed, i) => ({
             date: new Date(
@@ -62,8 +62,8 @@ vi.mock("../../../server/utils/api-handler", async () => {
         },
         dataSource: "windguru",
         fallbackUsed: false,
-      };
-    }),
+      }),
+    ),
   };
 });
 

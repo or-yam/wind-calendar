@@ -1,3 +1,9 @@
+export interface ProviderWindData {
+  windData: WindConditionRaw[];
+  sunrise: string;
+  sunset: string;
+}
+
 export type WindConditionRaw = {
   date: Date;
   windSpeed: number | null;
