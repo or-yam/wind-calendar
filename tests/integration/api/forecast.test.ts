@@ -131,6 +131,15 @@ describe("forecast API handler", () => {
     expect(body.meta.locations).toEqual(["beit-yanai", "tel-aviv"]);
   });
 
+  it("normalizes mixed repeated/CSV locations in metadata order", async () => {
+    const res = await callHandler(
+      handler,
+      "/api/forecast?locations=tel-aviv,herzliya&locations=tel-aviv,beit-yanai",
+    );
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).meta.locations).toEqual(["tel-aviv", "herzliya", "beit-yanai"]);
+  });
+
   it("sessions contain wind and wave data", async () => {
     const res = await callHandler(handler, "/api/forecast");
 

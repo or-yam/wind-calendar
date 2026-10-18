@@ -128,6 +128,17 @@ describe("calendar API handler", () => {
     expect(res.headers["content-disposition"]).toContain("wind-forecast-beit-yanai-tel-aviv.ics");
   });
 
+  it("normalizes mixed repeated/CSV locations in filename order", async () => {
+    const res = await callHandler(
+      handler,
+      "/api/calendar?locations=tel-aviv,herzliya&locations=tel-aviv,beit-yanai",
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-disposition"]).toContain(
+      "wind-forecast-tel-aviv-herzliya-beit-yanai.ics",
+    );
+  });
+
   it("wave model failure is non-fatal — still returns ICS", async () => {
     const res = await callHandler(handler, "/api/calendar");
 
