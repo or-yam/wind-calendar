@@ -41,7 +41,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       effect:
-        specifier: 4.0.5
+        specifier: ^4.0.5
         version: 4.0.5
       ics:
         specifier: ^3.12.1
