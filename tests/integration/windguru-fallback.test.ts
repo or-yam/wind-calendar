@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import type { SpotInfo } from "../../server/types/forecast";
 import { fetchWindData } from "../../server/windguru/api";
 import { buildMockAPIRoot, goodWindSpeeds, realisticHours } from "../helpers/windguru-mocks";
+import { captureLogs } from "../helpers/capture-logs";
 
 function buildSpotInfo(models: number[]): SpotInfo {
   return {
@@ -109,24 +110,38 @@ describe("fetchWindData", () => {
   });
 
   it("falls back to GFS (model 3) when the primary model fails", async () => {
+    const { log, layer } = captureLogs();
     installFetchMock({
       1: new Response("upstream down", { status: 500, statusText: "Internal Server Error" }),
     });
 
-    const result = await Effect.runPromise(fetchWindData("771", 1));
+    const result = await Effect.runPromise(fetchWindData("771", 1).pipe(Effect.provide(layer)));
 
     expect(result.windData).toHaveLength(goodWindSpeeds.length);
+    expect(log).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        logLevel: "Error",
+        message: [expect.stringContaining("falling back to GFS (model 3)")],
+      }),
+    );
   });
 
   it("treats a wave model failure as non-fatal", async () => {
+    const { log, layer } = captureLogs();
     installFetchMock({
       84: new Response("wave down", { status: 500, statusText: "Internal Server Error" }),
     });
 
-    const result = await Effect.runPromise(fetchWindData("771", 3));
+    const result = await Effect.runPromise(fetchWindData("771", 3).pipe(Effect.provide(layer)));
 
     expect(result.windData).toHaveLength(goodWindSpeeds.length);
     expect(result.windData.every((condition) => condition.waveHeight === null)).toBe(true);
+    expect(log).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        logLevel: "Error",
+        message: [expect.stringContaining("Wave model fetch failed for spot 771 (non-fatal)")],
+      }),
+    );
   });
 
   it("merges wave data when the wave model succeeds", async () => {
@@ -136,13 +151,20 @@ describe("fetchWindData", () => {
   });
 
   it("surfaces the fallback error when both the primary and GFS models fail", async () => {
+    const { log, layer } = captureLogs();
     installFetchMock({
       1: new Response("primary down", { status: 500, statusText: "Internal Server Error" }),
       3: new Response("gfs down", { status: 500, statusText: "Internal Server Error" }),
     });
 
-    await expect(Effect.runPromise(fetchWindData("771", 1))).rejects.toThrow(
-      /API request failed: 500/,
+    await expect(
+      Effect.runPromise(fetchWindData("771", 1).pipe(Effect.provide(layer))),
+    ).rejects.toThrow(/API request failed: 500/);
+    expect(log).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        logLevel: "Error",
+        message: [expect.stringContaining("falling back to GFS (model 3)")],
+      }),
     );
   });
 

@@ -43,7 +43,7 @@ function floatParam(key: string) {
     ),
   ).pipe(
     Schema.decodeTo(
-      Schema.Number,
+      Schema.Finite.annotate({ message: `${key} must be finite` }),
       SchemaTransformation.transform({ decode: parseFloat, encode: String }),
     ),
   );
@@ -69,7 +69,7 @@ export const ModelSchema = Schema.String.check(
   ),
 ).pipe(
   Schema.decodeTo(
-    Schema.Union([Schema.String, Schema.Number]),
+    Schema.Union([Schema.String, Schema.Finite]),
     SchemaTransformation.transform({ decode: parseModel, encode: String }),
   ),
   Schema.decodeTo(ModelIdSchema),

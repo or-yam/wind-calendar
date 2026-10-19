@@ -41,10 +41,9 @@ export function providerFetch(
 
 /** Read a response body, falling back to a placeholder when it cannot be read. */
 export function providerBodyText(response: Response): Effect.Effect<string> {
-  return Effect.tryPromise({
-    try: () => response.text(),
-    catch: () => new Error("response body unavailable"),
-  }).pipe(Effect.orElseSucceed(() => "<response body unavailable>"));
+  return Effect.tryPromise(() => response.text()).pipe(
+    Effect.orElseSucceed(() => "<response body unavailable>"),
+  );
 }
 
 export function providerJson<T>(

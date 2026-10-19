@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { fetchOpenMeteoData } from "../../../server/open-meteo/forecast";
+import { captureLogs } from "../../helpers/capture-logs";
 import type {
   OpenMeteoForecastResponse,
   OpenMeteoMarineResponse,
@@ -143,6 +144,7 @@ describe("fetchOpenMeteoData", () => {
   });
 
   it("handles wave data fetch failure gracefully", async () => {
+    const { log, layer } = captureLogs();
     installFetchMock((url) => {
       if (url.hostname === "marine-api.open-meteo.com") {
         return new Response("Marine API error", { status: 500 });
@@ -151,7 +153,7 @@ describe("fetchOpenMeteoData", () => {
     });
 
     const result = await Effect.runPromise(
-      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem").pipe(Effect.provide(layer)),
     );
 
     expect(result.windData).toHaveLength(5);
@@ -160,6 +162,12 @@ describe("fetchOpenMeteoData", () => {
 
     // Wave data should be null when marine API fails
     expect(result.windData[0].waveHeight).toBeNull();
+    expect(log).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        logLevel: "Error",
+        message: [expect.stringContaining("Wave data fetch failed for 32.08,34.78 (non-fatal)")],
+      }),
+    );
   });
 
   it("throws when wind forecast API fails", async () => {

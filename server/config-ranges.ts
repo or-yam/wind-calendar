@@ -1,10 +1,10 @@
 import { Schema } from "effect";
 
 export const WindRangeSchema = Schema.Struct({
-  windMin: Schema.Number.check(
+  windMin: Schema.Finite.check(
     Schema.isGreaterThanOrEqualTo(0, { message: "windMin must be >= 0" }),
   ),
-  windMax: Schema.Number.check(
+  windMax: Schema.Finite.check(
     Schema.isLessThanOrEqualTo(200, { message: "windMax must be <= 200" }),
   ),
 }).check(
@@ -14,10 +14,10 @@ export const WindRangeSchema = Schema.Struct({
 );
 
 export const WaveHeightRangeSchema = Schema.Struct({
-  waveHeightMin: Schema.Number.check(
+  waveHeightMin: Schema.Finite.check(
     Schema.isGreaterThanOrEqualTo(0, { message: "waveHeightMin must be >= 0" }),
   ),
-  waveHeightMax: Schema.Number.check(
+  waveHeightMax: Schema.Finite.check(
     Schema.isLessThanOrEqualTo(20, { message: "waveHeightMax must be <= 20" }),
   ),
 }).check(
@@ -27,6 +27,6 @@ export const WaveHeightRangeSchema = Schema.Struct({
   ),
 );
 
-export const WavePeriodSchema = Schema.Number.check(
+export const WavePeriodSchema = Schema.Finite.check(
   Schema.isGreaterThanOrEqualTo(0, { message: "wavePeriodMin must be >= 0" }),
 );

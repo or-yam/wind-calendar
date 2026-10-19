@@ -4,6 +4,13 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const domTests = [
+  "tests/unit/components/**/*.test.{ts,tsx}",
+  "tests/unit/hooks/**/*.test.{ts,tsx}",
+  "tests/unit/App.test.ts",
+  "tests/integration/*.test.tsx",
+];
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -13,7 +20,21 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: "jsdom",
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["tests/**/*.test.{ts,tsx}"],
+          exclude: domTests,
+        },
+      },
+      {
+        extends: true,
+        test: { name: "dom", environment: "jsdom", include: domTests },
+      },
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
