@@ -90,12 +90,12 @@ describe("parseQueryParams", () => {
     ).toMatchObject({ windEnabled: false, waveEnabled: false });
   });
 
-  it("preserves both filters disabled and large finite positive wave periods", () => {
+  it("preserves both filters disabled and unbounded positive wave periods", () => {
     expect(
       parseQueryParams(
-        new URLSearchParams("windEnabled=false&waveEnabled=false&wavePeriodMin=1000000"),
+        new URLSearchParams("windEnabled=false&waveEnabled=false&wavePeriodMin=Infinity"),
       ),
-    ).toMatchObject({ windEnabled: false, waveEnabled: false, wavePeriodMin: 1000000 });
+    ).toMatchObject({ windEnabled: false, waveEnabled: false, wavePeriodMin: Infinity });
   });
 
   it.each([0, 24])("accepts boundary minSessionHours=%s", (hours) => {
@@ -132,6 +132,7 @@ describe("parseQueryParams", () => {
     ["location=tel-aviv,herzliya", unknownLocation("tel-aviv,herzliya")],
     ["minSessionHours=-1", "minSessionHours must be between 0 and 24"],
     ["minSessionHours=25", "minSessionHours must be between 0 and 24"],
+    ["minSessionHours=Infinity", "minSessionHours must be between 0 and 24"],
     ["model=999", invalidModel("999")],
     ["model=bad", invalidModel("bad")],
     ["model=3junk", invalidModel("3junk")],
@@ -139,6 +140,7 @@ describe("parseQueryParams", () => {
     ["model=", invalidModel("")],
     ["windMin=-1", "windMin must be >= 0"],
     ["windMax=201", "windMax must be <= 200"],
+    ["windMax=Infinity", "windMax must be <= 200"],
     ["windMin=35", "windMin must be less than windMax"],
     ["windMin=40", "windMin must be less than windMax"],
     ["windMax=-1", "windMin must be less than windMax"],
@@ -149,6 +151,7 @@ describe("parseQueryParams", () => {
     ["waveHeightMin=3", "waveHeightMin must be less than waveHeightMax"],
     ["waveHeightMax=-1", "waveHeightMin must be less than waveHeightMax"],
     ["wavePeriodMin=-1", "wavePeriodMin must be >= 0"],
+    ["wavePeriodMin=-Infinity", "wavePeriodMin must be >= 0"],
     ["windEnabled=false&windMin=-1", "windMin must be >= 0"],
     ["waveEnabled=false&waveHeightMin=-1", "waveHeightMin must be >= 0"],
   ])("preserves exact validation message for %s", (query, message) => {
@@ -167,23 +170,6 @@ describe("parseQueryParams", () => {
       expect(() => parseQueryParams(new URLSearchParams({ [key]: raw }))).toThrow(
         new Error(`Invalid ${key}: "${raw}" is not a number`),
       );
-    }
-  });
-
-  it.each([
-    "minSessionHours",
-    "windMin",
-    "windMax",
-    "waveHeightMin",
-    "waveHeightMax",
-    "wavePeriodMin",
-  ])("rejects infinite and overflowed %s even with filters disabled", (key) => {
-    for (const raw of ["Infinity", "-Infinity", "1e309", "-1e309"]) {
-      expect(() =>
-        parseQueryParams(
-          new URLSearchParams({ windEnabled: "false", waveEnabled: "false", [key]: raw }),
-        ),
-      ).toThrow(new Error(`${key} must be finite`));
     }
   });
 

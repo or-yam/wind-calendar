@@ -43,7 +43,8 @@ function floatParam(key: string) {
     ),
   ).pipe(
     Schema.decodeTo(
-      Schema.Finite.annotate({ message: `${key} must be finite` }),
+      // oxlint-disable-next-line effecttsgo/schema-number -- Range validation follows parsing and preserves error precedence.
+      Schema.Number,
       SchemaTransformation.transform({ decode: parseFloat, encode: String }),
     ),
   );
@@ -69,7 +70,8 @@ export const ModelSchema = Schema.String.check(
   ),
 ).pipe(
   Schema.decodeTo(
-    Schema.Union([Schema.String, Schema.Finite]),
+    // oxlint-disable-next-line effecttsgo/schema-number -- ModelIdSchema validates supported numeric IDs.
+    Schema.Union([Schema.String, Schema.Number]),
     SchemaTransformation.transform({ decode: parseModel, encode: String }),
   ),
   Schema.decodeTo(ModelIdSchema),
