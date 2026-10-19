@@ -7,16 +7,17 @@
     "dev": "portless run --name wind-calendar vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "lint:ci": "oxlint --format=github",
+    "lint": "oxlint && pnpm run lint:effect",
+    "lint:fix": "oxlint --fix && pnpm run lint:effect --fix",
+    "lint:ci": "oxlint --format=github && pnpm run lint:effect --format=github",
+    "lint:effect": "oxlint --config .oxlintrc.effect.json --disable-nested-config server tests",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check": "pnpm run fmt:check && pnpm run lint && tsc -b && vitest run",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky && effect-tsgo patch --typescript --oxlint"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.83",
@@ -40,6 +41,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@effect/tsgo": "0.53.4",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -51,6 +53,7 @@
     "lint-staged": "^17.6.0",
     "oxfmt": "^0.67.0",
     "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "7.0.2004",
     "portless": "^0.15.7",
     "typescript": "~7.0.2",
     "vercel": "^58.11.0",
