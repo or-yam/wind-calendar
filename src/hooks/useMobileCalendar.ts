@@ -4,7 +4,11 @@ const query = "(max-width: 767px)";
 function subscribe(onChange: () => void) {
   const media = window.matchMedia?.(query);
   media?.addEventListener("change", onChange);
-  return () => media?.removeEventListener("change", onChange);
+  window.addEventListener("resize", onChange);
+  return () => {
+    media?.removeEventListener("change", onChange);
+    window.removeEventListener("resize", onChange);
+  };
 }
 
 export function useMobileCalendar() {

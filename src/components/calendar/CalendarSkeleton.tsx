@@ -20,13 +20,16 @@ export function CalendarSkeleton({ dayCount }: { dayCount: number }) {
               <Skeleton className="h-8 w-8" />
             </div>
             <div
-              className="relative h-[840px]"
+              className="relative h-[504px]"
               style={{
                 backgroundImage:
-                  "repeating-linear-gradient(to bottom, transparent 0, transparent 59px, var(--border) 59px, var(--border) 60px)",
+                  "repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--border) 35px, var(--border) 36px)",
               }}
             >
-              <Skeleton className="absolute inset-x-1 h-36" style={{ top: 120 + (i % 3) * 60 }} />
+              <Skeleton
+                className="absolute inset-x-1 h-[108px]"
+                style={{ top: 72 + (i % 3) * 36 }}
+              />
             </div>
           </div>
         ))}

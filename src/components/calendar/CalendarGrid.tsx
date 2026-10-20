@@ -1,107 +1,67 @@
+import { useId, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
-import { sameDay } from "@/lib/date-utils";
-import { cn } from "@/lib/utils";
-import { SessionEvent } from "./SessionEvent";
+import { addDays } from "@/lib/date-utils";
+import { DayColumn } from "./DayColumn";
+import { HourScale } from "./HourScale";
+import { SessionDetails } from "./SessionDetails";
+import { intersects, weekHours } from "./sessionSegments";
+import { sessionKey } from "./overlapLanes";
 
-export function dayLabel(day: Date) {
-  return `${day.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} ${day.toLocaleDateString("en-US", { month: "short" })} ${day.getDate()}`;
-}
+const HOUR_HEIGHT = 36;
 
 export function CalendarGrid({
   days,
   sessions,
   today,
+  weekStart,
 }: {
   days: Date[];
   sessions: ForecastSession[];
   today: Date;
+  weekStart: Date;
 }) {
-  const startHour = 6;
-  const endHour = 20;
-  const hourHeight = 60;
+  const { startHour, endHour } = weekHours(sessions, weekStart);
+  const detailsId = useId();
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const selected = sessions.find(
+    (session) =>
+      sessionKey(session) === selectedKey &&
+      days.some((day) => intersects(session, day, addDays(day, 1))),
+  );
+  if (selectedKey !== null && !selected) setSelectedKey(null);
+  const close = () => {
+    setSelectedKey(null);
+    if (trigger.current?.isConnected) trigger.current.focus({ preventScroll: true });
+  };
   return (
-    <div
-      role="region"
-      aria-label="Weekly forecast calendar"
-      className="grid overflow-hidden rounded border border-border bg-card"
-      style={{ gridTemplateColumns: `40px repeat(${days.length}, minmax(0, 1fr))` }}
-    >
-      <div className="relative mt-16 text-xs tabular-nums text-muted-foreground" aria-label="Hours">
-        {Array.from({ length: endHour - startHour + 1 }, (_, index) => (
-          <span
-            key={index}
-            className="absolute right-1"
-            style={{
-              top: index * hourHeight,
-              transform: index === endHour - startHour ? "translateY(-100%)" : undefined,
+    <>
+      <div
+        role="region"
+        aria-label="Weekly forecast calendar"
+        className="grid overflow-hidden rounded border border-border bg-card"
+        style={{ gridTemplateColumns: `40px repeat(${days.length}, minmax(0, 1fr))` }}
+      >
+        <HourScale startHour={startHour} endHour={endHour} hourHeight={HOUR_HEIGHT} />
+        {days.map((day) => (
+          <DayColumn
+            key={day.toDateString()}
+            day={day}
+            sessions={sessions}
+            today={today}
+            startHour={startHour}
+            endHour={endHour}
+            hourHeight={HOUR_HEIGHT}
+            selectedKey={selectedKey}
+            detailsId={detailsId}
+            onActivate={(session, button) => {
+              trigger.current = button;
+              setSelectedKey(sessionKey(session));
             }}
-          >
-            {String(startHour + index).padStart(2, "0")}:00
-          </span>
+          />
         ))}
       </div>
-      {days.map((day) => {
-        const matches = sessions
-          .filter((s) => sameDay(new Date(s.start), day))
-          .sort(
-            (a, b) => a.start.localeCompare(b.start) || a.location.id.localeCompare(b.location.id),
-          );
-        const isToday = sameDay(day, today);
-        return (
-          <div
-            key={day.toDateString()}
-            role="group"
-            aria-label={`${dayLabel(day)}${matches.length ? "" : ": No sessions"}`}
-            data-today={isToday}
-            tabIndex={-1}
-            className={cn(
-              "min-w-0 border-l border-border outline-offset-[-2px]",
-              isToday && "bg-primary/5",
-            )}
-          >
-            <div className="flex h-16 flex-col items-center justify-center border-b border-border text-xs uppercase text-muted-foreground">
-              {day.toLocaleDateString("en-US", { weekday: "short" })}
-              <span
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full text-xl font-bold text-foreground",
-                  isToday && "bg-primary text-primary-foreground",
-                )}
-              >
-                {day.getDate()}
-              </span>
-            </div>
-            <div
-              className="relative"
-              style={{
-                height: (endHour - startHour) * hourHeight,
-                backgroundImage:
-                  "repeating-linear-gradient(to bottom, transparent 0, transparent 59px, var(--border) 59px, var(--border) 60px)",
-              }}
-            >
-              {!matches.length && (
-                <p className="absolute top-1/2 w-full text-center text-xs text-muted-foreground">
-                  No match
-                </p>
-              )}
-              {matches.map((session) => {
-                const start = new Date(session.start);
-                const end = new Date(session.end);
-                return (
-                  <SessionEvent
-                    key={`${session.location.id}-${session.start}-${session.end}-${session.matchType}`}
-                    session={session}
-                    dayLabel={dayLabel(day)}
-                    style={{
-                      top: (start.getHours() + start.getMinutes() / 60 - startHour) * hourHeight,
-                      height: ((end.getTime() - start.getTime()) / 3600000) * hourHeight,
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+      {selected && <SessionDetails session={selected} id={detailsId} onClose={close} />}
+    </>
   );
 }

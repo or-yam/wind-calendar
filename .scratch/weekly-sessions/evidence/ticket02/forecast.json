@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "location": "beit-yanai",
+    "locations": ["beit-yanai", "bat-galim", "herzliya"],
+    "model": "om_gfs",
+    "dataSource": "open-meteo",
+    "dataSources": {},
+    "generatedAt": "2026-10-20T08:00:00Z"
+  },
+  "sessions": [
+    {
+      "location": { "id": "bat-galim", "label": "Bat Galim" },
+      "start": "2026-10-19T11:00:00+03:00",
+      "end": "2026-10-19T15:00:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 18, "max": 24, "gustMax": 30, "direction": "W" },
+      "wave": { "avgHeight": 1.2, "avgPeriod": 8, "direction": "NW" },
+      "swell": { "avgHeight": 0.8, "avgPeriod": 7 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "bat-galim", "label": "Bat Galim" },
+      "start": "2026-10-23T11:00:00+03:00",
+      "end": "2026-10-23T15:00:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 18, "max": 24, "gustMax": 30, "direction": "W" },
+      "wave": { "avgHeight": 1.2, "avgPeriod": 8, "direction": "NW" },
+      "swell": { "avgHeight": 0.8, "avgPeriod": 7 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "beit-yanai", "label": "Beit Yanai" },
+      "start": "2026-10-23T11:00:00+03:00",
+      "end": "2026-10-23T16:00:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 16, "max": 21, "gustMax": 27, "direction": "NW" },
+      "wave": { "avgHeight": 0.8, "avgPeriod": 7, "direction": "W" },
+      "swell": { "avgHeight": 0.6, "avgPeriod": 6 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "herzliya", "label": "Herzliya" },
+      "start": "2026-10-23T12:00:00+03:00",
+      "end": "2026-10-23T13:00:00+03:00",
+      "matchType": "wave",
+      "wind": { "min": 9, "max": 9, "gustMax": 12, "direction": "N" },
+      "wave": { "avgHeight": 1.4, "avgPeriod": 9, "direction": "W" },
+      "swell": { "avgHeight": 1.1, "avgPeriod": 8 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "beit-yanai", "label": "Beit Yanai" },
+      "start": "2026-10-23T16:00:00+03:00",
+      "end": "2026-10-23T17:00:00+03:00",
+      "matchType": "wind",
+      "wind": { "min": 19, "max": 25, "gustMax": 31, "direction": "W" },
+      "wave": { "avgHeight": 0.7, "avgPeriod": 6, "direction": "NW" },
+      "swell": { "avgHeight": 0.5, "avgPeriod": 6 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "bat-galim", "label": "Bat Galim" },
+      "start": "2026-10-20T05:15:00+03:00",
+      "end": "2026-10-20T05:25:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 14, "max": 17, "gustMax": 21, "direction": "NNW" },
+      "wave": { "avgHeight": 0.6, "avgPeriod": 6, "direction": "NW" },
+      "swell": { "avgHeight": 0.5, "avgPeriod": 6 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "bat-galim", "label": "Bat Galim" },
+      "start": "2026-10-20T21:00:00+03:00",
+      "end": "2026-10-20T23:00:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 17, "max": 22, "gustMax": 28, "direction": "W" },
+      "wave": { "avgHeight": 1.0, "avgPeriod": 8, "direction": "NW" },
+      "swell": { "avgHeight": 0.8, "avgPeriod": 7 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "beit-yanai", "label": "Beit Yanai" },
+      "start": "2026-10-21T23:00:00+03:00",
+      "end": "2026-10-22T01:00:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 15, "max": 20, "gustMax": 26, "direction": "NW" },
+      "wave": { "avgHeight": 0.9, "avgPeriod": 7, "direction": "W" },
+      "swell": { "avgHeight": 0.7, "avgPeriod": 7 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "beit-yanai", "label": "Beit Yanai" },
+      "start": "2026-10-17T23:30:00+03:00",
+      "end": "2026-10-18T01:15:00+03:00",
+      "matchType": "both",
+      "wind": { "min": 16, "max": 21, "gustMax": 27, "direction": "W" },
+      "wave": { "avgHeight": 1.1, "avgPeriod": 8, "direction": "NW" },
+      "swell": { "avgHeight": 0.9, "avgPeriod": 7 },
+      "hourly": []
+    },
+    {
+      "location": { "id": "beit-yanai", "label": "Beit Yanai" },
+      "start": "2026-10-24T22:30:00+03:00",
+      "end": "2026-10-25T02:00:00+03:00",
+      "matchType": "wind",
+      "wind": { "min": 18, "max": 24, "gustMax": 30, "direction": "NW" },
+      "wave": { "avgHeight": 0.8, "avgPeriod": 7, "direction": "W" },
+      "swell": { "avgHeight": 0.6, "avgPeriod": 6 },
+      "hourly": []
+    }
+  ]
+}

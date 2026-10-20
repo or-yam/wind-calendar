@@ -1,10 +1,11 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
-import { addDays, formatWeekRange, sameDay } from "@/lib/date-utils";
+import { addDays, formatWeekRange } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { CalendarSkeleton } from "./calendar/CalendarSkeleton";
-import { CalendarGrid, dayLabel } from "./calendar/CalendarGrid";
-
+import { CalendarGrid } from "./calendar/CalendarGrid";
+import { dayLabel } from "./calendar/DayColumn";
+import { intersects } from "./calendar/sessionSegments";
 import { useMobileCalendar } from "@/hooks/useMobileCalendar";
 
 interface ForecastCalendarProps {
@@ -37,11 +38,9 @@ export function ForecastCalendar({
   const calendarRef = useRef<HTMLDivElement>(null);
   const focusToday = useRef(false);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekSessions = sessions.filter(
-    (s) => new Date(s.start) >= weekStart && new Date(s.start) < addDays(weekStart, 7),
-  );
+  const weekSessions = sessions.filter((s) => intersects(s, weekStart, addDays(weekStart, 7)));
   const visibleSessions = isMobile
-    ? weekSessions.filter((s) => sameDay(new Date(s.start), days[selectedDay]))
+    ? weekSessions.filter((s) => intersects(s, days[selectedDay], addDays(days[selectedDay], 1)))
     : weekSessions;
   useLayoutEffect(() => {
     if (!focusToday.current || isPending) return;
@@ -103,6 +102,7 @@ export function ForecastCalendar({
           <CalendarGrid
             days={isMobile ? [days[selectedDay]] : days}
             sessions={weekSessions}
+            weekStart={weekStart}
             today={today}
           />
         )}
