@@ -307,7 +307,7 @@ describe("ForecastCalendar", () => {
     );
   });
 
-  it("focuses today without horizontal scrolling when Today is clicked", async () => {
+  it("focuses today without scrolling the page when Today is clicked", async () => {
     const now = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay());

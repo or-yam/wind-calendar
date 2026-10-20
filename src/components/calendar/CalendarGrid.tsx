@@ -6,8 +6,10 @@ import { HourScale } from "./HourScale";
 import { SessionDetails } from "./SessionDetails";
 import { intersects, weekHours } from "./sessionSegments";
 import { sessionKey } from "./overlapLanes";
+import { useMobileCalendar } from "@/hooks/useMobileCalendar";
 
-const HOUR_HEIGHT = 36;
+const DESKTOP_HOUR_HEIGHT = 36;
+const MOBILE_HOUR_HEIGHT = 40;
 
 export function CalendarGrid({
   days,
@@ -20,6 +22,8 @@ export function CalendarGrid({
   today: Date;
   weekStart: Date;
 }) {
+  const isMobile = useMobileCalendar();
+  const hourHeight = isMobile ? MOBILE_HOUR_HEIGHT : DESKTOP_HOUR_HEIGHT;
   const { startHour, endHour } = weekHours(sessions, weekStart);
   const detailsId = useId();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -42,7 +46,7 @@ export function CalendarGrid({
         className="grid overflow-hidden rounded border border-border bg-card"
         style={{ gridTemplateColumns: `40px repeat(${days.length}, minmax(0, 1fr))` }}
       >
-        <HourScale startHour={startHour} endHour={endHour} hourHeight={HOUR_HEIGHT} />
+        <HourScale startHour={startHour} endHour={endHour} hourHeight={hourHeight} />
         {days.map((day) => (
           <DayColumn
             key={day.toDateString()}
@@ -51,7 +55,7 @@ export function CalendarGrid({
             today={today}
             startHour={startHour}
             endHour={endHour}
-            hourHeight={HOUR_HEIGHT}
+            hourHeight={hourHeight}
             selectedKey={selectedKey}
             detailsId={detailsId}
             onActivate={(session, button) => {

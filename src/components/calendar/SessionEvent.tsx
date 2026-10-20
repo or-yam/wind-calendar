@@ -44,7 +44,7 @@ export function SessionEvent({
       aria-controls={expanded ? detailsId : undefined}
       onClick={(event) => onActivate(event.currentTarget)}
       aria-label={`${dayLabel} at ${session.location.label}: ${startTime} – ${endTime}, ${conditions}`}
-      className="absolute flex flex-col items-start justify-start overflow-hidden rounded border border-border border-l-3 bg-card p-1 text-left text-card-foreground hover:bg-muted focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary aria-expanded:z-10 aria-expanded:border-primary aria-expanded:bg-muted"
+      className="session-event absolute flex flex-col items-start justify-start overflow-hidden rounded border border-border border-l-3 bg-card p-1 text-left text-card-foreground hover:bg-muted focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary aria-expanded:z-10 aria-expanded:border-primary aria-expanded:bg-muted"
       style={{
         ...style,
         padding: height < 48 ? 2 : undefined,
@@ -56,39 +56,41 @@ export function SessionEvent({
     >
       <span
         className={cn(
-          "block text-sm font-bold wrap-anywhere",
+          "session-event__location block text-sm font-bold wrap-anywhere",
           height < 48 ? "leading-none" : "leading-tight",
         )}
       >
         {session.location.label}
       </span>
-      <span className="my-0.5 flex flex-wrap text-xs tabular-nums text-muted-foreground">
+      <span className="session-event__time my-0.5 flex flex-wrap text-xs tabular-nums text-muted-foreground">
         <span className="whitespace-nowrap">{startTime}</span>
         <span className="whitespace-nowrap"> – </span>
         <span className="whitespace-nowrap">{endTime}</span>
       </span>
-      <span className="flex flex-wrap gap-1">
+      <span className="session-event__badges flex flex-wrap gap-1">
         {session.matchType !== "wave" && (
           <span
-            className="rounded px-1 text-xs font-bold whitespace-nowrap"
+            className="session-event__badge session-event__wind rounded px-1 text-xs font-bold whitespace-nowrap"
+            data-compact-label="W"
             style={{ backgroundColor: windColor(midKnots), color: windTextColor(midKnots) }}
           >
-            {windLabel}
+            <span className="session-event__badge-label">{windLabel}</span>
           </span>
         )}
         {session.matchType !== "wind" && (
           <span
-            className="rounded px-1 text-xs font-bold whitespace-nowrap"
+            className="session-event__badge session-event__wave rounded px-1 text-xs font-bold whitespace-nowrap"
+            data-compact-label="≈"
             style={{
               backgroundColor: waveHeightColor(wave.avgHeight),
               color: waveHeightTextColor(wave.avgHeight),
             }}
           >
-            {waveLabel}
+            <span className="session-event__badge-label">{waveLabel}</span>
           </span>
         )}
       </span>
-      <span className="mt-1 flex flex-wrap gap-1">
+      <span className="session-event__directions mt-1 flex flex-wrap gap-1">
         {session.matchType !== "wave" && (
           <DirectionIndicator direction={wind.direction} label="Wind" />
         )}

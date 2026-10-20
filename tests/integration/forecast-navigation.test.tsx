@@ -232,7 +232,7 @@ describe("forecast navigation with rendered calendar", () => {
     expect(todayCard()?.getAttribute("aria-label")).toBe("FRI Mar 27: No sessions");
   });
 
-  it("does not steal focus or scroll horizontally when the day changes", async () => {
+  it("preserves navigation focus without scrolling on day rollover", async () => {
     vi.setSystemTime(new Date(2026, 11, 31, 23, 59, 59));
     await act(async () => root.render(createElement(Harness)));
 

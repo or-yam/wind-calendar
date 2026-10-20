@@ -183,28 +183,6 @@
   }
 }
 
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: #ff3d8d transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  height: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #ff3d8d;
-  border-radius: 9999px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #3ee6cf;
-}
-
 @layer base {
   :root {
     --background: #04090b;
@@ -258,6 +236,47 @@
   ::selection {
     background: var(--primary);
     color: var(--primary-foreground);
+  }
+}
+
+.session-event {
+  container: session-event / inline-size;
+}
+
+@container session-event (max-width: 48px) {
+  .session-event {
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .session-event__location,
+  .session-event__time,
+  .session-event__directions {
+    display: none;
+  }
+
+  .session-event__badges {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 100%;
+  }
+
+  .session-event__badge {
+    max-width: 100%;
+    overflow: hidden;
+    padding-inline: 1px;
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  .session-event__badge-label {
+    display: none;
+  }
+
+  .session-event__badge::after {
+    content: attr(data-compact-label);
   }
 }
 

@@ -1,6 +1,6 @@
 # Weekly upcoming sessions UI
 
-Status: approved. User approved the five slices, dependencies, and test boundaries. Local tickets created; app implementation has not started.
+Status: approved; all five local implementation tickets are complete. Independent review and Vercel preview QA remain pending.
 
 Planning sources: the main worktree's `to-spec`, `to-tickets`, `tdd`, and `writing-for-agents` skills. Work in complete, verifiable feature slices, with tests and cleanup inside each slice.
 
@@ -81,11 +81,11 @@ Each ticket delivers working user behavior and fits a fresh implementation sessi
 
 **Delivers:** users can read actual wind-only, wave-only, and combined sessions in a seven-day desktop grid, with a usable single-day fallback on mobile.
 
-- [ ] Week dates, hourly placement, duration, condition badges/directions, and timezone are correct for ordinary non-overlapping sessions.
-- [ ] Previous/next week, Today, filter reset, loading, error, and empty-day behavior work through the integrated page.
-- [ ] A combined session shows both badges, following the desktop reference.
-- [ ] Rendered behavior tests cover real session data, match types, navigation, and request states; the slice passes its focused checks.
-- [ ] Replace the strip entry component and loading UI, update consumers/test imports, and remove the replaced strip rendering and scroll-to-today behavior in the same slice.
+- [x] Week dates, hourly placement, duration, condition badges/directions, and timezone are correct for ordinary non-overlapping sessions.
+- [x] Previous/next week, Today, filter reset, loading, error, and empty-day behavior work through the integrated page.
+- [x] A combined session shows both badges, following the desktop reference.
+- [x] Rendered behavior tests cover real session data, match types, navigation, and request states; the slice passes its focused checks.
+- [x] Replace the strip entry component and loading UI, update consumers/test imports, and remove the replaced strip rendering and scroll-to-today behavior in the same slice.
 
 **Done when:** real forecast fixtures can be demonstrated in the app at desktop and phone widths, with passing behavior tests and no old strip path still rendered.
 
@@ -95,11 +95,11 @@ Each ticket delivers working user behavior and fits a fresh implementation sessi
 
 **Delivers:** users can compare simultaneous sessions and inspect complete information using touch or keyboard.
 
-- [ ] Nested/equal-start overlaps use readable parallel lanes; adjacent intervals do not overlap.
-- [ ] Fractional hours, short blocks, cross-midnight/week segments, and sessions outside the default hourly range render correctly.
-- [ ] Activation, close, independent wind/wave directions, session disappearance, and focus return work through public controls.
-- [ ] Rendered tests protect details/content behavior; browser checks establish visual placement using worked fixtures.
-- [ ] Replace temporary single-event assumptions from the first slice and remove any resulting unused presentation helpers.
+- [x] Nested/equal-start overlaps use readable parallel lanes; adjacent intervals do not overlap.
+- [x] Fractional hours, short blocks, cross-midnight/week segments, and sessions outside the default hourly range render correctly.
+- [x] Activation, close, independent wind/wave directions, session disappearance, and focus return work through public controls.
+- [x] Rendered tests protect details/content behavior; browser checks establish visual placement using worked fixtures.
+- [x] Replace temporary single-event assumptions from the first slice and remove any resulting unused presentation helpers.
 
 **Done when:** the combined event and crowded Friday examples are verifiable with full accessible details and passing regression checks.
 
@@ -109,11 +109,11 @@ Each ticket delivers working user behavior and fits a fresh implementation sessi
 
 **Delivers:** mobile readers get the approved three-day layout, week strip, Day option, and range navigation, including crowded forecasts.
 
-- [ ] Initial range, date selection, week-end clamping, boundary arrows, Today, and Day switching follow the decisions above.
-- [ ] Selected date survives desktop/mobile transitions; details remain when their session stays visible.
-- [ ] At 320px and 390px, essential content and controls fit without horizontal scrolling, including both badges on the combined example.
-- [ ] Rendered navigation/accessibility tests pass; browser checks cover range changes, crowded Day mode, and resize.
-- [ ] Replace the temporary mobile fallback from the first slice; remove its unused controls/styles.
+- [x] Initial range, date selection, week-end clamping, boundary arrows, Today, and Day switching follow the decisions above.
+- [x] Selected date survives desktop/mobile transitions; details remain when their session stays visible.
+- [x] At 320px and 390px, essential content and controls fit without horizontal scrolling, including both badges on the combined example.
+- [x] Rendered navigation/accessibility tests pass; browser checks cover range changes, crowded Day mode, and resize.
+- [x] Replace the temporary mobile fallback from the first slice; remove its unused controls/styles.
 
 **Done when:** the mobile reference can be exercised with real fixtures, and desktop remains functional after resizing in both directions.
 
@@ -123,11 +123,11 @@ Each ticket delivers working user behavior and fits a fresh implementation sessi
 
 **Delivers:** calendar preferences and navigation remain predictable while filters, browser history, background refresh, and the date change.
 
-- [ ] Explicit Day preference survives filter updates, reload, and browser back/forward; malformed presentation state falls back safely.
-- [ ] Presentation state stays out of forecast requests and subscription URLs; resizing alone does not fetch forecasts.
-- [ ] Filter reset, Today, midnight/Sunday rollover, selected future week, and focus preservation retain the existing guarantees.
-- [ ] App-level regression tests cover URL/network behavior; rendered calendar tests cover lifecycle/focus behavior with controlled time.
-- [ ] Remove superseded state synchronization or effects introduced by earlier slices.
+- [x] Explicit Day preference survives filter updates, reload, and browser back/forward; malformed presentation state falls back safely.
+- [x] Presentation state stays out of forecast requests and subscription URLs; resizing alone does not fetch forecasts.
+- [x] Filter reset, Today, midnight/Sunday rollover, selected future week, and focus preservation retain the existing guarantees.
+- [x] App-level regression tests cover URL/network behavior; rendered calendar tests cover lifecycle/focus behavior with controlled time.
+- [x] Remove superseded state synchronization or effects introduced by earlier slices.
 
 **Done when:** app-boundary tests demonstrate the behavior without mocking internal query or navigation collaborators.
 
@@ -137,11 +137,11 @@ Each ticket delivers working user behavior and fits a fresh implementation sessi
 
 **Delivers:** the calendar fully replaces the strip, matches the reviewed designs, and ships without abandoned UI code.
 
-- [ ] Remove unused strip components, strip-only skeletons/helpers, horizontal scroll/snap effects, scrollbar rules, classes, labels, imports, and obsolete assertions. Retain shared primitives with live consumers.
-- [ ] Search the application and tests for old strip references; every remaining reference is intentional and accounted for. Rename outdated test descriptions/files to match their public behavior.
-- [ ] Preserve both reference mockups; remove temporary implementation/debug artifacts that are unnecessary for review.
-- [ ] Browser checks pass at all four target widths, including keyboard access, details, overlap bounds, and resizing. Document intentional deviations from the references.
-- [ ] After cleanup, focused tests, `pnpm check`, and `pnpm build` pass. Report unrelated failures explicitly rather than silently dropping coverage.
+- [x] Remove unused strip components, strip-only skeletons/helpers, horizontal scroll/snap effects, scrollbar rules, classes, labels, imports, and obsolete assertions. Retain shared primitives with live consumers.
+- [x] Search the application and tests for old strip references; every remaining reference is intentional and accounted for. Rename outdated test descriptions/files to match their public behavior.
+- [x] Preserve both reference mockups; remove temporary implementation/debug artifacts that are unnecessary for review.
+- [x] Browser checks pass at all four target widths, including keyboard access, details, overlap bounds, and resizing. Document intentional deviations from the references.
+- [x] After cleanup, focused tests, `pnpm check`, and `pnpm build` pass. Report unrelated failures explicitly rather than silently dropping coverage.
 
 **Done when:** no obsolete strip UI remains, final checks run on the cleaned implementation, and screenshots support the claimed desktop/mobile behavior.
 
