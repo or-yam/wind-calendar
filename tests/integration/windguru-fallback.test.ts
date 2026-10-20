@@ -118,10 +118,10 @@ describe("fetchWindData", () => {
     const result = await Effect.runPromise(fetchWindData("771", 1).pipe(Effect.provide(layer)));
 
     expect(result.windData).toHaveLength(goodWindSpeeds.length);
-    expect(log).toHaveBeenCalledExactlyOnceWith(
+    expect(log).toHaveBeenCalledWith(
       expect.objectContaining({
-        logLevel: "Error",
-        message: [expect.stringContaining("falling back to GFS (model 3)")],
+        logLevel: "Warn",
+        message: ["provider_fallback"],
       }),
     );
   });
@@ -136,10 +136,10 @@ describe("fetchWindData", () => {
 
     expect(result.windData).toHaveLength(goodWindSpeeds.length);
     expect(result.windData.every((condition) => condition.waveHeight === null)).toBe(true);
-    expect(log).toHaveBeenCalledExactlyOnceWith(
+    expect(log).toHaveBeenCalledWith(
       expect.objectContaining({
-        logLevel: "Error",
-        message: [expect.stringContaining("Wave model fetch failed for spot 771 (non-fatal)")],
+        logLevel: "Warn",
+        message: ["wave_data_unavailable"],
       }),
     );
   });
@@ -160,10 +160,10 @@ describe("fetchWindData", () => {
     await expect(
       Effect.runPromise(fetchWindData("771", 1).pipe(Effect.provide(layer))),
     ).rejects.toThrow(/API request failed: 500/);
-    expect(log).toHaveBeenCalledExactlyOnceWith(
+    expect(log).toHaveBeenCalledWith(
       expect.objectContaining({
-        logLevel: "Error",
-        message: [expect.stringContaining("falling back to GFS (model 3)")],
+        logLevel: "Warn",
+        message: ["provider_fallback"],
       }),
     );
   });

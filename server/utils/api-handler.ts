@@ -1,4 +1,5 @@
 import type { H3Event } from "nitro";
+import { errorDetails } from "./error-details.js";
 import { HTTPError } from "nitro";
 import { Effect, Match } from "effect";
 import { classifyProviderError, ConfigError, ForecastError } from "../errors";
@@ -39,7 +40,7 @@ export function parseConfig(
   return Effect.try({
     try: () => parseQueryParams(queryToSearchParams(query)),
     catch: (cause) =>
-      new ConfigError({ message: cause instanceof Error ? cause.message : String(cause) }),
+      new ConfigError({ cause, message: cause instanceof Error ? cause.message : String(cause) }),
   });
 }
 
@@ -105,19 +106,22 @@ export function resolveForecastData(
     return openMeteo.pipe(
       Effect.catch((error) =>
         Effect.gen(function* () {
-          if (dev) {
-            yield* Effect.logError(`[API] Open-Meteo failed: ${error.message}`);
-          }
-
           const fallbackModelId = getWindguruFallback(modelId);
 
           if (fallbackModelId === null) {
             return yield* classifyProviderError(error, "openmeteo", locationInfo, dev);
           }
 
-          if (dev) {
-            yield* Effect.log(`[API] Falling back to Windguru model ${fallbackModelId}`);
-          }
+          yield* Effect.logWarning("provider_fallback").pipe(
+            Effect.annotateLogs({
+              ...errorDetails(error),
+              provider: "openmeteo",
+              fallbackProvider: "windguru",
+              fallbackModel: fallbackModelId,
+              location: config.location,
+              model: config.model,
+            }),
+          );
 
           const fetchResult = yield* fetchWindguruWithErrorHandling(
             location.spotId,
@@ -156,14 +160,23 @@ export function toHttpError(error: ConfigError | ForecastError): HTTPError {
       "ConfigError",
       (e) =>
         new HTTPError({
+          cause: e,
           statusCode: 400,
           statusMessage: "Bad Request",
+          message: "Bad Request",
           data: { error: e.message },
         }),
     ),
     Match.tag(
       "ForecastError",
-      (e) => new HTTPError({ statusCode: e.status, statusMessage: e.body.error, data: e.body }),
+      (e) =>
+        new HTTPError({
+          cause: e,
+          statusCode: e.status,
+          statusMessage: e.body.error,
+          message: e.body.error,
+          data: e.body,
+        }),
     ),
     Match.exhaustive,
   );

@@ -93,6 +93,13 @@ describe("POST /api/interpret-config", () => {
     expect(response.statusCode).toBe(502);
     expect(response.body).toContain("Could not interpret that request");
     expect(response.body).not.toContain("provider secret details");
-    expect(log).toHaveBeenCalledExactlyOnceWith("Free-text configuration failed", error);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(log.mock.calls[0]![0])).toMatchObject({
+      event: "request_failed",
+      level: "error",
+      status: 502,
+      cause: { errorTag: "ExternalError", cause: { errorType: "Error" } },
+    });
+    expect(JSON.stringify(log.mock.calls)).not.toContain("provider secret details");
   });
 });

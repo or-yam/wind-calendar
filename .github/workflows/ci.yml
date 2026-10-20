@@ -39,3 +39,6 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+      - name: Production logging regression tests
+        run: pnpm run test:production-logs

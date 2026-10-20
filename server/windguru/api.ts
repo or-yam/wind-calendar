@@ -1,3 +1,5 @@
+import { writeLog } from "../utils/logging.js";
+import { errorDetails } from "../utils/error-details.js";
 import { Effect, Option } from "effect";
 import type { APIRoot } from "../types/api-response";
 import type { ProviderWindData, WindConditionRaw } from "../types/wind-conditions";
@@ -27,7 +29,11 @@ function extractWindData(forecast: APIRoot, spotId: string): WindConditionRaw[] 
   const fcst = forecast.fcst;
 
   if (!fcst?.WINDSPD) {
-    console.error(`No WINDSPD data in forecast for spot ${spotId} (model ${fcst?.id_model})`);
+    writeLog("warning", "provider_data_missing", {
+      provider: "windguru",
+      spotId,
+      providerModel: fcst?.id_model,
+    });
     return [];
   }
 
@@ -94,8 +100,15 @@ function fetchWithGfsFallback(
   return primary.pipe(
     Effect.catch((error) =>
       Effect.gen(function* () {
-        yield* Effect.logError(
-          `Model ${modelId} fetch failed for spot ${locationCode}, falling back to GFS (model ${GFS_MODEL_ID}): ${error.message}`,
+        yield* Effect.logWarning("provider_fallback").pipe(
+          Effect.annotateLogs({
+            ...errorDetails(error),
+            provider: "windguru",
+            providerModel: modelId,
+            spotId: locationCode,
+            fallbackProvider: "windguru",
+            fallbackModel: GFS_MODEL_ID,
+          }),
         );
         return yield* getForecast(locationCode, GFS_MODEL_ID);
       }),
@@ -110,8 +123,13 @@ export function fetchWindData(
   const wind = fetchWithGfsFallback(locationCode, modelId);
   const wave = getForecast(locationCode, WAVE_MODEL_ID).pipe(
     Effect.tapError((error) =>
-      Effect.logError(
-        `Wave model fetch failed for spot ${locationCode} (non-fatal): ${error.message}`,
+      Effect.logWarning("wave_data_unavailable").pipe(
+        Effect.annotateLogs({
+          ...errorDetails(error),
+          provider: "windguru",
+          providerModel: WAVE_MODEL_ID,
+          spotId: locationCode,
+        }),
       ),
     ),
     Effect.option,

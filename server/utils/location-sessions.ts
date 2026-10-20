@@ -30,7 +30,7 @@ export function buildLocationSessions(
             { location: id, model: config.model },
             location,
             dev,
-          );
+          ).pipe(Effect.annotateLogs({ location: id, model: config.model }));
           return { id, location, resolved };
         }),
       { concurrency: "unbounded" },

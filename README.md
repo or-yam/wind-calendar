@@ -168,3 +168,36 @@ pnpm lint:fix
 # Run tests
 pnpm test
 ```
+
+## Production logs
+
+Forecast, calendar, AI configuration, and feature-flag endpoints emit JSON logs to Vercel.
+`request_completed` / `request_failed` record status and duration; provider requests record
+host, path, operation, duration, and model/location identifiers where applicable. `provider_fallback` and `wave_data_unavailable`
+are warnings. Terminal provider failures and unexpected exceptions are errors; invalid
+requests and local rate limits are warnings. Expected 404/405 responses are info.
+`model` is the requested application model; `providerModel` is the actual provider slug/ID.
+
+Use the response's `X-Request-Id` to correlate application logs. It identifies the origin
+invocation that generated the response; CDN cache hits can reuse that response and ID.
+It is separate from Vercel's platform request ID.
+
+```bash
+pnpm exec vercel logs --project wind-calendar --environment production --level error --since 1h --expand
+pnpm exec vercel logs --project wind-calendar --environment production --query 'warning' --since 1h --expand
+pnpm exec vercel logs --project wind-calendar --environment production --query '<X-Request-Id>' --since 1h --expand
+```
+
+Warnings use stdout with a JSON `level: "warning"` field because Vercel maps stderr
+warnings to errors for non-streaming functions. Use the message query above to find them;
+the platform may display these individual log lines as info. HTTP 4xx/5xx requests can
+still have a platform warning/error classification independently of application log level.
+
+Logs preserve error tags and upstream statuses through internal cause chains. Error
+messages, request bodies, headers, URL queries, and upstream response bodies are omitted;
+unexpected errors include frame locations from the deployment bundle. Unexpected exceptions return a generic handled
+500 response. Deployment logs include
+`VERCEL_GIT_COMMIT_SHA` when available. Crash reporting and alerts are configured separately.
+
+Run `pnpm test:production-logs` to build and verify request-ID headers through Nitro's
+production error handler; the regular Vitest handler tests use bare H3.

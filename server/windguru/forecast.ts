@@ -39,9 +39,10 @@ export function getForecast(
       Effect.mapError(
         (error) =>
           new ProviderDataError({
+            cause: error,
             message: `Failed to fetch model ${modelId} for spot ${spotId}: ${error.message}`,
           }),
       ),
     );
-  });
+  }).pipe(Effect.annotateLogs({ provider: "windguru", spotId, providerModel: modelId }));
 }

@@ -10,12 +10,14 @@ export interface ErrorResponse {
 
 /** A provider request exceeded its timeout. */
 export class ProviderTimeout extends Data.TaggedError("ProviderTimeout")<{
+  readonly cause?: unknown;
   readonly message: string;
   readonly url: string;
 }> {}
 
 /** A provider request failed before a response was received. */
 export class ProviderNetworkError extends Data.TaggedError("ProviderNetworkError")<{
+  readonly cause?: unknown;
   readonly message: string;
   readonly url: string;
 }> {}
@@ -31,6 +33,7 @@ export class ProviderBadStatus extends Data.TaggedError("ProviderBadStatus")<{
 
 /** A provider response body was not valid JSON. */
 export class ProviderBadJson extends Data.TaggedError("ProviderBadJson")<{
+  readonly cause?: unknown;
   readonly message: string;
   readonly url: string;
   readonly status: number;
@@ -38,6 +41,7 @@ export class ProviderBadJson extends Data.TaggedError("ProviderBadJson")<{
 
 /** A provider responded, but its payload was missing or malformed. */
 export class ProviderDataError extends Data.TaggedError("ProviderDataError")<{
+  readonly cause?: unknown;
   readonly message: string;
 }> {}
 
@@ -50,12 +54,14 @@ export type ProviderError =
 
 /** A forecast failure already resolved to an HTTP status and response body. */
 export class ForecastError extends Data.TaggedError("ForecastError")<{
+  readonly cause?: ProviderError;
   readonly status: number;
   readonly body: ErrorResponse;
 }> {}
 
 /** A query string failed validation. */
 export class ConfigError extends Data.TaggedError("ConfigError")<{
+  readonly cause?: unknown;
   readonly message: string;
 }> {}
 
@@ -170,6 +176,7 @@ export function classifyProviderError(
     debug: Record<string, unknown> = {},
   ): ForecastError =>
     new ForecastError({
+      cause: error,
       status,
       body: { ...body, ...(dev && { debug: { ...baseDebug, ...debug } }) },
     });

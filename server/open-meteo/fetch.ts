@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { observeProviderRequest } from "../utils/logging.js";
 import { ProviderBadStatus, type ProviderError } from "../errors";
 import { providerBadStatus, providerBodyText, providerFetch, providerJson } from "../utils/http";
 import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
@@ -34,7 +35,7 @@ export function makeRequest<T>(url: string): Effect.Effect<T, ProviderError> {
     }
 
     return json as T;
-  });
+  }).pipe((program) => observeProviderRequest(program, url));
 }
 
 /**
@@ -57,7 +58,9 @@ export function fetchForecast(
     models: model,
   });
 
-  return makeRequest<OpenMeteoForecastResponse>(`${FORECAST_BASE_URL}?${params}`);
+  return makeRequest<OpenMeteoForecastResponse>(`${FORECAST_BASE_URL}?${params}`).pipe(
+    Effect.annotateLogs({ provider: "openmeteo", providerModel: model, operation: "forecast" }),
+  );
 }
 
 /**
@@ -77,5 +80,7 @@ export function fetchMarine(
     forecast_days: "7",
   });
 
-  return makeRequest<OpenMeteoMarineResponse>(`${MARINE_BASE_URL}?${params}`);
+  return makeRequest<OpenMeteoMarineResponse>(`${MARINE_BASE_URL}?${params}`).pipe(
+    Effect.annotateLogs({ provider: "openmeteo", operation: "marine" }),
+  );
 }

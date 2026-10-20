@@ -1,4 +1,5 @@
 import { Effect, Option } from "effect";
+import { errorDetails } from "../utils/error-details.js";
 import type { ProviderWindData, WindConditionRaw } from "../types/wind-conditions";
 import { ProviderDataError, type ProviderError } from "../errors";
 import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
@@ -150,7 +151,15 @@ export function fetchOpenMeteoData(
   const wind = fetchForecast(lat, lon, model, tz);
   const wave = fetchMarine(lat, lon, tz).pipe(
     Effect.tapError((error) =>
-      Effect.logError(`Wave data fetch failed for ${lat},${lon} (non-fatal): ${error.message}`),
+      Effect.logWarning("wave_data_unavailable").pipe(
+        Effect.annotateLogs({
+          ...errorDetails(error),
+          provider: "openmeteo",
+          providerModel: model,
+          latitude: lat,
+          longitude: lon,
+        }),
+      ),
     ),
     Effect.option,
   );

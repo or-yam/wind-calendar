@@ -162,10 +162,10 @@ describe("fetchOpenMeteoData", () => {
 
     // Wave data should be null when marine API fails
     expect(result.windData[0].waveHeight).toBeNull();
-    expect(log).toHaveBeenCalledExactlyOnceWith(
+    expect(log).toHaveBeenCalledWith(
       expect.objectContaining({
-        logLevel: "Error",
-        message: [expect.stringContaining("Wave data fetch failed for 32.08,34.78 (non-fatal)")],
+        logLevel: "Warn",
+        message: ["wave_data_unavailable"],
       }),
     );
   });

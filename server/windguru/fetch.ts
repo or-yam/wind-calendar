@@ -1,4 +1,4 @@
-import type { Effect } from "effect";
+import { Effect } from "effect";
 import type { APIRoot } from "../types/api-response";
 import type { SpotInfo } from "../types/forecast";
 import type { ProviderError } from "../errors";
@@ -21,7 +21,9 @@ export function fetchSpotInfo(spotId: string): Effect.Effect<SpotInfo, ProviderE
     id_spot: spotId,
   });
 
-  return makeRequest<SpotInfo>(`${BASE_URL}?${params}`);
+  return makeRequest<SpotInfo>(`${BASE_URL}?${params}`).pipe(
+    Effect.annotateLogs({ operation: "spot_info" }),
+  );
 }
 
 export function fetchModelForecast(
@@ -37,5 +39,7 @@ export function fetchModelForecast(
     WGCACHEABLE: "21600",
   });
 
-  return makeRequest<APIRoot>(`${BASE_URL}?${params}`);
+  return makeRequest<APIRoot>(`${BASE_URL}?${params}`).pipe(
+    Effect.annotateLogs({ operation: "forecast", providerModel: modelId }),
+  );
 }

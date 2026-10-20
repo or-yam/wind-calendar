@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { observeProviderRequest } from "./logging.js";
 import {
   ProviderBadJson,
   ProviderBadStatus,
@@ -26,12 +27,14 @@ export function providerFetch(
 
       if (isTimeout) {
         return new ProviderTimeout({
+          cause,
           message: `Request timed out after ${options.timeoutMs}ms`,
           url,
         });
       }
 
       return new ProviderNetworkError({
+        cause,
         message: `Network error: ${cause instanceof Error ? cause.message : String(cause)}`,
         url,
       });
@@ -52,8 +55,9 @@ export function providerJson<T>(
 ): Effect.Effect<T, ProviderBadJson> {
   return Effect.tryPromise({
     try: () => response.json() as Promise<T>,
-    catch: () =>
+    catch: (cause) =>
       new ProviderBadJson({
+        cause,
         message: `Invalid JSON response (status ${response.status})`,
         url,
         status: response.status,
@@ -89,5 +93,5 @@ export function requestJson<T>(
     }
 
     return yield* providerJson<T>(response, url);
-  });
+  }).pipe((program) => observeProviderRequest(program, url));
 }

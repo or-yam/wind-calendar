@@ -1,4 +1,6 @@
 import { defineHandler, HTTPError } from "nitro";
+import { runLoggedEffect } from "../utils/logging.js";
+import { observedHandler } from "../utils/observed-handler.js";
 import { readBody } from "nitro/h3";
 import { z } from "zod";
 import { Effect } from "effect";
@@ -26,55 +28,60 @@ export const freeTextRequestSchema = z
   })
   .strict();
 
-export default defineHandler(async (event) => {
-  if (event.req.method !== "POST") {
-    throw new HTTPError({ statusCode: 405, statusMessage: "Method Not Allowed" });
-  }
+export default defineHandler(
+  observedHandler("/api/interpret-config", async (event) => {
+    if (event.req.method !== "POST") {
+      throw new HTTPError({ statusCode: 405, statusMessage: "Method Not Allowed" });
+    }
 
-  if (!(await isFeatureEnabled(FEATURE_FLAGS.freeTextConfigBuilder))) {
-    throw new HTTPError({ statusCode: 404, statusMessage: "Not Found" });
-  }
+    if (!(await isFeatureEnabled(FEATURE_FLAGS.freeTextConfigBuilder))) {
+      throw new HTTPError({ statusCode: 404, statusMessage: "Not Found" });
+    }
 
-  const rateCheck = checkRateLimit(`ai:${getClientIp(event)}`);
-  if (rateCheck.limited) {
-    event.res.headers.set("Retry-After", rateCheck.retryAfter.toString());
-    throw new HTTPError({ statusCode: 429, statusMessage: "Too Many Requests" });
-  }
+    const rateCheck = checkRateLimit(`ai:${getClientIp(event)}`);
+    if (rateCheck.limited) {
+      event.res.headers.set("Retry-After", rateCheck.retryAfter.toString());
+      throw new HTTPError({ statusCode: 429, statusMessage: "Too Many Requests" });
+    }
 
-  const parsed = freeTextRequestSchema.safeParse(await readBody(event));
-  if (!parsed.success) {
-    throw new HTTPError({
-      statusCode: 400,
-      statusMessage: "Bad Request",
-      data: { error: parsed.error.issues[0]?.message ?? "Invalid request" },
-    });
-  }
+    const parsed = freeTextRequestSchema.safeParse(await readBody(event));
+    if (!parsed.success) {
+      throw new HTTPError({
+        statusCode: 400,
+        statusMessage: "Bad Request",
+        data: { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+      });
+    }
 
-  if (!process.env.OPENAI_API_KEY) {
-    throw new HTTPError({
-      statusCode: 503,
-      statusMessage: "AI configuration unavailable",
-      data: { error: "Free-text configuration is not set up" },
-    });
-  }
+    if (!process.env.OPENAI_API_KEY) {
+      throw new HTTPError({
+        statusCode: 503,
+        statusMessage: "AI configuration unavailable",
+        data: { error: "Free-text configuration is not set up" },
+      });
+    }
 
-  const result = await Effect.runPromise(
-    Effect.tryPromise({
-      try: () => interpretFreeTextConfig(parsed.data.request),
-      catch: (cause) => new ExternalError({ message: "Free-text configuration failed", cause }),
-    }).pipe(
-      Effect.tapError((error) => Effect.sync(() => console.error(error.message, error.cause))),
-      Effect.mapError(
-        () =>
-          new HTTPError({
-            statusCode: 502,
-            statusMessage: "AI interpretation failed",
-            data: { error: "Could not interpret that request. Try again or use the manual form." },
-          }),
+    const result = await runLoggedEffect(
+      Effect.tryPromise({
+        try: () => interpretFreeTextConfig(parsed.data.request),
+        catch: (cause) => new ExternalError({ message: "Free-text configuration failed", cause }),
+      }).pipe(
+        Effect.mapError(
+          (error) =>
+            new HTTPError({
+              cause: error,
+              statusCode: 502,
+              statusMessage: "AI interpretation failed",
+              message: "AI interpretation failed",
+              data: {
+                error: "Could not interpret that request. Try again or use the manual form.",
+              },
+            }),
+        ),
       ),
-    ),
-  );
+    );
 
-  event.res.headers.set("Cache-Control", "no-store");
-  return result;
-});
+    event.res.headers.set("Cache-Control", "no-store");
+    return result;
+  }),
+);
