@@ -4,7 +4,7 @@ import type { Plugin } from "vite";
  * Dev: Relaxed CSP with 'unsafe-inline' for Vite HMR.
  * Prod: Strict CSP without 'unsafe-inline' for scripts.
  */
-export const injectCSP = (sentryOrigin?: string): Plugin => {
+export const injectCSP = (errorReportingOrigin?: string): Plugin => {
   return {
     name: "inject-csp",
     transformIndexHtml(html, ctx) {
@@ -13,7 +13,7 @@ export const injectCSP = (sentryOrigin?: string): Plugin => {
       const connectSources = [
         "'self'",
         "https://va.vercel-scripts.com",
-        ...(sentryOrigin ? [sentryOrigin] : []),
+        ...(errorReportingOrigin ? [errorReportingOrigin] : []),
       ].join(" ");
       const csp = isDev
         ? // Development: Allow inline scripts for Vite HMR

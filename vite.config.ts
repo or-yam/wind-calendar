@@ -7,14 +7,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { injectCSP } from "./vite-plugins/csp.ts";
 import { portless } from "./vite-plugins/portless.ts";
-import { getSentryOrigin } from "./shared/sentry-config.ts";
+import { getErrorReportingOrigin } from "./shared/error-observability-config.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ command, mode }) => {
-  const env = { ...loadEnv(mode, process.cwd(), ""), ...process.env };
-  const sentryOrigin = getSentryOrigin(env.VITE_SENTRY_DSN);
+  const env = {
+    ...loadEnv(mode, process.cwd(), ["VITE_SENTRY_", "SENTRY_", "VERCEL_"]),
+    ...process.env,
+  };
+  const errorReportingOrigin = getErrorReportingOrigin(env.VITE_SENTRY_DSN);
   const canUploadSourceMaps = Boolean(
     command === "build" && env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT,
   );
@@ -25,7 +28,7 @@ export default defineConfig(({ command, mode }) => {
       nitro(),
       react(),
       tailwindcss(),
-      injectCSP(sentryOrigin),
+      injectCSP(errorReportingOrigin),
       portless(),
       ...(canUploadSourceMaps
         ? [

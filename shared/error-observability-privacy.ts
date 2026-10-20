@@ -1,4 +1,4 @@
-interface SentryEventLike {
+interface ErrorEventLike {
   request?: {
     url?: string;
     query_string?: unknown;
@@ -9,7 +9,7 @@ interface SentryEventLike {
   user?: unknown;
 }
 
-interface SentryBreadcrumbLike {
+interface ErrorBreadcrumbLike {
   data?: Record<string, unknown>;
 }
 
@@ -19,7 +19,7 @@ function stripUrlDetails(value: unknown): string {
   return String(value).split(/[?#]/, 1)[0];
 }
 
-export function scrubSentryEvent<T extends SentryEventLike>(event: T): T {
+export function scrubErrorEvent<T extends ErrorEventLike>(event: T): T {
   if (event.request) {
     if (event.request.url) event.request.url = stripUrlDetails(event.request.url);
     delete event.request.query_string;
@@ -31,7 +31,7 @@ export function scrubSentryEvent<T extends SentryEventLike>(event: T): T {
   return event;
 }
 
-export function scrubSentryBreadcrumb<T extends SentryBreadcrumbLike>(breadcrumb: T): T {
+export function scrubErrorBreadcrumb<T extends ErrorBreadcrumbLike>(breadcrumb: T): T {
   for (const field of PRIVATE_URL_FIELDS) {
     if (breadcrumb.data?.[field]) {
       breadcrumb.data[field] = stripUrlDetails(breadcrumb.data[field]);

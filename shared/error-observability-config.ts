@@ -1,4 +1,4 @@
-export function getSentryOrigin(dsn: string | undefined): string | undefined {
+export function getErrorReportingOrigin(dsn: string | undefined): string | undefined {
   if (!dsn) return undefined;
 
   try {
