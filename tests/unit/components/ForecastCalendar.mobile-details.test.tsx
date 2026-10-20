@@ -45,12 +45,12 @@ it("returns focus to the remaining overnight segment after Day mode removes the 
     vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
   );
   const overnight = { ...makeSession("Bat Galim", 23, 25) };
-  await calendar.render([overnight], { today: new Date(2026, 9, 21) });
+  await calendar.render([overnight], { today: new Date(2026, 9, 23) });
   await act(async () => event("Bat Galim").click());
-  const saturday = calendar.container.querySelector<HTMLButtonElement>(
-    'button[aria-label="SAT Oct 24"]',
+  const friday = calendar.container.querySelector<HTMLButtonElement>(
+    'button[aria-label="FRI Oct 23"]',
   )!;
-  await act(async () => saturday.click());
+  await act(async () => friday.click());
   const saturdaySegment = calendar.container.querySelector<HTMLButtonElement>(
     'button[aria-label*="SAT Oct 24 at Bat Galim"]',
   )!;
@@ -61,12 +61,13 @@ it("returns focus to the remaining overnight segment after Day mode removes the 
       .find((button) => button.textContent === "Day")!
       .click(),
   );
+  expect(saturdaySegment.isConnected).toBe(false);
   await act(async () =>
     calendar.container
       .querySelector<HTMLButtonElement>('[aria-label="Close session details"]')!
       .click(),
   );
   expect(document.activeElement).toBe(
-    calendar.container.querySelector('button[aria-label*="SAT Oct 24 at Bat Galim"]'),
+    calendar.container.querySelector('button[aria-label*="FRI Oct 23 at Bat Galim"]'),
   );
 });
