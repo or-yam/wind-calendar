@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { Effect } from "effect";
 import { fetchOpenMeteoData } from "../../../server/open-meteo/forecast";
+import { captureLogs } from "../../helpers/capture-logs";
 import type {
   OpenMeteoForecastResponse,
   OpenMeteoMarineResponse,
@@ -120,7 +122,9 @@ describe("fetchOpenMeteoData", () => {
   });
 
   it("fetches wind + wave data successfully", async () => {
-    const result = await fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem");
+    const result = await Effect.runPromise(
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+    );
 
     expect(result.windData).toHaveLength(5);
     expect(result.sunrise).toBe("06:15");
@@ -140,6 +144,7 @@ describe("fetchOpenMeteoData", () => {
   });
 
   it("handles wave data fetch failure gracefully", async () => {
+    const { log, layer } = captureLogs();
     installFetchMock((url) => {
       if (url.hostname === "marine-api.open-meteo.com") {
         return new Response("Marine API error", { status: 500 });
@@ -147,7 +152,9 @@ describe("fetchOpenMeteoData", () => {
       return null;
     });
 
-    const result = await fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem");
+    const result = await Effect.runPromise(
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem").pipe(Effect.provide(layer)),
+    );
 
     expect(result.windData).toHaveLength(5);
     expect(result.sunrise).toBe("06:15");
@@ -155,6 +162,12 @@ describe("fetchOpenMeteoData", () => {
 
     // Wave data should be null when marine API fails
     expect(result.windData[0].waveHeight).toBeNull();
+    expect(log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        logLevel: "Warn",
+        message: ["wave_data_unavailable"],
+      }),
+    );
   });
 
   it("throws when wind forecast API fails", async () => {
@@ -166,7 +179,7 @@ describe("fetchOpenMeteoData", () => {
     });
 
     await expect(
-      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+      Effect.runPromise(fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem")),
     ).rejects.toThrow();
   });
 
@@ -183,9 +196,9 @@ describe("fetchOpenMeteoData", () => {
       return null;
     });
 
-    await expect(fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem")).rejects.toThrow(
-      "Missing sunrise/sunset data",
-    );
+    await expect(
+      Effect.runPromise(fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem")),
+    ).rejects.toThrow("Missing sunrise/sunset data");
   });
 
   it("handles null values in wind data arrays", async () => {
@@ -206,7 +219,9 @@ describe("fetchOpenMeteoData", () => {
       return null;
     });
 
-    const result = await fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem");
+    const result = await Effect.runPromise(
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+    );
 
     expect(result.windData).toHaveLength(2);
     expect(result.windData[0].windSpeed).toBe(12.5);
@@ -228,7 +243,9 @@ describe("fetchOpenMeteoData", () => {
       return null;
     });
 
-    const result = await fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem");
+    const result = await Effect.runPromise(
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+    );
 
     // "2026-03-03T00:00" in Asia/Jerusalem (UTC+3) = "2026-03-02T21:00" UTC
     const expectedDate = new Date("2026-03-02T21:00:00.000Z");
@@ -261,7 +278,9 @@ describe("fetchOpenMeteoData", () => {
       return null;
     });
 
-    const result = await fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem");
+    const result = await Effect.runPromise(
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+    );
 
     expect(result.windData).toHaveLength(5);
     expect(result.windData[0].waveHeight).toBeNull(); // No match for hour 0
@@ -286,7 +305,7 @@ describe("fetchOpenMeteoData", () => {
     });
 
     await expect(
-      fetchOpenMeteoData(32.08, 34.78, "invalid_model", "Asia/Jerusalem"),
+      Effect.runPromise(fetchOpenMeteoData(32.08, 34.78, "invalid_model", "Asia/Jerusalem")),
     ).rejects.toThrow("API request failed: 400");
   });
 
@@ -307,7 +326,9 @@ describe("fetchOpenMeteoData", () => {
       return null;
     });
 
-    const result = await fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem");
+    const result = await Effect.runPromise(
+      fetchOpenMeteoData(32.08, 34.78, "gfs_global", "Asia/Jerusalem"),
+    );
 
     // Should extract just HH:MM part
     expect(result.sunrise).toBe("06:15");

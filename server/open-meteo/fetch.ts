@@ -1,4 +1,7 @@
-import { ApiError } from "../windguru/fetch";
+import { Effect } from "effect";
+import { observeProviderRequest } from "../utils/logging.js";
+import { ProviderBadStatus, type ProviderError } from "../errors";
+import { providerBadStatus, providerBodyText, providerFetch, providerJson } from "../utils/http";
 import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
 
 const FORECAST_BASE_URL = "https://api.open-meteo.com/v1/forecast";
@@ -7,67 +10,43 @@ const REQUEST_TIMEOUT_MS = 10_000;
 
 /**
  * Generic GET request for Open-Meteo APIs.
- * Throws ApiError on HTTP failure or JSON parse failure.
+ * Fails with a typed ProviderError on HTTP failure or JSON parse failure.
  */
-export async function makeRequest<T>(url: string): Promise<T> {
-  let response: Response;
+export function makeRequest<T>(url: string): Effect.Effect<T, ProviderError> {
+  return Effect.gen(function* () {
+    const response = yield* providerFetch(url, { timeoutMs: REQUEST_TIMEOUT_MS });
 
-  try {
-    response = await fetch(url, {
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch (error) {
-    const isTimeout =
-      error instanceof DOMException &&
-      (error.name === "TimeoutError" || error.name === "AbortError");
-
-    if (isTimeout) {
-      throw new ApiError(`Request timed out after ${REQUEST_TIMEOUT_MS}ms`, { url });
+    if (!response.ok) {
+      const body = yield* providerBodyText(response);
+      return yield* providerBadStatus(response, body, url);
     }
-    throw new ApiError(`Network error: ${error instanceof Error ? error.message : String(error)}`, {
-      url,
-    });
-  }
 
-  if (!response.ok) {
-    throw new ApiError(`API request failed: ${response.status} ${response.statusText}`, {
-      status: response.status,
-      response: await response.text().catch(() => "<response body unavailable>"),
-      url,
-    });
-  }
+    const json = yield* providerJson<{ error?: boolean; reason?: string }>(response, url);
 
-  let json: any;
-  try {
-    json = await response.json();
-  } catch {
-    throw new ApiError(`Invalid JSON response (status ${response.status})`, {
-      status: response.status,
-      url,
-    });
-  }
+    // Open-Meteo returns { error: true, reason: "..." } on validation errors
+    if (json && typeof json === "object" && json.error === true) {
+      return yield* new ProviderBadStatus({
+        message: `Open-Meteo error: ${json.reason || "Unknown error"}`,
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        body: JSON.stringify(json),
+      });
+    }
 
-  // Open-Meteo returns { error: true, reason: "..." } on validation errors
-  if (json && typeof json === "object" && json.error === true) {
-    throw new ApiError(`Open-Meteo error: ${json.reason || "Unknown error"}`, {
-      status: response.status,
-      response: JSON.stringify(json),
-      url,
-    });
-  }
-
-  return json as T;
+    return json as T;
+  }).pipe((program) => observeProviderRequest(program, url));
 }
 
 /**
  * Fetch wind forecast + sunrise/sunset from Open-Meteo Forecast API.
  */
-export async function fetchForecast(
+export function fetchForecast(
   lat: number,
   lon: number,
   model: string,
   tz: string,
-): Promise<OpenMeteoForecastResponse> {
+): Effect.Effect<OpenMeteoForecastResponse, ProviderError> {
   const params = new URLSearchParams({
     latitude: lat.toString(),
     longitude: lon.toString(),
@@ -79,17 +58,19 @@ export async function fetchForecast(
     models: model,
   });
 
-  return makeRequest<OpenMeteoForecastResponse>(`${FORECAST_BASE_URL}?${params}`);
+  return makeRequest<OpenMeteoForecastResponse>(`${FORECAST_BASE_URL}?${params}`).pipe(
+    Effect.annotateLogs({ provider: "openmeteo", providerModel: model, operation: "forecast" }),
+  );
 }
 
 /**
  * Fetch wave height from Open-Meteo Marine API.
  */
-export async function fetchMarine(
+export function fetchMarine(
   lat: number,
   lon: number,
   tz: string,
-): Promise<OpenMeteoMarineResponse> {
+): Effect.Effect<OpenMeteoMarineResponse, ProviderError> {
   const params = new URLSearchParams({
     latitude: lat.toString(),
     longitude: lon.toString(),
@@ -99,5 +80,7 @@ export async function fetchMarine(
     forecast_days: "7",
   });
 
-  return makeRequest<OpenMeteoMarineResponse>(`${MARINE_BASE_URL}?${params}`);
+  return makeRequest<OpenMeteoMarineResponse>(`${MARINE_BASE_URL}?${params}`).pipe(
+    Effect.annotateLogs({ provider: "openmeteo", operation: "marine" }),
+  );
 }

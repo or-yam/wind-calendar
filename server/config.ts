@@ -1,102 +1,39 @@
-import type { CalendarConfig, WaveSource } from "../shared/types";
-import { DEFAULTS } from "../shared/constants";
-import { LOCATIONS } from "../shared/locations";
-import { MODELS, isValidModelId, type ModelId } from "../shared/models";
-
-function parseFloatParam(params: URLSearchParams, key: string, fallback: number): number {
-  const raw = params.get(key);
-  if (raw === null) return fallback;
-  const num = parseFloat(raw);
-  if (isNaN(num)) throw new Error(`Invalid ${key}: "${raw}" is not a number`);
-  return num;
-}
-
-function parseBoolParam(params: URLSearchParams, key: string, fallback: boolean): boolean {
-  const raw = params.get(key);
-  if (raw === null) return fallback;
-  return raw === "true";
-}
-
-function parseLocations(searchParams: URLSearchParams): string[] {
-  const locationsParams = searchParams.getAll("locations");
-  const rawLocations =
-    locationsParams.length > 0
-      ? locationsParams.flatMap((value) => value.split(","))
-      : [searchParams.get("location") ?? DEFAULTS.locations[0]];
-  const locations = [...new Set(rawLocations.map((value) => value.trim()).filter(Boolean))];
-
-  if (locations.length === 0) throw new Error("At least one location is required");
-  if (locations.length > 3) throw new Error("A maximum of 3 locations is allowed");
-
-  const unknown = locations.filter((location) => !(location in LOCATIONS));
-  if (unknown.length > 0) {
-    throw new Error(
-      `Unknown location: "${unknown[0]}". Valid locations: ${Object.keys(LOCATIONS).join(", ")}`,
-    );
-  }
-
-  return locations;
-}
+import type { CalendarConfig } from "../shared/types.js";
+import { LOCATIONS } from "../shared/locations.js";
+import { normalizeQueryParams } from "./config-query.js";
+import {
+  decodeConfigValue,
+  LocationsSchema,
+  MinSessionHoursSchema,
+  ModelSchema,
+  WindNumbersSchema,
+  WaveSourceSchema,
+  WaveNumbersSchema,
+} from "./config-schema.js";
+import { WindRangeSchema, WaveHeightRangeSchema, WavePeriodSchema } from "./config-ranges.js";
 
 export function parseQueryParams(searchParams: URLSearchParams): CalendarConfig {
-  const locations = parseLocations(searchParams);
-
-  const minSessionHours = parseFloatParam(
-    searchParams,
-    "minSessionHours",
-    DEFAULTS.minSessionHours,
-  );
-  if (minSessionHours < 0 || minSessionHours > 24)
-    throw new Error("minSessionHours must be between 0 and 24");
-
-  // Model
-  let model: ModelId = DEFAULTS.model;
-  const modelParam = searchParams.get("model");
-  if (modelParam !== null) {
-    const numericModel = Number(modelParam);
-    const parsedModel = Number.isNaN(numericModel) ? modelParam : numericModel;
-    if (!isValidModelId(parsedModel)) {
-      const validModels = Object.keys(MODELS).join(", ");
-      throw new Error(`Invalid model: "${modelParam}". Valid models: ${validModels}`);
-    }
-    model = parsedModel;
-  }
-
-  // Wind
-  const windEnabled = parseBoolParam(searchParams, "windEnabled", DEFAULTS.windEnabled);
-  const windMin = parseFloatParam(searchParams, "windMin", DEFAULTS.windMin);
-  const windMax = parseFloatParam(searchParams, "windMax", DEFAULTS.windMax);
-  if (windMin < 0) throw new Error("windMin must be >= 0");
-  if (windMax > 200) throw new Error("windMax must be <= 200");
-  if (windMin >= windMax) throw new Error("windMin must be less than windMax");
-
-  // Waves
-  const waveEnabled = parseBoolParam(searchParams, "waveEnabled", DEFAULTS.waveEnabled);
-  const waveSourceRaw = searchParams.get("waveSource") ?? DEFAULTS.waveSource;
-  if (waveSourceRaw !== "total" && waveSourceRaw !== "swell")
-    throw new Error(`Invalid waveSource: "${waveSourceRaw}". Must be "total" or "swell"`);
-  const waveSource: WaveSource = waveSourceRaw;
-  const waveHeightMin = parseFloatParam(searchParams, "waveHeightMin", DEFAULTS.waveHeightMin);
-  const waveHeightMax = parseFloatParam(searchParams, "waveHeightMax", DEFAULTS.waveHeightMax);
-  const wavePeriodMin = parseFloatParam(searchParams, "wavePeriodMin", DEFAULTS.wavePeriodMin);
-  if (waveHeightMin < 0) throw new Error("waveHeightMin must be >= 0");
-  if (waveHeightMax > 20) throw new Error("waveHeightMax must be <= 20");
-  if (waveHeightMin >= waveHeightMax)
-    throw new Error("waveHeightMin must be less than waveHeightMax");
-  if (wavePeriodMin < 0) throw new Error("wavePeriodMin must be >= 0");
+  const query = normalizeQueryParams(searchParams);
+  // Stages preserve first-error precedence, including number parsing before range checks.
+  const locations = decodeConfigValue(LocationsSchema, query.locations);
+  const minSessionHours = decodeConfigValue(MinSessionHoursSchema, query.minSessionHours);
+  const model = decodeConfigValue(ModelSchema, query.model);
+  const wind = decodeConfigValue(WindNumbersSchema, query);
+  decodeConfigValue(WindRangeSchema, wind);
+  const waveSource = decodeConfigValue(WaveSourceSchema, query.waveSource);
+  const waves = decodeConfigValue(WaveNumbersSchema, query);
+  decodeConfigValue(WaveHeightRangeSchema, waves);
+  decodeConfigValue(WavePeriodSchema, waves.wavePeriodMin);
 
   return {
-    locations,
+    locations: [...locations],
     minSessionHours,
     model,
-    windEnabled,
-    windMin,
-    windMax,
-    waveEnabled,
+    windEnabled: query.windEnabled,
+    ...wind,
+    waveEnabled: query.waveEnabled,
     waveSource,
-    waveHeightMin,
-    waveHeightMax,
-    wavePeriodMin,
+    ...waves,
   };
 }
 

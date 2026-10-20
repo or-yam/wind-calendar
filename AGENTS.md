@@ -27,15 +27,17 @@ tests/            # Vitest test files
 
 ## Error Handling
 
-**Preferred pattern** - Use `tryCatch` wrapper
+The server uses [Effect](https://effect.website/docs/v4). Client code does not.
 
-**API errors** - Use `ApiError` class
-
-**Validation** - Direct throws:
-
-```typescript
-if (invalid) throw new Error("Descriptive message with context");
-```
+- **Errors** — typed `Data.TaggedError` classes live in `server/errors.ts`
+  (`ProviderError`, `ForecastError`, `ConfigError`, `ExternalError`).
+- **Providers** — `server/windguru/*` and `server/open-meteo/*` return `Effect<A, ProviderError>`,
+  built from the `server/utils/http.ts` helpers.
+- **Pipelines** — compose with `Effect.gen`; recover with `Effect.catch` / `Effect.catchTag` /
+  `Effect.option`.
+- **Handlers** — run the pipeline with `Effect.runPromise`, mapping failures to `HTTPError` via
+  `toHttpError`.
+- **Validation** — wrap throwing parsers with `Effect.try`.
 
 ## React Patterns
 
