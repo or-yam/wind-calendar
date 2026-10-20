@@ -1,0 +1,132 @@
+{
+  "checks": {
+    "adjacent": true,
+    "combinedBadges": true,
+    "contained": true,
+    "fiveHours": true,
+    "keyboard": true,
+    "oneHour": true,
+    "parallel": true,
+    "sameStart": true,
+    "threeLanes": true
+  },
+  "days": 3,
+  "eventCount": 6,
+  "events": [
+    {
+      "badges": [
+        {
+          "color": "rgb(191, 244, 0)",
+          "height": 16,
+          "width": 45.09375
+        },
+        {
+          "color": "rgb(225, 227, 255)",
+          "height": 16,
+          "width": 41.671875
+        }
+      ],
+      "height": 40,
+      "left": 44,
+      "name": "THU Oct 22 at Beit Yanai: 00:00 \u2013 01:00, Wind 15\u201320 kn NW, Wave 0.9m 7s W",
+      "right": 121,
+      "tabIndex": 0,
+      "top": 65,
+      "width": 77
+    },
+    {
+      "badges": [
+        {
+          "color": "rgb(255, 169, 17)",
+          "height": 8,
+          "width": 7.515625
+        },
+        {
+          "color": "rgb(211, 214, 255)",
+          "height": 8,
+          "width": 7.578125
+        }
+      ],
+      "height": 160,
+      "left": 126,
+      "name": "FRI Oct 23 at Bat Galim: 11:00 \u2013 15:00, Wind 18\u201324 kn W, Wave 1.2m 8s NW",
+      "right": 148.984375,
+      "tabIndex": 0,
+      "top": 505,
+      "width": 22.984375
+    },
+    {
+      "badges": [
+        {
+          "color": "rgb(237, 241, 0)",
+          "height": 8,
+          "width": 7.515625
+        },
+        {
+          "color": "rgb(230, 232, 255)",
+          "height": 8,
+          "width": 7.578125
+        }
+      ],
+      "height": 200,
+      "left": 152.984375,
+      "name": "FRI Oct 23 at Beit Yanai: 11:00 \u2013 16:00, Wind 16\u201321 kn NW, Wave 0.8m 7s W",
+      "right": 175.96875,
+      "tabIndex": 0,
+      "top": 505,
+      "width": 22.984375
+    },
+    {
+      "badges": [
+        {
+          "color": "rgb(201, 204, 255)",
+          "height": 8,
+          "width": 7.578125
+        }
+      ],
+      "height": 40,
+      "left": 179.984375,
+      "name": "FRI Oct 23 at Herzliya: 12:00 \u2013 13:00, Wave 1.4m 9s W",
+      "right": 202.96875,
+      "tabIndex": 0,
+      "top": 545,
+      "width": 22.984375
+    },
+    {
+      "badges": [
+        {
+          "color": "rgb(255, 135, 24)",
+          "height": 16,
+          "width": 44.875
+        }
+      ],
+      "height": 40,
+      "left": 126,
+      "name": "FRI Oct 23 at Beit Yanai: 16:00 \u2013 17:00, Wind 19\u201325 kn W",
+      "right": 203,
+      "tabIndex": 0,
+      "top": 705,
+      "width": 77
+    },
+    {
+      "badges": [
+        {
+          "color": "rgb(255, 169, 17)",
+          "height": 16,
+          "width": 45.46875
+        }
+      ],
+      "height": 60,
+      "left": 208,
+      "name": "SAT Oct 24 at Beit Yanai: 22:30 \u2013 24:00, Wind 18\u201324 kn NW",
+      "right": 285,
+      "tabIndex": 0,
+      "top": 965,
+      "width": 77
+    }
+  ],
+  "forecastCalls": 1,
+  "gridWidth": 288,
+  "overflow": false,
+  "width": 320
+}

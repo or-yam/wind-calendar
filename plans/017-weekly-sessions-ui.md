@@ -1,6 +1,6 @@
 # Weekly upcoming sessions UI
 
-Status: approved; all five local implementation tickets are complete. Independent review and Vercel preview QA remain pending.
+Status: complete; all five implementation tickets, independent Sol review, and parent Vercel preview QA passed. See the [final QA report](../.scratch/weekly-sessions/evidence/preview/qa-report.md).
 
 Planning sources: the main worktree's `to-spec`, `to-tickets`, `tdd`, and `writing-for-agents` skills. Work in complete, verifiable feature slices, with tests and cleanup inside each slice.
 
@@ -161,4 +161,4 @@ None.
 
 ## Review follow-up status (2026-10-20)
 
-All local findings from the first standards/spec review round are implemented. Transition weeks use one elapsed-hours axis across all columns and offset-qualified local event/detail times. Calendar source and rendered tests are split into focused files under 100 lines. Browser bounds verify overlap lanes, adjacent intervals, fractional starts, overnight segments, and the 45-minute rollback fixture. `pnpm check` passes (58 suites / 613 tests); `pnpm build` passes. Independent Sol review and parent Vercel preview QA remain pending. See [round 1 resolution](../.scratch/weekly-sessions/reviews/round1-resolution.md).
+All local findings from the first standards/spec review round are implemented. Transition weeks use one elapsed-hours axis across all columns and offset-qualified local event/detail times. Calendar source and rendered tests are split into focused files under 100 lines. Browser bounds verify overlap lanes, adjacent intervals, fractional starts, overnight segments, and the 45-minute rollback fixture. `pnpm check` passes (58 suites / 613 tests); `pnpm build` passes. Independent Sol standards/spec reviews passed after the [round 1](../.scratch/weekly-sessions/reviews/round1-resolution.md) and [round 2](../.scratch/weekly-sessions/reviews/round2-resolution.md) corrections. Parent QA passed on the protected Vercel preview, including live APIs and controlled browser fixtures. See the [final QA report](../.scratch/weekly-sessions/evidence/preview/qa-report.md).
