@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { formatTimeFromDate } from "@/lib/date-utils";
 import { DirectionIndicator } from "./DirectionIndicator";
+import { waveRangeLabel, windRangeLabel } from "./conditionLabels";
 
 const timestamp = (value: string) => {
   const date = new Date(value);
@@ -50,19 +51,17 @@ export function SessionDetails({
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
         {session.matchType !== "wave" && (
           <p>
-            Wind {wind.min === wind.max ? wind.min : `${wind.min}–${wind.max}`} kn · Gusts{" "}
-            {wind.gustMax} kn <DirectionIndicator direction={wind.direction} label="Wind" />
+            Wind {windRangeLabel(wind)} · Gusts {wind.gustMax} kn{" "}
+            <DirectionIndicator direction={wind.direction} label="Wind" />
           </p>
         )}
         {session.matchType !== "wind" && (
           <>
             <p>
-              Wave {wave.avgHeight.toFixed(1)}m{wave.avgPeriod > 0 ? ` ${wave.avgPeriod}s` : ""}{" "}
+              Wave {waveRangeLabel(wave)}{" "}
               <DirectionIndicator direction={wave.direction} label="Wave" wave />
             </p>
-            <p>
-              Swell {swell.avgHeight.toFixed(1)}m{swell.avgPeriod > 0 ? ` ${swell.avgPeriod}s` : ""}
-            </p>
+            <p>Swell {waveRangeLabel(swell)}</p>
           </>
         )}
       </div>

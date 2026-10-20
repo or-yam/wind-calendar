@@ -1,6 +1,7 @@
 import { sameDay } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { dayLabel } from "./DayColumn";
+import { cn } from "@/lib/utils";
 
 export type CalendarMode = "three-days" | "day";
 
@@ -27,11 +28,12 @@ export function CalendarMobileControls({
             aria-label={dayLabel(day)}
             aria-pressed={sameDay(selectedDay, day)}
             onClick={() => onSelectDay(day)}
-            className={`min-h-11 rounded border text-center text-xs font-semibold ${
+            className={cn(
+              "min-h-11 rounded border text-center text-xs font-semibold",
               sameDay(selectedDay, day)
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground"
-            }`}
+                : "border-border bg-card text-foreground",
+            )}
           >
             <span className="block">{day.toLocaleDateString("en-US", { weekday: "short" })}</span>
             {day.getDate()}

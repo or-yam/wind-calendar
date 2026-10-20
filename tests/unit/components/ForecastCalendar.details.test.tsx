@@ -41,6 +41,7 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 it("places equal-start and nested Friday sessions beside each other, and touching sessions at full width", async () => {
@@ -106,12 +107,12 @@ it("segments midnight and visible-week boundaries without changing the original 
   expect(segments[0].style.height).toBe("36px");
   expect(segments[1].getAttribute("aria-label")).toContain("00:00 – 01:00");
   expect(segments[1].style.top).toBe("0px");
-  expect(event("Outgoing").getAttribute("aria-label")).toContain("22:30 – 24:00");
+  expect(event("Outgoing").getAttribute("aria-label")).toContain("22:30 UTC+03 – 24:00");
   expect(container.textContent).toContain("24:00");
   expect(JSON.stringify([incoming, overnight, outgoing])).toBe(originals);
   await render([incoming, overnight, outgoing], { weekStart: new Date(2026, 9, 25) });
   expect(event("Outgoing").getAttribute("aria-label")).toContain(
-    "SUN Oct 25 at Outgoing: 00:00 – 02:00",
+    "SUN Oct 25 at Outgoing: 00:00 – 02:00 UTC+02",
   );
   expect(container.querySelectorAll('[aria-label*="at Outgoing:"]')).toHaveLength(1);
 });
@@ -170,6 +171,52 @@ it("closes details when the session leaves the visible days and does not reopen 
   const friday = container.querySelector<HTMLButtonElement>('button[aria-label="FRI Oct 23"]')!;
   await act(async () => friday.click());
   expect(container.querySelector('[aria-label="Session details"]')).toBeNull();
+});
+
+it("returns focus to the remaining overnight segment after Day mode removes the trigger", async () => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+  );
+  const overnight = { ...session("Bat Galim", 23, 25) };
+  await render([overnight], { today: new Date(2026, 9, 21) });
+  await act(async () => event("Bat Galim").click());
+  const saturday = container.querySelector<HTMLButtonElement>('button[aria-label="SAT Oct 24"]')!;
+  await act(async () => saturday.click());
+  const saturdaySegment = container.querySelector<HTMLButtonElement>(
+    'button[aria-label*="SAT Oct 24 at Bat Galim"]',
+  )!;
+  expect(saturdaySegment.getAttribute("aria-label")).toContain("SAT Oct 24 at Bat Galim");
+  await act(async () => saturdaySegment.click());
+  await act(async () =>
+    [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Day")!
+      .click(),
+  );
+  await act(async () =>
+    container.querySelector<HTMLButtonElement>('[aria-label="Close session details"]')!.click(),
+  );
+  expect(document.activeElement?.getAttribute("data-session-key")).toBe(
+    saturdaySegment.dataset.sessionKey,
+  );
+});
+
+it("keeps a rollback-spanning session positive and labels both local offsets", async () => {
+  vi.stubEnv("TZ", "Asia/Jerusalem");
+  const base = session("Jerusalem", 1, 2);
+  await render(
+    [
+      {
+        ...base,
+        start: "2026-10-24T22:30:00.000Z",
+        end: "2026-10-24T23:15:00.000Z",
+      },
+    ],
+    { weekStart: new Date(2026, 9, 25), today: new Date(2026, 9, 25) },
+  );
+  const eventButton = event("Jerusalem");
+  expect(eventButton.getAttribute("aria-label")).toContain("01:30 UTC+03 – 01:15 UTC+02");
+  expect(Number.parseFloat(eventButton.style.height)).toBeGreaterThan(0);
 });
 
 it("closes details when the visible week changes away from the session", async () => {

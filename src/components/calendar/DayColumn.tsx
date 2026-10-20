@@ -2,7 +2,7 @@ import type { ForecastSession } from "@shared/forecast-types";
 import { addDays, sameDay } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { overlapLanes, laneBox, sessionKey } from "./overlapLanes";
-import { intersects, segmentHours, segmentTime } from "./sessionSegments";
+import { intersects, segmentHours, segmentTime, sessionSegmentTime } from "./sessionSegments";
 import { SessionEvent } from "./SessionEvent";
 
 export function dayLabel(day: Date) {
@@ -58,8 +58,7 @@ export function DayColumn({
         className="relative"
         style={{
           height: (endHour - startHour) * hourHeight,
-          backgroundImage:
-            "repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--border) 35px, var(--border) 36px)",
+          backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${hourHeight - 1}px, var(--border) ${hourHeight - 1}px, var(--border) ${hourHeight}px)`,
         }}
       >
         {!matches.length && (
@@ -77,8 +76,14 @@ export function DayColumn({
               detailsId={detailsId}
               onActivate={(button) => onActivate(session, button)}
               dayLabel={dayLabel(day)}
-              startTime={segmentTime(start)}
-              endTime={segmentTime(end)}
+              startTime={
+                start === 0
+                  ? segmentTime(start)
+                  : sessionSegmentTime(session.start, start, session.end)
+              }
+              endTime={
+                end === 24 ? segmentTime(end) : sessionSegmentTime(session.end, end, session.start)
+              }
               style={{
                 ...laneBox(lane, lanes),
                 top: (start - startHour) * hourHeight,

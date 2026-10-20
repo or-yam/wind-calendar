@@ -36,7 +36,12 @@ export function CalendarGrid({
   if (selectedKey !== null && !selected) setSelectedKey(null);
   const close = () => {
     setSelectedKey(null);
-    if (trigger.current?.isConnected) trigger.current.focus({ preventScroll: true });
+    const target = trigger.current?.isConnected
+      ? trigger.current
+      : [...document.querySelectorAll<HTMLButtonElement>("button[data-session-key]")].find(
+          (button) => button.dataset.sessionKey === selectedKey,
+        );
+    target?.focus({ preventScroll: true });
   };
   return (
     <>

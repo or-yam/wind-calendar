@@ -147,6 +147,27 @@ describe("forecast navigation with rendered calendar", () => {
     ).toContain("SUN Aug 2");
   });
 
+  it("moves backward by three days from the clamped Saturday range", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query === "(max-width: 767px)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    await act(async () => root.render(createElement(Harness)));
+    const saturday = container.querySelector<HTMLButtonElement>('button[aria-label="SAT Aug 1"]')!;
+    await act(async () => saturday.click());
+    expect(
+      container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
+    ).toContain("THU Jul 30");
+    const previous = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Previous range"]',
+    )!;
+    await act(async () => previous.click());
+    expect(
+      container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
+    ).toContain("MON Jul 27");
+  });
+
   it("focuses today's day when returning from a future week with no sessions", async () => {
     await act(async () => root.render(createElement(Harness)));
 

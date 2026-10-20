@@ -63,9 +63,11 @@ describe("forecast calendar accessibility", () => {
     expect(
       container.querySelector('[role="region"][aria-label="Weekly forecast calendar"]'),
     ).not.toBeNull();
-    const event = container.querySelector('button[aria-label*="at Beit Yanai"]')!;
+    const event = container.querySelector<HTMLButtonElement>(
+      'button[aria-label*="at Beit Yanai"]',
+    )!;
     expect(event.getAttribute("aria-label")).toContain("09:00 – 12:00, Wind 16–20 kn W");
-    expect(event.getAttribute("tabindex")).not.toBe("0");
+    expect(event.tabIndex).toBe(0);
     expect(event.querySelector('[aria-label^="Wave direction"]')).toBeNull();
     expect(event.textContent).not.toContain("1.2m");
   });

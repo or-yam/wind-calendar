@@ -158,3 +158,7 @@ No external tracker configuration was found. Tickets are stored locally, one fil
 ## Unresolved questions
 
 None.
+
+## Review follow-up status (2026-10-20)
+
+The first standards/spec review round fixed mobile range movement, mobile grid spacing, event focus restoration, keyboard tab-stop coverage, component CSS placement, conditional class handling, listener cleanup, and shared condition range formatting. A DST elapsed-geometry change is covered at the rendered boundary, but the transition-day axis still needs a deliberate repeated-hour presentation. Small-file test/source extraction and brittle assertion migration remain incomplete. `pnpm check` passes (49 suites / 611 tests); browser checks at 320, 390, 768, and 1280px found no horizontal overflow. Independent review and Vercel preview QA remain pending. See [round 1 resolution](../.scratch/weekly-sessions/reviews/round1-resolution.md).

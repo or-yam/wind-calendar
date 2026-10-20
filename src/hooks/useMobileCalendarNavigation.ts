@@ -62,7 +62,7 @@ export function useMobileCalendarNavigation({
     onToday();
   };
   const moveRange = (direction: -1 | 1) => {
-    const candidate = addDays(selectedDay, direction * count);
+    const candidate = addDays(weekDays[rangeStartIndex], direction * count);
     if (candidate < weekStart) {
       if (canGoPrev) {
         onPrev();
