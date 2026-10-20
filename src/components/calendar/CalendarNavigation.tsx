@@ -5,6 +5,7 @@ export function CalendarNavigation({
   weekStart,
   isMobile,
   canGoPrev,
+  canGoNext,
   onPrev,
   onNext,
   onToday,
@@ -12,6 +13,7 @@ export function CalendarNavigation({
   weekStart: Date;
   isMobile: boolean;
   canGoPrev: boolean;
+  canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -39,6 +41,7 @@ export function CalendarNavigation({
         className="min-h-11"
         variant="outline"
         onClick={onNext}
+        disabled={!canGoNext}
       >
         <span className="sm:hidden">→</span>
         <span className="hidden sm:inline">Next →</span>

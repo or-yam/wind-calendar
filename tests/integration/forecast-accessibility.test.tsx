@@ -33,6 +33,7 @@ function renderCards(overrides: Partial<Parameters<typeof ForecastCalendar>[0]> 
     weekStart: new Date(2026, 6, 26),
     today: new Date(2026, 6, 29),
     canGoPrev: false,
+    canGoNext: true,
     onPrev: vi.fn(),
     onNext: vi.fn(),
     onToday: vi.fn(),

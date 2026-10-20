@@ -22,6 +22,7 @@ const defaults = {
   weekStart: new Date(2026, 9, 18),
   today: new Date(2026, 9, 20),
   canGoPrev: false,
+  canGoNext: true,
   onPrev: () => {},
   onNext: () => {},
   onToday: () => {},

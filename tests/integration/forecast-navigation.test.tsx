@@ -22,6 +22,7 @@ function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
     weekStart: navigation.weekStart,
     today: navigation.today,
     canGoPrev: navigation.canGoPrev,
+    canGoNext: navigation.canGoNext,
     onPrev: navigation.goToPrev,
     onNext: navigation.goToNext,
     onToday: navigation.goToToday,
@@ -145,6 +146,48 @@ describe("forecast navigation with rendered calendar", () => {
     expect(
       container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
     ).toContain("SUN Aug 2");
+  });
+
+  it("disables desktop Next after advancing two weeks and restores it on Today", async () => {
+    await act(async () => root.render(createElement(Harness)));
+    await act(async () => nextButton().click());
+    expect(nextButton().disabled).toBe(false);
+    await act(async () => nextButton().click());
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    expect(nextButton().disabled).toBe(true);
+    await act(async () => nextButton().click());
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    await act(async () => todayButton().click());
+    expect(nextButton().disabled).toBe(false);
+  });
+
+  it.each(["Day", "3 days"])("caps mobile %s navigation at the final range", async (mode) => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query === "(max-width: 767px)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    await act(async () => root.render(createElement(Harness)));
+    if (mode === "Day") {
+      const dayButton = [...container.querySelectorAll("button")].find(
+        (b) => b.textContent === "Day",
+      )!;
+      await act(async () => dayButton.click());
+    }
+    for (let i = 0; i < 25 && !nextButton().disabled; i++) {
+      await act(async () => nextButton().click());
+    }
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    expect(nextButton().disabled).toBe(true);
+    const days = container.querySelectorAll('[role="region"] [role="group"]');
+    expect(days[days.length - 1]?.getAttribute("aria-label")).toContain("SAT Aug 15");
+    await act(async () => nextButton().click());
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    const previous = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Previous range"]',
+    )!;
+    await act(async () => previous.click());
+    expect(nextButton().disabled).toBe(false);
   });
 
   it("moves backward by three days from the clamped Saturday range", async () => {

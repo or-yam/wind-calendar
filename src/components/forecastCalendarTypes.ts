@@ -8,6 +8,7 @@ export interface ForecastCalendarProps {
   weekStart: Date;
   today?: Date;
   canGoPrev: boolean;
+  canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;

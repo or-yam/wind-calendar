@@ -136,7 +136,7 @@ function App() {
   const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));
   const sessions = data?.sessions ?? [];
   const forecastConfigKey = buildConfigParams(config).toString();
-  const { weekStart, today, canGoPrev, goToToday, goToPrev, goToNext } =
+  const { weekStart, today, canGoPrev, canGoNext, goToToday, goToPrev, goToNext } =
     useWeekNavigation(forecastConfigKey);
 
   const handleLocationsChange = (locations: string[]) => {
@@ -237,6 +237,7 @@ function App() {
             weekStart={weekStart}
             today={today}
             canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
             onPrev={goToPrev}
             onNext={goToNext}
             onToday={goToToday}

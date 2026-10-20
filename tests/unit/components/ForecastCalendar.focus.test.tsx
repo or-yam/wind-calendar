@@ -31,6 +31,7 @@ describe("ForecastCalendar", () => {
         weekStart,
         today,
         canGoPrev: false,
+        canGoNext: true,
         onPrev: vi.fn(),
         onNext: vi.fn(),
         onToday: vi.fn(),

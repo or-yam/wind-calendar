@@ -17,6 +17,7 @@ export function ForecastCalendar({
   weekStart,
   today = new Date(),
   canGoPrev,
+  canGoNext,
   onPrev,
   onNext,
   onToday,
@@ -32,6 +33,7 @@ export function ForecastCalendar({
     selectedDay,
     visibleDays,
     canMovePrev,
+    canMoveNext,
     selectDay,
     selectToday,
     moveRange,
@@ -40,6 +42,7 @@ export function ForecastCalendar({
     today,
     isMobile,
     canGoPrev,
+    canGoNext,
     onPrev,
     onNext,
     onToday,
@@ -62,6 +65,7 @@ export function ForecastCalendar({
           weekStart={weekStart}
           isMobile={isMobile}
           canMovePrev={canMovePrev}
+          canMoveNext={canMoveNext}
           moveRange={moveRange}
           onPrev={onPrev}
           onNext={onNext}

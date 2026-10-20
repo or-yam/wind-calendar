@@ -7,6 +7,7 @@ export function useCalendarPresentation({
   today,
   isMobile,
   canGoPrev,
+  canGoNext,
   onPrev,
   onNext,
   onToday,
@@ -18,6 +19,7 @@ export function useCalendarPresentation({
   today: Date;
   isMobile: boolean;
   canGoPrev: boolean;
+  canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -34,6 +36,7 @@ export function useCalendarPresentation({
       today,
       isMobile,
       canGoPrev,
+      canGoNext,
       onPrev,
       onNext,
       onToday,

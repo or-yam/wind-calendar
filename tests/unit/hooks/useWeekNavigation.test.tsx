@@ -12,14 +12,15 @@ function WeekStart() {
 }
 
 function Navigation({ resetKey = "default" }: { resetKey?: string }) {
-  const { weekStart, canGoPrev, goToPrev, goToNext } = useWeekNavigation(resetKey);
+  const { weekStart, canGoPrev, canGoNext, goToPrev, goToNext } = useWeekNavigation(resetKey);
   return createElement(
     "div",
     null,
     createElement("span", null, weekStart.getDate()),
-    createElement("button", { onClick: goToNext }, "Next"),
+    createElement("button", { onClick: goToNext, disabled: !canGoNext }, "Next"),
     createElement("button", { onClick: goToPrev, disabled: !canGoPrev }, "Previous"),
     createElement("button", { onClick: goToPrev }, "Force previous"),
+    createElement("button", { onClick: goToNext }, "Force next"),
   );
 }
 
@@ -74,6 +75,31 @@ describe("useWeekNavigation", () => {
     await act(async () => forcePrevious.click());
 
     expect(container.querySelector("span")?.textContent).toBe("26");
+  });
+
+  it("caps navigation two weeks ahead even when the handler is called directly", async () => {
+    await act(async () => root.render(createElement(Navigation)));
+    const buttons = [...container.querySelectorAll("button")];
+    const next = buttons.find((button) => button.textContent === "Next")!;
+    const forceNext = buttons.find((button) => button.textContent === "Force next")!;
+    await act(async () => next.click());
+    expect(next.disabled).toBe(false);
+    await act(async () => next.click());
+    expect(container.querySelector("span")?.textContent).toBe("9");
+    expect(next.disabled).toBe(true);
+
+    await act(async () => {
+      forceNext.click();
+      forceNext.click();
+    });
+    expect(container.querySelector("span")?.textContent).toBe("9");
+
+    vi.setSystemTime(new Date(2026, 7, 2, 12));
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    expect(next.disabled).toBe(false);
+    await act(async () => next.click());
+    expect(container.querySelector("span")?.textContent).toBe("16");
+    expect(next.disabled).toBe(true);
   });
 
   it("allows returning from a future week to the current week", async () => {

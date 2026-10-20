@@ -9,6 +9,7 @@ export function useMobileCalendarNavigation({
   today,
   isMobile,
   canGoPrev,
+  canGoNext,
   onPrev,
   onNext,
   onToday,
@@ -19,6 +20,7 @@ export function useMobileCalendarNavigation({
   today: Date;
   isMobile: boolean;
   canGoPrev: boolean;
+  canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -42,6 +44,7 @@ export function useMobileCalendarNavigation({
   const selectedIndex = selection?.week === weekStart.getTime() ? selection.day : initialIndex;
   const selectedDay = weekDays[selectedIndex];
   const rangeStartIndex = Math.min(selectedIndex, 7 - count);
+  const canMoveNext = canGoNext || (isMobile && rangeStartIndex < 7 - count);
   const canMovePrev = canGoPrev || (isMobile && rangeStartIndex > 0);
   const visibleDays = Array.from({ length: count }, (_, i) =>
     addDays(weekDays[rangeStartIndex], i),
@@ -62,6 +65,7 @@ export function useMobileCalendarNavigation({
     onToday();
   };
   const moveRange = (direction: -1 | 1) => {
+    if (direction === 1 && !canMoveNext) return;
     const candidate = addDays(weekDays[rangeStartIndex], direction * count);
     if (candidate < weekStart) {
       if (canGoPrev) {
@@ -71,6 +75,7 @@ export function useMobileCalendarNavigation({
       return;
     }
     if (candidate >= addDays(weekStart, 7)) {
+      if (!canGoNext) return;
       onNext();
       setSelection({ week: addDays(weekStart, 7).getTime(), day: 0 });
       return;
@@ -89,6 +94,7 @@ export function useMobileCalendarNavigation({
     selectedDay,
     visibleDays,
     canMovePrev,
+    canMoveNext,
     selectDay,
     selectToday,
     moveRange,
