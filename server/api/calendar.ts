@@ -24,13 +24,13 @@ export default defineHandler(async (event) => {
     });
   }
 
-  const program = Effect.gen(function* () {
+  const calendarProgram = Effect.gen(function* () {
     const config = yield* parseConfig(getQuery(event));
     const result = yield* buildLocationSessions(config, dev);
     return { config, result };
   }).pipe(Effect.mapError(toHttpError));
 
-  const { config, result } = await Effect.runPromise(program);
+  const { config, result } = await Effect.runPromise(calendarProgram);
 
   const { sessions, dataSources, fallbackUsed } = result;
 
