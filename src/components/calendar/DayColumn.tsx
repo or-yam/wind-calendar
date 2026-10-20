@@ -1,9 +1,8 @@
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays, sameDay } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import { overlapLanes, laneBox, sessionKey } from "./overlapLanes";
-import { intersects, segmentHours, segmentTime, sessionSegmentTime } from "./sessionSegments";
-import { SessionEvent } from "./SessionEvent";
+import { intersects } from "./sessionSegments";
+import { DayEvents } from "./DayEvents";
 
 export function dayLabel(day: Date) {
   return `${day.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} ${day.toLocaleDateString("en-US", { month: "short" })} ${day.getDate()}`;
@@ -16,6 +15,7 @@ export function DayColumn({
   startHour,
   endHour,
   hourHeight,
+  elapsedAxis,
   selectedKey,
   detailsId,
   onActivate,
@@ -26,6 +26,7 @@ export function DayColumn({
   startHour: number;
   endHour: number;
   hourHeight: number;
+  elapsedAxis: boolean;
   selectedKey: string | null;
   detailsId: string;
   onActivate: (session: ForecastSession, button: HTMLButtonElement) => void;
@@ -66,32 +67,17 @@ export function DayColumn({
             No match
           </p>
         )}
-        {overlapLanes(matches).map(({ session, lane, lanes }) => {
-          const { start, end } = segmentHours(session, day);
-          return (
-            <SessionEvent
-              key={sessionKey(session)}
-              session={session}
-              expanded={selectedKey === sessionKey(session)}
-              detailsId={detailsId}
-              onActivate={(button) => onActivate(session, button)}
-              dayLabel={dayLabel(day)}
-              startTime={
-                start === 0
-                  ? segmentTime(start)
-                  : sessionSegmentTime(session.start, start, session.end)
-              }
-              endTime={
-                end === 24 ? segmentTime(end) : sessionSegmentTime(session.end, end, session.start)
-              }
-              style={{
-                ...laneBox(lane, lanes),
-                top: (start - startHour) * hourHeight,
-                height: (end - start) * hourHeight,
-              }}
-            />
-          );
-        })}
+        <DayEvents
+          day={day}
+          dayName={dayLabel(day)}
+          sessions={matches}
+          startHour={startHour}
+          hourHeight={hourHeight}
+          elapsedAxis={elapsedAxis}
+          selectedKey={selectedKey}
+          detailsId={detailsId}
+          onActivate={onActivate}
+        />
       </div>
     </div>
   );

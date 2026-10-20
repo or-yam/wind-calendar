@@ -1,33 +1,42 @@
 # Weekly sessions review resolution · round 1
 
-Task worktree: `t3-0a251680`, pinned base `32159f7e5a5e4e9dd76b1c58460472c29749440b`.
+Task worktree: `t3-0a251680`, pinned integration base `32159f7e5a5e4e9dd76b1c58460472c29749440b`.
 
 ## Standards findings
 
-- **Implementation-coupled tests — partially resolved.** Keyboard coverage now asserts the native event button has `tabIndex === 0`. The two forecast component test files still contain exact inline-style assertions and selectors tied to rendered markup. Browser checks below validate actual responsive widths and event bounds, but the test cleanup/split requested by review is not complete.
-- **Keyboard assertion regression — resolved.** `forecast-accessibility.test.tsx` checks `event.tabIndex === 0`.
-- **Component styles in global CSS — resolved.** Removed the new `.session-event` global container rules. Container sizing and compact styling now live in named Tailwind container-query classes on `SessionEvent`.
-- **Conditional classes bypass `cn()` — resolved.** `CalendarMobileControls` now uses `cn()`.
-- **Listener cleanup — resolved.** Both listeners share one `AbortController` signal; unsubscribe aborts it.
-- **File-size guideline — unresolved.** `ForecastCalendar.tsx`, `SessionEvent.tsx`, and both cited rendered test files remain over 100 lines. These need focused extractions/splits.
-- **Duplicated condition formatting — resolved.** Shared wind and wave range labels live in `conditionLabels.ts` and serve event and detail views.
+- **Implementation-coupled tests — resolved.** Replaced exact `calc(...)`/inline-style checks and `nth-child`/class-name queries with event names, date/time content, accessible conditions, actions, and focus assertions. Layout relationships are checked at the approved browser boundary below. Rendered calendar tests are split into behavior-focused files; all are under 100 lines and use `tests/helpers/forecast-calendar-render.tsx` where shared setup is useful.
+- **Keyboard assertion regression — resolved.** Accessibility coverage asserts the native event button has `tabIndex === 0`.
+- **Component styles in global CSS — resolved.** Removed component-specific global container rules; compact presentation uses named Tailwind container-query classes in `SessionBadges`/`SessionEvent`.
+- **Conditional classes bypass `cn()` — resolved.** `CalendarMobileControls` uses `cn()`.
+- **Listener cleanup — resolved.** Both `matchMedia` and resize listeners share one `AbortController` signal; unsubscribe aborts it.
+- **File-size guideline — resolved.** `ForecastCalendar.tsx`, `DayColumn.tsx`, `SessionEvent.tsx`, extracted calendar components/hooks, and every focused rendered calendar test are below 100 lines.
+- **Duplicated condition formatting — resolved.** Shared wind and wave range labels serve both event badges and details.
 
 ## Spec findings
 
-- **Mobile arrows — resolved.** Movement is based on the clamped visible-range start. The rendered navigation regression selects Saturday from a Thu–Sat range and verifies Previous starts Monday. Browser reproduction at 390px also moved Thu–Sat to Mon–Wed; week navigation remained in the same week.
-- **Mobile hour grid — resolved.** Day-column gradient stops are derived from `hourHeight`. Browser computed style at 320px showed 39px transparent plus 1px border, matching the 40px mobile scale.
-- **Details focus return — resolved.** If the trigger unmounts, close locates a current button carrying the selected session key. A rendered regression verifies focus returns to its remaining Saturday segment after switching to Day.
-- **DST rollback geometry — partially resolved.** Offset-transition intervals use elapsed duration for positive geometry, and event times include UTC offsets when the segment spans an offset change. A rendered Asia/Jerusalem fixture for `2026-10-25T01:30+03:00` → `2026-10-25T01:15+02:00` verifies both labels and positive height. The shared hourly axis is still based on local wall-clock hours, so the transition-day elapsed geometry does not have a fully disambiguated repeated-hour axis. That UI representation needs a follow-up before this finding can be considered fully closed.
+- **Mobile arrows — resolved.** Movement uses the clamped visible-range start. Rendered navigation selects Saturday from Thu–Sat and verifies Previous starts Monday. Browser reproduction at 390px also moved Thu–Sat to Mon–Wed.
+- **Mobile hour grid — resolved.** Gradient stops derive from `hourHeight`. Browser computed style at 320px was 39px transparent plus a 1px line for the 40px mobile scale.
+- **Details focus return — resolved.** When the original trigger unmounts, close locates a currently rendered event button for the same session. Rendered coverage switches to Day and confirms focus returns to its remaining Saturday segment.
+- **DST rollback and spring-forward geometry and axis — resolved.** A week containing an offset transition uses one shared elapsed-hours-since-local-midnight axis for every day column. The axis is labeled in elapsed hours, and a visible note explains the clock-change week. Event segments use clipped source instants and elapsed duration; event and detail times show local clocks with `UTC±HH:MM` offsets. Ordinary weeks retain the local wall-clock axis. Rendered coverage includes the Asia/Jerusalem rollback fixture, a Berlin spring-forward fixture, and Lord Howe’s half-hour offset transition.
 
-## Verification
+## Browser evidence
 
-- `pnpm check`: **49 suites, 611 tests passed**.
-- Browser via `agent-browser` and `portless`: 320, 390, 768, and 1280px produced no document horizontal overflow; measured calendar widths were 288, 358, 732, and 1080px. A real forecast event was present at desktop widths. At 320px the mobile grid used three columns and a 40px hourly gradient.
-- Browser navigation check: selected Saturday in the clamped three-day range, then Previous; visible dates became Monday–Wednesday.
+Used a controlled forecast response in `agent-browser` against the worktree's `portless` app. At 1280px on the transition week, DOM bounding boxes showed:
 
-## Still pending
+- Equal-start sessions share a top coordinate and occupy separate horizontal lanes; the nested interval occupies a third lane.
+- The adjacent interval begins at the prior event's bottom coordinate and returns to full column width.
+- Three- and five-hour events measured 108px and 180px at 36px per elapsed hour; the nested one-hour event measured 36px.
+- The 06:15 fractional event starts 6.25 elapsed hours from local midnight and measured 18px for its 30-minute duration.
+- The overnight session measured 36px for its Sunday 23:00–midnight piece and 108px for its Monday midnight–03:00 piece.
+- The rollback fixture measured 27px, exactly 45 minutes at 36px/hour. Its accessible label and details read `01:30 UTC+03:00 – 01:15 UTC+02:00`.
+- The transition-week scale labeled elapsed hours through `25h` and displayed the clock-change note.
+- At 320px and 390px the 45-minute block measured 30px at 40px/hour; at 768px and 1280px it measured 27px at 36px/hour.
 
-- Complete the small-file extractions and split both oversized rendered test files while preserving behavior coverage.
-- Remove implementation-coupled style/markup assertions and cover visual relationships through browser evidence.
-- Resolve repeated-hour axis labeling for DST transitions.
-- Independent review and Vercel preview QA remain pending; this worktree does not deploy or publish.
+At 320, 390, 768, and 1280px, `documentElement.scrollWidth` matched the viewport width; measured calendar widths were 288, 358, 732, and 1080px. At 320px the grid showed three day columns and used the 40px mobile line interval.
+
+## Verification and handoff
+
+- `pnpm check`: **58 suites, 613 tests passed**.
+- `pnpm build`: passed.
+- No provider/API changes. No push, deploy, or PR.
+- All local round-one findings are resolved. Independent Sol re-review and parent Vercel preview QA remain pending by request.

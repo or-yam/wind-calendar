@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
-import { windColor, windTextColor } from "@/lib/wind-colors";
-import { waveHeightColor, waveHeightTextColor } from "@/lib/wave-colors";
+import { windColor } from "@/lib/wind-colors";
+import { waveHeightColor } from "@/lib/wave-colors";
 import { cn } from "@/lib/utils";
 import { DirectionIndicator } from "./DirectionIndicator";
 import { sessionKey } from "./overlapLanes";
 import { waveRangeLabel, windRangeLabel } from "./conditionLabels";
+import { SessionBadges } from "./SessionBadges";
 
 export function SessionEvent({
   session,
@@ -70,39 +71,7 @@ export function SessionEvent({
         <span className="whitespace-nowrap"> – </span>
         <span className="whitespace-nowrap">{endTime}</span>
       </span>
-      <span className="session-event__badges flex flex-wrap gap-1 @max-[48px]/session-event:max-w-full @max-[48px]/session-event:flex-col @max-[48px]/session-event:items-center @max-[48px]/session-event:gap-0">
-        {session.matchType !== "wave" && (
-          <span
-            className="session-event__badge session-event__wind rounded px-1 text-xs font-bold whitespace-nowrap @max-[48px]/session-event:max-w-full @max-[48px]/session-event:overflow-hidden @max-[48px]/session-event:px-px @max-[48px]/session-event:text-[8px] @max-[48px]/session-event:leading-none"
-            data-compact-label="W"
-            style={{ backgroundColor: windColor(midKnots), color: windTextColor(midKnots) }}
-          >
-            <span
-              className="session-event__badge-label @max-[48px]/session-event:text-[0px] @max-[48px]/session-event:after:content-[attr(data-compact-label)] @max-[48px]/session-event:after:text-[8px]"
-              data-compact-label="W"
-            >
-              {windLabel}
-            </span>
-          </span>
-        )}
-        {session.matchType !== "wind" && (
-          <span
-            className="session-event__badge session-event__wave rounded px-1 text-xs font-bold whitespace-nowrap @max-[48px]/session-event:max-w-full @max-[48px]/session-event:overflow-hidden @max-[48px]/session-event:px-px @max-[48px]/session-event:text-[8px] @max-[48px]/session-event:leading-none"
-            data-compact-label="≈"
-            style={{
-              backgroundColor: waveHeightColor(wave.avgHeight),
-              color: waveHeightTextColor(wave.avgHeight),
-            }}
-          >
-            <span
-              className="session-event__badge-label @max-[48px]/session-event:text-[0px] @max-[48px]/session-event:after:content-[attr(data-compact-label)] @max-[48px]/session-event:after:text-[8px]"
-              data-compact-label="≈"
-            >
-              {waveLabel}
-            </span>
-          </span>
-        )}
-      </span>
+      <SessionBadges session={session} />
       <span className="session-event__directions mt-1 flex flex-wrap gap-1 @max-[48px]/session-event:hidden">
         {session.matchType !== "wave" && (
           <DirectionIndicator direction={wind.direction} label="Wind" />
