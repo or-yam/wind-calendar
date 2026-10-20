@@ -7,7 +7,7 @@ const Analytics = lazy(() =>
 );
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
-import { ForecastCards } from "./components/ForecastCards";
+import { ForecastCalendar } from "./components/ForecastCalendar";
 import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
@@ -212,7 +212,7 @@ function App() {
             </div>
           }
         >
-          <ForecastCards
+          <ForecastCalendar
             sessions={sessions}
             isPending={isPending}
             error={error}

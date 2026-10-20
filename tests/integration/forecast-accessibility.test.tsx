@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ForecastSession } from "../../shared/forecast-types";
-import { ForecastCards } from "../../src/components/ForecastCards";
+import { ForecastCalendar } from "../../src/components/ForecastCalendar";
 import { Hero } from "../../src/components/Hero";
 
 vi.mock("../../src/components/canvasui/VHS", () => ({
@@ -25,8 +25,8 @@ const session: ForecastSession = {
 
 const NO_SESSIONS: ForecastSession[] = [];
 
-function renderCards(overrides: Partial<Parameters<typeof ForecastCards>[0]> = {}) {
-  return createElement(ForecastCards, {
+function renderCards(overrides: Partial<Parameters<typeof ForecastCalendar>[0]> = {}) {
+  return createElement(ForecastCalendar, {
     sessions: [session],
     isPending: false,
     error: null,
@@ -40,7 +40,7 @@ function renderCards(overrides: Partial<Parameters<typeof ForecastCards>[0]> = {
   });
 }
 
-describe("forecast strip accessibility", () => {
+describe("forecast calendar accessibility", () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -58,28 +58,28 @@ describe("forecast strip accessibility", () => {
     vi.useRealTimers();
   });
 
-  it("gives the forecast strip a role, a name and keyboard focus", async () => {
+  it("names the calendar and exposes session conditions without unnecessary tab stops", async () => {
     await act(async () => root.render(renderCards()));
-
-    const track = container.querySelector(".forecast-scroll")!;
-    expect(track.getAttribute("role")).toBe("group");
-    expect(track.getAttribute("tabindex")).toBe("0");
-    expect(track.getAttribute("aria-label")).toBe("Forecast days, scroll horizontally");
-  });
-
-  it("keeps session cards out of the sequential tab order", async () => {
-    await act(async () => root.render(renderCards()));
-
-    for (const card of container.querySelectorAll(".session-card")) {
-      expect(card.getAttribute("tabindex")).not.toBe("0");
-      expect(card.getAttribute("role")).toBe("group");
-    }
+    expect(
+      container.querySelector('[role="region"][aria-label="Weekly forecast calendar"]'),
+    ).not.toBeNull();
+    const event = container.querySelector('[role="group"][aria-label*="at Beit Yanai"]')!;
+    expect(event.getAttribute("aria-label")).toContain("09:00 – 12:00, Wind 16–20 kn W");
+    expect(event.getAttribute("tabindex")).not.toBe("0");
+    expect(event.querySelector('[aria-label^="Wave direction"]')).toBeNull();
+    expect(event.textContent).not.toContain("1.2m");
   });
 
   it("announces loading instead of relying on skeletons", async () => {
     await act(async () => root.render(renderCards({ isPending: true, sessions: NO_SESSIONS })));
 
     expect(container.textContent).toContain("Loading the forecast");
+    expect(
+      container
+        .querySelector('[role="region"][aria-label="Weekly forecast calendar"]')
+        ?.getAttribute("aria-busy"),
+    ).toBe("true");
+    expect(container.textContent).not.toContain("No match");
     for (const skeleton of container.querySelectorAll("[data-slot='skeleton']")) {
       expect(skeleton.getAttribute("aria-hidden")).toBe("true");
     }
@@ -91,13 +91,13 @@ describe("forecast strip accessibility", () => {
     expect(container.textContent).toContain("No sessions match this week");
   });
 
-  it("announces a forecast error without rendering empty cards", async () => {
+  it("announces a forecast error without rendering empty days", async () => {
     await act(async () =>
       root.render(renderCards({ sessions: NO_SESSIONS, error: new Error("QA unavailable") })),
     );
 
     expect(container.textContent).toContain("QA unavailable");
-    expect(container.querySelectorAll(".session-card")).toHaveLength(0);
+    expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(0);
   });
 
   it("names the conditions section so its content sits in a landmark", async () => {

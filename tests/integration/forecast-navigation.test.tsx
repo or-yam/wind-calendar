@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ForecastSession } from "../../shared/forecast-types";
 import { useWeekNavigation } from "../../src/hooks/useWeekNavigation";
-import { ForecastCards } from "../../src/components/ForecastCards";
+import { ForecastCalendar } from "../../src/components/ForecastCalendar";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -14,7 +14,7 @@ const NO_SESSIONS: ForecastSession[] = [];
 
 function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
   navigation = useWeekNavigation("default");
-  return createElement(ForecastCards, {
+  return createElement(ForecastCalendar, {
     sessions,
     isPending: false,
     error: null,
@@ -41,7 +41,7 @@ function session(day: number, hour: number): ForecastSession {
   };
 }
 
-describe("forecast navigation with rendered cards", () => {
+describe("forecast navigation with rendered calendar", () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -69,7 +69,7 @@ describe("forecast navigation with rendered cards", () => {
     vi.useRealTimers();
   });
 
-  it("focuses today's card when returning from a future week with no sessions", async () => {
+  it("focuses today's day when returning from a future week with no sessions", async () => {
     await act(async () => root.render(createElement(Harness)));
 
     const next = nextButton();
@@ -86,7 +86,7 @@ describe("forecast navigation with rendered cards", () => {
     expect(todayCard()?.getAttribute("aria-label")).toBe("WED Jul 29: No sessions");
   });
 
-  it("focuses today's card when returning from a future week with sessions", async () => {
+  it("focuses today's day when returning from a future week with sessions", async () => {
     await act(async () =>
       root.render(createElement(Harness, { sessions: [session(29, 9), session(29, 14)] })),
     );
@@ -97,10 +97,11 @@ describe("forecast navigation with rendered cards", () => {
     await act(async () => today.click());
 
     expect(document.activeElement).toBe(todayCard());
-    expect(todayCard()?.getAttribute("aria-label")).toContain("WED Jul 29 at Beit Yanai: 09:00");
+    expect(todayCard()?.getAttribute("aria-label")).toBe("WED Jul 29");
+    expect(todayCard()?.textContent).toContain("09:00 – 11:00");
   });
 
-  it("focuses today's card when Today is pressed while already on the current week", async () => {
+  it("focuses today's day when Today is pressed while already on the current week", async () => {
     await act(async () => root.render(createElement(Harness)));
 
     const today = todayButton();
@@ -153,7 +154,7 @@ describe("forecast navigation with rendered cards", () => {
     expect(todayCard()?.getAttribute("aria-label")).toBe("FRI Mar 27: No sessions");
   });
 
-  it("does not steal focus or reposition the strip when the day changes", async () => {
+  it("does not steal focus or scroll horizontally when the day changes", async () => {
     vi.setSystemTime(new Date(2026, 11, 31, 23, 59, 59));
     await act(async () => root.render(createElement(Harness)));
 

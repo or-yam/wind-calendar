@@ -205,33 +205,6 @@
   background: #3ee6cf;
 }
 
-.forecast-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #ff3d8d transparent;
-}
-
-.forecast-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.forecast-scroll::-webkit-scrollbar-track {
-  background: #102126;
-  border-radius: 9999px;
-  margin: 0 40px;
-}
-
-.forecast-scroll::-webkit-scrollbar-thumb {
-  background: #ff3d8d;
-  border-radius: 9999px;
-  border: 2px solid #102126;
-  background-clip: padding-box;
-}
-
-.forecast-scroll::-webkit-scrollbar-thumb:hover {
-  background: #3ee6cf;
-  background-clip: padding-box;
-}
-
 @layer base {
   :root {
     --background: #04090b;
