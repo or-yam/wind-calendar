@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&display=swap");
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 2px solid #3ee6cf;
+        outline-offset: 3px;
+      }
+      #wind-week {
+        --wc-bg: #04090b;
+        --wc-card: #0c171a;
+        --wc-text: #c9e4dd;
+        --wc-muted: #9dbdb6;
+        --wc-line: #284248;
+        --wc-pink: #ff3d8d;
+        --wc-mint: #3ee6cf;
+        background: var(--wc-bg);
+        color: var(--wc-text);
+        padding: 24px 18px 18px;
+        border-radius: 12px;
+        font:
+          17px/1.3 "Barlow Condensed",
+          sans-serif;
+      }
+      #wind-week .heading {
+        display: inline-block;
+        margin: 0 0 24px 0;
+        padding: 9px 16px;
+        background: var(--wc-mint);
+        color: var(--wc-bg);
+        border: 3px solid #080808;
+        border-radius: 60px;
+        box-shadow: 5px 5px 0 var(--wc-pink);
+        transform: rotate(-1deg);
+        font-size: 30px;
+        line-height: 1;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      #wind-week .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      #wind-week .range {
+        font-size: 23px;
+        font-weight: 600;
+        margin-right: auto;
+      }
+      #wind-week .control {
+        color: var(--wc-text);
+        background: var(--wc-card);
+        border: 1px solid #52716e;
+        border-radius: 3px;
+        padding: 5px 11px;
+        min-height: 34px;
+      }
+      #wind-week .control:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      #wind-week .switch {
+        display: flex;
+        margin-left: 4px;
+      }
+      #wind-week .switch button {
+        border-radius: 0;
+        margin-left: -1px;
+      }
+      #wind-week .switch [aria-pressed="true"] {
+        background: var(--wc-mint);
+        color: var(--wc-bg);
+      }
+      #wind-week .calendar {
+        border: 1px solid var(--wc-line);
+        border-radius: 3px;
+        overflow: hidden;
+        background: var(--wc-card);
+      }
+      #wind-week .days {
+        display: grid;
+        grid-template-columns: 44px repeat(7, minmax(0, 1fr));
+        border-bottom: 1px solid var(--wc-line);
+      }
+      #wind-week .day {
+        text-align: center;
+        padding: 9px 2px 11px;
+        border-left: 1px solid var(--wc-line);
+        color: var(--wc-muted);
+      }
+      #wind-week .day span {
+        display: block;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      #wind-week .day b {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        margin-top: 3px;
+        font-size: 23px;
+        font-weight: 600;
+        color: var(--wc-text);
+      }
+      #wind-week .day.current b {
+        background: var(--wc-pink);
+        color: var(--wc-bg);
+        border-radius: 50%;
+      }
+      #wind-week .day.current {
+        background: #ff3d8d09;
+      }
+      #wind-week .timeline {
+        display: grid;
+        grid-template-columns: 44px repeat(7, minmax(0, 1fr));
+        height: 432px;
+      }
+      #wind-week .hours {
+        position: relative;
+        color: var(--wc-muted);
+        font-size: 12px;
+      }
+      #wind-week .hour {
+        position: absolute;
+        right: 7px;
+        transform: translateY(-50%);
+      }
+      #wind-week .hour:first-child {
+        transform: none;
+      }
+      #wind-week .lane {
+        position: relative;
+        border-left: 1px solid var(--wc-line);
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 35px,
+          #28424888 35px,
+          #28424888 36px
+        );
+      }
+      #wind-week .lane.current {
+        background-color: #ff3d8d06;
+      }
+      #wind-week .no-match {
+        position: absolute;
+        top: 47%;
+        width: 100%;
+        text-align: center;
+        font-size: 13px;
+        color: #78918e;
+      }
+      #wind-week .event {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        text-align: left;
+        padding: 6px;
+        background: #142e2e;
+        color: var(--wc-text);
+        border: 1px solid #42655f;
+        border-left: 3px solid var(--wc-mint);
+        border-radius: 3px;
+        overflow: hidden;
+        min-height: 29px;
+        transition: background 0.15s;
+      }
+      #wind-week .event:hover,
+      #wind-week .event[aria-pressed="true"] {
+        background: #244240;
+        border-color: var(--wc-mint);
+      }
+      #wind-week .event b {
+        display: block;
+        font-size: 16px;
+        line-height: 1.1;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      #wind-week .event .time {
+        display: block;
+        font-size: 12px;
+        margin: 3px 0 6px;
+        color: var(--wc-muted);
+      }
+      #wind-week .badge {
+        display: inline-block;
+        background: #fff000;
+        color: #04090b;
+        padding: 1px 4px;
+        border-radius: 2px;
+        font-size: 12px;
+        line-height: 1.3;
+        font-weight: 600;
+      }
+      #wind-week .wave {
+        background: #9b9dff;
+      }
+      #wind-week .event.wave-event {
+        background: #20243d;
+        border-left-color: #9b9dff;
+      }
+      #wind-week .event .dir {
+        display: block;
+        color: var(--wc-muted);
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      #wind-week .event.narrow {
+        padding: 5px 3px;
+      }
+      #wind-week .event.narrow b {
+        font-size: 13px;
+      }
+      #wind-week .event.narrow .dir {
+        display: none;
+      }
+      #wind-week .detail {
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: #102126;
+        border-left: 3px solid var(--wc-mint);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        min-height: 52px;
+      }
+      #wind-week .detail b {
+        font-size: 18px;
+        font-weight: 600;
+      }
+      #wind-week .detail .secondary {
+        color: var(--wc-muted);
+      }
+      #wind-week .detail button {
+        margin-left: auto;
+        background: none;
+        color: var(--wc-text);
+        border: 0;
+        font-size: 20px;
+      }
+      #wind-week .note {
+        font-size: 13px;
+        color: var(--wc-muted);
+        margin: 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      #wind-week.compact .timeline {
+        height: 284px;
+      }
+      #wind-week.compact .hours {
+        visibility: hidden;
+      }
+      #wind-week.compact .lane {
+        background-image: none;
+        padding: 8px 4px;
+      }
+      #wind-week.compact .event {
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 91px;
+        margin-bottom: 8px;
+      }
+      #wind-week.compact .event.narrow b {
+        font-size: 16px;
+      }
+      #wind-week.compact .event.narrow .dir {
+        display: block;
+      }
+      @media (max-width: 570px) {
+        #wind-week {
+          padding: 20px 16px 16px;
+        }
+        #wind-week .heading {
+          font-size: 27px;
+        }
+        #wind-week .range {
+          width: 100%;
+          font-size: 22px;
+        }
+        #wind-week .calendar {
+          overflow-x: auto;
+        }
+        #wind-week .days,
+        #wind-week .timeline {
+          min-width: 640px;
+        }
+        #wind-week .toolbar {
+          gap: 6px;
+        }
+        #wind-week .switch {
+          margin-left: auto;
+        }
+        #wind-week .detail {
+          align-items: flex-start;
+        }
+        #wind-week .note {
+          font-size: 13px;
+        }
+      }
+
+      #wind-week {
+        max-width: 420px;
+        margin-inline: auto;
+        padding: 24px 16px 18px;
+      }
+      #wind-week .heading {
+        font-size: 28px;
+        margin-bottom: 24px;
+      }
+      #wind-week .range {
+        width: 100%;
+        font-size: 23px;
+      }
+      #wind-week .control {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      #wind-week .toolbar {
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      #wind-week .switch {
+        margin-left: auto;
+      }
+      #wind-week .week-strip {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        margin-bottom: 16px;
+        gap: 2px;
+      }
+      #wind-week .week-day {
+        background: transparent;
+        color: var(--wc-muted);
+        border: 0;
+        padding: 5px 0;
+        border-radius: 3px;
+        min-height: 66px;
+        text-align: center;
+      }
+      #wind-week .week-day span {
+        display: block;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      #wind-week .week-day b {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        font-size: 21px;
+        font-weight: 600;
+        margin-top: 3px;
+      }
+      #wind-week .week-day[aria-pressed="true"] {
+        background: #183b38;
+        color: var(--wc-mint);
+      }
+      #wind-week .week-day.today b {
+        background: var(--wc-pink);
+        color: var(--wc-bg);
+        border-radius: 50%;
+      }
+      #wind-week .days,
+      #wind-week .timeline {
+        min-width: 0;
+        grid-template-columns: 36px repeat(3, minmax(0, 1fr));
+      }
+      #wind-week.single .days,
+      #wind-week.single .timeline {
+        grid-template-columns: 36px minmax(0, 1fr);
+      }
+      #wind-week .timeline {
+        height: 480px;
+      }
+      #wind-week .lane {
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 39px,
+          #28424888 39px,
+          #28424888 40px
+        );
+      }
+      #wind-week .event {
+        padding: 6px 5px;
+        left: 3px;
+        right: 3px;
+      }
+      #wind-week .event .time {
+        font-size: 12px;
+      }
+      #wind-week .event .dir {
+        font-size: 12px;
+      }
+      #wind-week .day {
+        padding: 8px 0;
+      }
+      #wind-week .day b {
+        font-size: 22px;
+      }
+      #wind-week .day span {
+        font-size: 12px;
+      }
+      #wind-week .detail {
+        position: relative;
+        padding: 14px 40px 14px 14px;
+        gap: 6px;
+        align-items: flex-start;
+      }
+      #wind-week .detail b,
+      #wind-week .detail > span {
+        width: 100%;
+      }
+      #wind-week .detail button {
+        position: absolute;
+        right: 4px;
+        top: 5px;
+        min-height: 44px;
+        min-width: 36px;
+      }
+      #wind-week .note .mode-note {
+        display: none;
+      }
+      @media (max-width: 350px) {
+        #wind-week .heading {
+          font-size: 24px;
+        }
+        #wind-week .event b {
+          font-size: 15px;
+        }
+        #wind-week .event .dir {
+          font-size: 11px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section id="wind-week" aria-label="Upcoming sessions weekly calendar concept">
+      <h2 class="heading">Upcoming sessions</h2>
+      <div class="toolbar">
+        <span class="range">Oct 18 – 24, 2026</span
+        ><button class="control" disabled aria-label="Previous days">‹</button
+        ><button class="control" id="next-week" aria-label="Next days">›</button
+        ><button class="control" id="today">Today</button>
+        <div class="switch" aria-label="Calendar layout">
+          <button class="control" id="grid-mode" aria-pressed="true">3 days</button
+          ><button class="control" id="compact-mode" aria-pressed="false">Day</button>
+        </div>
+      </div>
+      <nav class="week-strip" aria-label="Select day"></nav>
+      <div class="calendar" aria-label="Sample forecast sessions, October 18 to 24">
+        <div class="days"></div>
+        <div class="timeline"></div>
+      </div>
+      <div class="detail" hidden aria-live="polite"></div>
+      <p class="note">
+        <span>Sample forecast · Local time · Tap a session for details</span
+        ><span class="mode-note">Sample forecast</span>
+      </p>
+    </section>
+    <script>
+      (() => {
+        const root = document.getElementById("wind-week");
+        const data = [
+          {
+            day: 1,
+            start: 11,
+            end: 15,
+            name: "Bat Galim",
+            wind: "18–24 kn",
+            dir: "W",
+            wave: "1.2m · 8s",
+            both: true,
+          },
+          {
+            day: 0,
+            start: 10,
+            end: 13,
+            name: "Beit Yanai",
+            wind: "16–21 kn",
+            dir: "NW",
+            wave: "0.8m · 7s",
+          },
+          {
+            day: 2,
+            start: 9,
+            end: 12,
+            name: "Bat Galim",
+            wind: "18–24 kn",
+            dir: "W",
+            wave: "1.2m · 8s",
+          },
+          {
+            day: 2,
+            start: 14,
+            end: 18,
+            name: "Beit Yanai",
+            wind: "17–22 kn",
+            dir: "NW",
+            wave: "0.9m · 7s",
+          },
+          {
+            day: 3,
+            start: 12,
+            end: 17,
+            name: "Beit Yanai",
+            wind: "19–25 kn",
+            dir: "NW",
+            wave: "1.1m · 8s",
+          },
+          { day: 4, start: 8, end: 11, name: "Herzliya", wind: null, dir: "W", wave: "1.4m · 9s" },
+          {
+            day: 5,
+            start: 11,
+            end: 15,
+            name: "Bat Galim",
+            wind: "18–23 kn",
+            dir: "W",
+            wave: "1.0m · 8s",
+            overlap: 0,
+          },
+          {
+            day: 5,
+            start: 12,
+            end: 16,
+            name: "Beit Yanai",
+            wind: "17–21 kn",
+            dir: "NW",
+            wave: "0.9m · 7s",
+            overlap: 1,
+          },
+          {
+            day: 6,
+            start: 13,
+            end: 17,
+            name: "Beit Yanai",
+            wind: "16–20 kn",
+            dir: "NW",
+            wave: "0.7m · 6s",
+          },
+        ];
+        const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        let start = 1;
+        let count = 3;
+        let selected = null;
+        const time = (h) => String(h).padStart(2, "0") + ":00";
+        function draw() {
+          const visible = names.map((name, day) => ({ name, day })).slice(start, start + count);
+          root.querySelector(".range").textContent =
+            count === 1
+              ? `Oct ${18 + start}, 2026`
+              : `Oct ${18 + start} – ${18 + start + count - 1}, 2026`;
+          root.querySelector(".week-strip").innerHTML = names
+            .map(
+              (name, day) =>
+                `<button class="week-day ${day === 2 ? "today" : ""}" data-day="${day}" aria-pressed="${day >= start && day < start + count}" aria-label="${name}, October ${18 + day}"><span>${name}</span><b>${18 + day}</b></button>`,
+            )
+            .join("");
+          root.querySelector(".days").innerHTML =
+            "<div></div>" +
+            visible
+              .map(
+                ({ name, day }) =>
+                  `<div class="day ${day === 2 ? "current" : ""}"><span>${name}</span><b>${18 + day}</b></div>`,
+              )
+              .join("");
+          root.querySelector(".timeline").innerHTML =
+            '<div class="hours">' +
+            Array.from(
+              { length: 6 },
+              (_, i) => `<span class="hour" style="top:${i * 80}px">${time(8 + i * 2)}</span>`,
+            ).join("") +
+            "</div>" +
+            visible
+              .map(({ name, day }) => {
+                const entries = data.filter((e) => e.day === day);
+                return (
+                  `<div class="lane ${day === 2 ? "current" : ""}">` +
+                  (entries.length
+                    ? entries
+                        .map(
+                          (e) =>
+                            `<button class="event ${e.wind ? "" : "wave-event"} ${e.overlap !== undefined ? "narrow" : ""}" data-event="${data.indexOf(e)}" aria-pressed="${selected === data.indexOf(e)}" aria-label="${name}, ${e.name}, ${time(e.start)} to ${time(e.end)}, ${e.both ? `Wind ${e.wind}, waves ${e.wave}` : e.wind || e.wave}" style="top:${(e.start - 8) * 40}px;height:${(e.end - e.start) * 40 - 3}px;${e.overlap !== undefined ? `left:${e.overlap ? 51 : 3}%;right:${e.overlap ? 3 : 51}%;` : ""}"><b>${e.name}</b><span class="time">${time(e.start)}–${time(e.end)}</span><span class="badge ${e.wind ? "" : "wave"}">${e.wind || e.wave.split(" · ")[0]}</span>${e.both ? `<span class="badge wave" style="margin-top:4px">${e.wave}</span>` : ""}<span class="dir">${e.both ? "Wind + waves" : e.wind ? "Wind" : "Waves"} · ${e.dir}</span></button>`,
+                        )
+                        .join("")
+                    : '<span class="no-match">No match</span>') +
+                  "</div>"
+                );
+              })
+              .join("");
+          root.querySelector('[aria-label="Previous days"]').disabled = start === 0;
+          root.querySelector("#next-week").disabled = start >= 7 - count;
+          root.classList.toggle("single", count === 1);
+          root.querySelector("#grid-mode").setAttribute("aria-pressed", count === 3);
+          root.querySelector("#compact-mode").setAttribute("aria-pressed", count === 1);
+        }
+        function close() {
+          selected = null;
+          root.querySelector(".detail").hidden = true;
+          root.querySelector(".detail").style.display = "none";
+        }
+        root.addEventListener("click", (e) => {
+          const day = e.target.closest("[data-day]");
+          if (day) {
+            start = Math.min(Number(day.dataset.day), 7 - count);
+            close();
+            draw();
+            return;
+          }
+          const event = e.target.closest("[data-event]");
+          if (!event) return;
+          selected = Number(event.dataset.event);
+          const d = data[selected];
+          const detail = root.querySelector(".detail");
+          detail.hidden = false;
+          detail.style.display = "flex";
+          detail.innerHTML = `<b>${d.name}</b><span>${names[d.day]} ${18 + d.day} Oct · ${time(d.start)}–${time(d.end)}</span><span class="secondary">${d.wind ? "Wind " + d.wind + " " + d.dir : ""}</span><span class="secondary">Waves ${d.wave}</span><button aria-label="Close session details">×</button>`;
+          detail.querySelector("button").onclick = () => {
+            close();
+            draw();
+          };
+          draw();
+        });
+        root.querySelector("#grid-mode").onclick = () => {
+          count = 3;
+          start = Math.min(start, 4);
+          close();
+          draw();
+        };
+        root.querySelector("#compact-mode").onclick = () => {
+          count = 1;
+          close();
+          draw();
+        };
+        root.querySelector("#next-week").onclick = () => {
+          start = Math.min(start + count, 7 - count);
+          close();
+          draw();
+        };
+        root.querySelector('[aria-label="Previous days"]').onclick = () => {
+          start = Math.max(0, start - count);
+          close();
+          draw();
+        };
+        root.querySelector("#today").onclick = () => {
+          start = 2;
+          close();
+          draw();
+        };
+        close();
+        draw();
+      })();
+    </script>
+  </body>
+</html>
