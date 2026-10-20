@@ -20,6 +20,7 @@ import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
 import { useDebouncedValue } from "./hooks/useDebouncedValue";
+import type { CalendarMode } from "./components/calendar/CalendarMobileControls";
 
 const FORECAST_DEBOUNCE_MS = 500;
 
@@ -76,6 +77,12 @@ function parseUrlParams() {
   };
 }
 
+function parseCalendarMode(): CalendarMode {
+  return new URLSearchParams(window.location.search).get("calendarView") === "day"
+    ? "day"
+    : "three-days";
+}
+
 function parseValidatedUrlParams(): CalendarConfig {
   const parsed = calendarConfigSchema.safeParse(parseUrlParams());
   return parsed.success
@@ -85,6 +92,7 @@ function parseValidatedUrlParams(): CalendarConfig {
 
 function App() {
   const [config, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>(() => parseCalendarMode());
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
   );
@@ -99,15 +107,25 @@ function App() {
 
   useEffect(() => {
     const params = buildConfigParams(config);
+    if (calendarMode === "day") params.set("calendarView", "day");
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", newUrl);
-  }, [config]);
+  }, [config, calendarMode]);
+
+  const updateCalendarMode = (mode: CalendarMode) => {
+    const params = new URLSearchParams(window.location.search);
+    if (mode === "day") params.set("calendarView", "day");
+    else params.delete("calendarView");
+    window.history.pushState(null, "", `${window.location.pathname}?${params.toString()}`);
+    setCalendarMode(mode);
+  };
 
   useEffect(() => {
     const handler = () => {
       const nextConfig = parseValidatedUrlParams();
       setConfig(nextConfig);
       setConfirmedConfig(nextConfig);
+      setCalendarMode(parseCalendarMode());
       setConfirmationPending(false);
     };
     window.addEventListener("popstate", handler);
@@ -222,6 +240,9 @@ function App() {
             onPrev={goToPrev}
             onNext={goToNext}
             onToday={goToToday}
+            mode={calendarMode}
+            onModeChange={updateCalendarMode}
+            resetKey={forecastConfigKey}
           />
         </ErrorBoundary>
         <SubscribeButtons config={confirmedConfig} />

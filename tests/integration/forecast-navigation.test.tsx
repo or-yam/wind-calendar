@@ -1,4 +1,4 @@
-import { act, createElement } from "react";
+import { act, createElement, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +14,7 @@ const NO_SESSIONS: ForecastSession[] = [];
 
 function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
   navigation = useWeekNavigation("default");
+  const [mode, setMode] = useState<"three-days" | "day">("three-days");
   return createElement(ForecastCalendar, {
     sessions,
     isPending: false,
@@ -24,6 +25,9 @@ function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
     onPrev: navigation.goToPrev,
     onNext: navigation.goToNext,
     onToday: navigation.goToToday,
+    mode,
+    onModeChange: setMode,
+    resetKey: "default",
   });
 }
 

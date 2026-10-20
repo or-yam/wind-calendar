@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays } from "@/lib/date-utils";
-import { CalendarMobileControls } from "./calendar/CalendarMobileControls";
+import { CalendarMobileControls, type CalendarMode } from "./calendar/CalendarMobileControls";
 import { CalendarNavigation } from "./calendar/CalendarNavigation";
 import { CalendarSkeleton } from "./calendar/CalendarSkeleton";
 import { CalendarGrid } from "./calendar/CalendarGrid";
@@ -19,6 +19,9 @@ interface ForecastCalendarProps {
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  mode?: CalendarMode;
+  onModeChange?: (mode: CalendarMode) => void;
+  resetKey?: string;
 }
 
 export function ForecastCalendar({
@@ -31,27 +34,26 @@ export function ForecastCalendar({
   onPrev,
   onNext,
   onToday,
+  mode: controlledMode,
+  onModeChange,
+  resetKey = "",
 }: ForecastCalendarProps) {
   const isMobile = useMobileCalendar();
-  const {
-    mode,
-    setMode,
-    weekDays,
-    selectedDay,
-    visibleDays,
-    canMovePrev,
-    selectDay,
-    selectToday,
-    moveRange,
-  } = useMobileCalendarNavigation({
-    weekStart,
-    today,
-    isMobile,
-    canGoPrev,
-    onPrev,
-    onNext,
-    onToday,
-  });
+  const [localMode, setLocalMode] = useState<CalendarMode>("three-days");
+  const mode = controlledMode ?? localMode;
+  const changeMode = onModeChange ?? setLocalMode;
+  const { weekDays, selectedDay, visibleDays, canMovePrev, selectDay, selectToday, moveRange } =
+    useMobileCalendarNavigation({
+      weekStart,
+      today,
+      isMobile,
+      canGoPrev,
+      onPrev,
+      onNext,
+      onToday,
+      mode,
+      resetKey,
+    });
   const calendarRef = useRef<HTMLDivElement>(null);
   const focusToday = useRef(false);
   const calendarDays = isMobile ? visibleDays : weekDays;
@@ -87,7 +89,7 @@ export function ForecastCalendar({
             selectedDay={selectedDay}
             mode={mode}
             onSelectDay={selectDay}
-            onModeChange={setMode}
+            onModeChange={changeMode}
           />
         )}
         {isPending ? (

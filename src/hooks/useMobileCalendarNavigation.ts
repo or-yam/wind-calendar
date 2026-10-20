@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addDays, sameDay } from "@/lib/date-utils";
 import type { CalendarMode } from "@/components/calendar/CalendarMobileControls";
 
@@ -12,6 +12,8 @@ export function useMobileCalendarNavigation({
   onPrev,
   onNext,
   onToday,
+  mode,
+  resetKey,
 }: {
   weekStart: Date;
   today: Date;
@@ -20,9 +22,16 @@ export function useMobileCalendarNavigation({
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  mode: CalendarMode;
+  resetKey: string;
 }) {
-  const [mode, setMode] = useState<CalendarMode>("three-days");
   const [selection, setSelection] = useState<{ week: number; day: number } | null>(null);
+  const previousResetKey = useRef(resetKey);
+  useEffect(() => {
+    if (previousResetKey.current === resetKey) return;
+    previousResetKey.current = resetKey;
+    setSelection(null);
+  }, [resetKey]);
   const count = dayCount(mode);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const initialDay = today >= weekStart && today < addDays(weekStart, 7) ? today : weekStart;
@@ -76,7 +85,6 @@ export function useMobileCalendarNavigation({
   };
   return {
     mode,
-    setMode,
     weekDays,
     selectedDay,
     visibleDays,
