@@ -28,6 +28,7 @@ describe("POST /api/interpret-config", () => {
   afterEach(() => {
     delete process.env.OPENAI_API_KEY;
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("returns a structured interpreted configuration", async () => {
@@ -80,7 +81,9 @@ describe("POST /api/interpret-config", () => {
   });
 
   it("hides model errors behind an actionable response", async () => {
-    interpretFreeTextConfig.mockRejectedValue(new Error("provider secret details"));
+    const error = new Error("provider secret details");
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    interpretFreeTextConfig.mockRejectedValue(error);
     const response = await callHandler(handler, "/api/interpret-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -90,5 +93,13 @@ describe("POST /api/interpret-config", () => {
     expect(response.statusCode).toBe(502);
     expect(response.body).toContain("Could not interpret that request");
     expect(response.body).not.toContain("provider secret details");
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(log.mock.calls[0]![0])).toMatchObject({
+      event: "request_failed",
+      level: "error",
+      status: 502,
+      cause: { errorTag: "ExternalError", cause: { errorType: "Error" } },
+    });
+    expect(JSON.stringify(log.mock.calls)).not.toContain("provider secret details");
   });
 });

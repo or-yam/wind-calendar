@@ -46,6 +46,7 @@ describe("App wave height configuration", () => {
   const params = () => new URLSearchParams(window.location.search);
 
   beforeEach(() => {
+    vi.spyOn(console, "error");
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 6, 29, 12));
     HTMLElement.prototype.scrollTo = vi.fn();
@@ -90,6 +91,9 @@ describe("App wave height configuration", () => {
     container.remove();
     vi.unstubAllGlobals();
     vi.useRealTimers();
+    const errors = vi.mocked(console.error).mock.calls;
+    vi.restoreAllMocks();
+    expect(errors).toEqual([]);
   });
 
   async function renderApp() {
@@ -100,8 +104,8 @@ describe("App wave height configuration", () => {
   }
 
   async function pressArrowOn(input: HTMLInputElement | undefined, key: string) {
-    input?.focus();
     await act(async () => {
+      input?.focus();
       input?.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
       input?.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true }));
     });
