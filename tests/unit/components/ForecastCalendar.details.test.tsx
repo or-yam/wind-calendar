@@ -159,16 +159,16 @@ it("closes details when the session leaves the visible days and does not reopen 
   const sessions = [session("Bat Galim", 11, 15)];
   await render(sessions, { today: new Date(2026, 9, 23) });
   await act(async () => event("Bat Galim").click());
-  const select = container.querySelector<HTMLSelectElement>('[aria-label="Select day"]')!;
-  await act(async () => {
-    select.value = "6";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-  });
+  const saturday = container.querySelector<HTMLButtonElement>('button[aria-label="SAT Oct 24"]')!;
+  await act(async () => saturday.click());
+  expect(container.querySelector('[aria-label="Session details"]')).not.toBeNull();
+  const dayMode = [...container.querySelectorAll("button")].find(
+    (button) => button.textContent === "Day",
+  )!;
+  await act(async () => dayMode.click());
   expect(container.querySelector('[aria-label="Session details"]')).toBeNull();
-  await act(async () => {
-    select.value = "5";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-  });
+  const friday = container.querySelector<HTMLButtonElement>('button[aria-label="FRI Oct 23"]')!;
+  await act(async () => friday.click());
   expect(container.querySelector('[aria-label="Session details"]')).toBeNull();
 });
 

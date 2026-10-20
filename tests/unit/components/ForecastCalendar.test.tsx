@@ -42,8 +42,8 @@ describe("ForecastCalendar", () => {
 
     expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(7);
     expect(container.textContent).not.toContain("No sessions match your filters this week");
-    const previous = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "← Prev",
+    const previous = [...container.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes("Prev"),
     )!;
     expect(previous.disabled).toBe(true);
   });
@@ -195,17 +195,39 @@ describe("ForecastCalendar", () => {
         }),
       ),
     );
-    const select = container.querySelector<HTMLSelectElement>('select[aria-label="Select day"]');
-    expect(select).not.toBeNull();
-    expect(select?.selectedOptions[0].textContent).toBe("WED Jul 29");
-    expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(1);
-    await act(async () => {
-      select!.value = "5";
-      select!.dispatchEvent(new Event("change", { bubbles: true }));
-    });
     expect(
-      container.querySelector('[aria-label$=": No sessions"]')?.getAttribute("aria-label"),
-    ).toBe("FRI Jul 31: No sessions");
+      container.querySelectorAll(
+        '[role="region"][aria-label="Weekly forecast calendar"] [role="group"]',
+      ),
+    ).toHaveLength(3);
+    const friday = container.querySelector<HTMLButtonElement>('button[aria-label="FRI Jul 31"]');
+    expect(friday).not.toBeNull();
+    await act(async () => friday!.click());
+    expect(friday!.getAttribute("aria-pressed")).toBe("true");
+    expect(
+      container.querySelectorAll(
+        '[role="region"][aria-label="Weekly forecast calendar"] [role="group"]',
+      ),
+    ).toHaveLength(3);
+    const dayMode = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Day",
+    )!;
+    await act(async () => dayMode.click());
+    expect(
+      container.querySelectorAll(
+        '[role="region"][aria-label="Weekly forecast calendar"] [role="group"]',
+      ),
+    ).toHaveLength(1);
+    expect(
+      container.querySelector('[role="group"][aria-label="FRI Jul 31: No sessions"]'),
+    ).not.toBeNull();
+    const today = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Today",
+    )!;
+    await act(async () => today.click());
+    expect(
+      container.querySelector('[role="group"][aria-label="WED Jul 29: No sessions"]'),
+    ).not.toBeNull();
     vi.unstubAllGlobals();
   });
 
@@ -239,7 +261,7 @@ describe("ForecastCalendar", () => {
     expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(7);
     narrow = true;
     await act(async () => window.dispatchEvent(new Event("resize")));
-    expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(3);
     narrow = false;
     await act(async () => window.dispatchEvent(new Event("resize")));
     expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(7);
@@ -276,6 +298,10 @@ describe("ForecastCalendar", () => {
         }),
       ),
     );
+    const dayMode = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Day",
+    )!;
+    await act(async () => dayMode.click());
     expect(container.querySelector('[role="status"]')?.textContent).toBe(
       "No sessions match this day",
     );

@@ -58,19 +58,19 @@ it("integrates forecast responses, week navigation, Today and filter reset", asy
     "18–24 kn",
   );
   const button = (name: string) =>
-    [...container.querySelectorAll("button")].find((b) => b.textContent === name)!;
-  expect(button("← Prev").disabled).toBe(true);
-  await act(async () => button("Next →").click());
+    [...container.querySelectorAll("button")].find((b) => b.textContent?.includes(name))!;
+  expect(button("Prev").disabled).toBe(true);
+  await act(async () => button("Next").click());
   expect(container.textContent).toContain("Aug 2 – 8, 2026");
   expect(container.querySelector('[role="status"]')?.textContent).toBe(
     "No sessions match this week",
   );
-  await act(async () => button("← Prev").click());
+  await act(async () => button("Prev").click());
   expect(container.textContent).toContain("Jul 26 – Aug 1, 2026");
-  await act(async () => button("Next →").click());
+  await act(async () => button("Next").click());
   await act(async () => button("Today").click());
   expect(container.querySelector('[aria-label*="at Beit Yanai"]')).not.toBeNull();
-  await act(async () => button("Next →").click());
+  await act(async () => button("Next").click());
   await act(async () =>
     container.querySelector<HTMLButtonElement>('[aria-label="Toggle wave forecast"]')!.click(),
   );
