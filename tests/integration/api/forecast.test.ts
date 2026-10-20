@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Effect } from "effect";
 import type { ForecastResponse } from "../../../shared/forecast-types";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockSpotInfo, mockAPIRoot, mockWindData } from "../../helpers/windguru-mocks";
@@ -40,9 +41,8 @@ vi.mock("../../../server/utils/api-handler", async () => {
   const actual = await vi.importActual("../../../server/utils/api-handler");
   return {
     ...actual,
-    resolveForecastData: vi.fn().mockImplementation(async () => {
-      return {
-        success: true,
+    resolveForecastData: vi.fn().mockImplementation(() =>
+      Effect.succeed({
         fetchResult: {
           windData: mockWindData.fcst.WINDSPD.map((windSpeed, i) => ({
             date: new Date(
@@ -63,8 +63,8 @@ vi.mock("../../../server/utils/api-handler", async () => {
         },
         dataSource: "windguru",
         fallbackUsed: false,
-      };
-    }),
+      }),
+    ),
   };
 });
 
@@ -129,6 +129,15 @@ describe("forecast API handler", () => {
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body) as ForecastResponse;
     expect(body.meta.locations).toEqual(["beit-yanai", "tel-aviv"]);
+  });
+
+  it("normalizes mixed repeated/CSV locations in metadata order", async () => {
+    const res = await callHandler(
+      handler,
+      "/api/forecast?locations=tel-aviv,herzliya&locations=tel-aviv,beit-yanai",
+    );
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).meta.locations).toEqual(["tel-aviv", "herzliya", "beit-yanai"]);
   });
 
   it("sessions contain wind and wave data", async () => {
