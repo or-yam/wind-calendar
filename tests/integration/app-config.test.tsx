@@ -233,4 +233,23 @@ describe("App wave height configuration", () => {
 
     expect(container.querySelector('[aria-label="Wave height range in meters"]')).toBeNull();
   });
+
+  it("enables wind from a wave-only URL when the waves flag is disabled", async () => {
+    features = { ...WAVES_ON, wavesForecast: false };
+    window.history.replaceState(
+      null,
+      "",
+      WAVE_URL.replace("windEnabled=true", "windEnabled=false"),
+    );
+    await renderApp();
+    await act(async () => vi.advanceTimersByTime(600));
+
+    expect(container.querySelector('[aria-label="Toggle wind forecast"]')).toBeNull();
+    expect(container.querySelector("#wind-min")).not.toBeNull();
+    expect(params().get("windEnabled")).toBe("true");
+    expect(forecastCalls.at(-1)!.params.get("windEnabled")).toBe("true");
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
+    expect(linkParams.get("windEnabled")).toBe("true");
+  });
 });

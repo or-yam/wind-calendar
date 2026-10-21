@@ -14,7 +14,7 @@ interface SubscribeActionsProps {
 }
 
 const actionClass =
-  "grid size-[44px] shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-[#04090b] transition hover:-translate-y-0.5 hover:text-[#ff3d8d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d] active:translate-y-0";
+  "grid size-[44px] shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-[#04090b] hover:text-[#ff3d8d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d]";
 
 const providers = (config: CalendarConfig) => [
   {

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { forecastQueryOptions } from "./lib/forecast-query";
 
@@ -84,12 +84,17 @@ function parseValidatedUrlParams(): CalendarConfig {
 }
 
 function App() {
-  const [config, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
+  const [storedConfig, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
   );
   const [confirmationPending, setConfirmationPending] = useState(false);
   const { data: features } = useQuery(featuresQueryOptions);
+  const config = useMemo(
+    () =>
+      features?.wavesForecast === false ? { ...storedConfig, windEnabled: true } : storedConfig,
+    [storedConfig, features?.wavesForecast],
+  );
 
   const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
     const nextConfig = update(config);
@@ -185,7 +190,11 @@ function App() {
           setConfig(calendarConfigSchema.parse(nextConfig));
           setConfirmationPending(true);
         }}
-        confirmedConfig={confirmedConfig}
+        confirmedConfig={
+          features?.wavesForecast === false
+            ? { ...confirmedConfig, windEnabled: true }
+            : confirmedConfig
+        }
         confirmationPending={confirmationPending}
         onConfirmConfig={confirmConfig}
         freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}

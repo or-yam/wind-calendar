@@ -102,15 +102,17 @@ export function ConfigForm({
       <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Switch
-              id="wind-toggle"
-              aria-label="Toggle wind forecast"
-              checked={windEnabled}
-              onCheckedChange={onWindEnabledChange}
-              disabled={isOnlyActive("wind")}
-            />
+            {wavesForecastEnabled && (
+              <Switch
+                id="wind-toggle"
+                aria-label="Toggle wind forecast"
+                checked={windEnabled}
+                onCheckedChange={onWindEnabledChange}
+                disabled={isOnlyActive("wind")}
+              />
+            )}
             <Label
-              htmlFor="wind-toggle"
+              htmlFor={wavesForecastEnabled ? "wind-toggle" : undefined}
               className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
               Wind

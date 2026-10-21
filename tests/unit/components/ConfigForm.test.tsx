@@ -136,13 +136,16 @@ describe("ConfigForm", () => {
     expect(onWaveHeightRangeChange).toHaveBeenNthCalledWith(2, [0.6, 2.9]);
   });
 
-  it("hides wave controls when the Waves forecast flag is disabled", async () => {
+  it("hides forecast toggles but keeps wind fields when the Waves forecast flag is disabled", async () => {
     await act(async () =>
       root.render(createElement(ConfigForm, { ...props, wavesForecastEnabled: false })),
     );
 
     expect(container.textContent).not.toContain("Waves");
     expect(container.querySelector('[aria-label="Toggle wave forecast"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Toggle wind forecast"]')).toBeNull();
+    expect(container.querySelector("#wind-min")).not.toBeNull();
+    expect(container.querySelector("#wind-max")).not.toBeNull();
   });
 
   it("hides Windguru models when their feature flag is disabled", async () => {
