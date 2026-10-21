@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays } from "@/lib/date-utils";
+import { cn } from "@/lib/utils";
 import { DayColumn } from "./DayColumn";
 import { HourScale } from "./HourScale";
 import { SessionDetails } from "./SessionDetails";
@@ -46,11 +47,9 @@ export function CalendarGrid({
   };
   return (
     <>
-      {elapsedAxis && (
-        <p className="mb-2 text-xs text-muted-foreground">
-          Clock-change week · elapsed hours since local midnight; event times include UTC offsets.
-        </p>
-      )}
+      <p className={cn("mb-2 text-xs text-muted-foreground", !elapsedAxis && "invisible")}>
+        Clock-change week · elapsed hours since local midnight; event times include UTC offsets.
+      </p>
       <div
         role="region"
         aria-label="Weekly forecast calendar"
