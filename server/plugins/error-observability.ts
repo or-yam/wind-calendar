@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nitro";
 import { definePlugin } from "nitro";
 import {
   isMonitoredDeployment,
+  scrubErrorBreadcrumb,
   scrubErrorEvent,
 } from "../../shared/error-observability-privacy.js";
 
@@ -32,5 +33,6 @@ export default definePlugin(() => {
       stackFrameVariables: false,
     },
     beforeSend: scrubErrorEvent,
+    beforeBreadcrumb: scrubErrorBreadcrumb,
   });
 });

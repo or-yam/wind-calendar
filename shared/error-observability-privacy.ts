@@ -10,6 +10,7 @@ interface ErrorEventLike {
 }
 
 interface ErrorBreadcrumbLike {
+  category?: string;
   data?: Record<string, unknown>;
 }
 
@@ -31,7 +32,9 @@ export function scrubErrorEvent<T extends ErrorEventLike>(event: T): T {
   return event;
 }
 
-export function scrubErrorBreadcrumb<T extends ErrorBreadcrumbLike>(breadcrumb: T): T {
+export function scrubErrorBreadcrumb<T extends ErrorBreadcrumbLike>(breadcrumb: T): T | null {
+  if (breadcrumb.category === "console") return null;
+
   for (const field of PRIVATE_URL_FIELDS) {
     if (breadcrumb.data?.[field]) {
       breadcrumb.data[field] = stripUrlDetails(breadcrumb.data[field]);

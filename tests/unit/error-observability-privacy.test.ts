@@ -28,11 +28,20 @@ describe("Error observability privacy", () => {
       },
     });
 
-    expect(breadcrumb.data).toEqual({
+    expect(breadcrumb?.data).toEqual({
       from: "/",
       to: "/forecast",
       url: "https://example.com/api",
       method: "GET",
     });
+  });
+  it("drops console breadcrumbs including messages and arguments", () => {
+    expect(
+      scrubErrorBreadcrumb({
+        category: "console",
+        message: "private prompt",
+        data: { arguments: [{ token: "private token" }] },
+      }),
+    ).toBeNull();
   });
 });
