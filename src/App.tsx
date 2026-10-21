@@ -28,7 +28,7 @@ const FORECAST_DEBOUNCE_MS = 500;
 
 function prototypeVariant() {
   const variant = new URLSearchParams(window.location.search).get("variant");
-  return import.meta.env.DEV && variant && ["A", "B", "C"].includes(variant) ? variant : null;
+  return import.meta.env.DEV && variant && ["A", "B", "C"].includes(variant) ? "A" : null;
 }
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
@@ -158,7 +158,7 @@ function App() {
   const Setup = isPrototype && PrototypeSetup ? PrototypeSetup : Hero;
 
   return (
-    <div className={`flex min-h-screen flex-col text-foreground ${isPrototype ? "pb-24" : ""}`}>
+    <div className="flex min-h-screen flex-col text-foreground">
       <Suspense fallback={null}>
         <Setup
           locations={config.locations}

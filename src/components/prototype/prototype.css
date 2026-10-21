@@ -22,10 +22,6 @@
   padding-top: 1rem;
 }
 
-.prototype-guided-conditions > form > div:first-child {
-  display: none;
-}
-
 .prototype-form fieldset > div {
   grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
 }

@@ -1,21 +1,13 @@
-# Main-page layout drafts — throwaway
+# Selected main-page draft: A
 
-Question: where should conditions and calendar subscription sit so setup is obvious and quick?
+Run `pnpm dev`, then open `/?variant=A` on the Portless URL.
+The original page remains available at `/` for comparison. Old B/C links now show A.
 
-Run `pnpm dev`, then use the Portless URL printed in the terminal:
+The selected direction combines conditions and compact square calendar actions in one panel,
+followed by upcoming sessions. The hero contains no calendar image or extra explanatory copy.
 
-- `/?variant=A`: one conditions panel with subscription actions in its footer.
-- `/?variant=B`: conditions beside a subscription summary and provider buttons; stacked on mobile.
-- `/?variant=C`: three collapsible steps on the same page.
-- `/` without `variant`: original page for comparison.
+Provider, copy, and download buttons remain simulated while the design is being refined.
+Conditions and the forecast use the existing live controls and API.
 
-Use the floating arrows, or left/right keys outside interactive controls, to switch drafts.
-Conditions persist in URL params when switching or reloading. Guided step and simulated
-action feedback live in memory. Each variant logs its current configuration to the console.
-
-All drafts use the real condition controls and forecast API. Provider, copy, and download
-buttons simulate actions; they do not open a calendar, copy a URL, or download a file.
-No calendar image is included in any draft's hero. The draft entry point is development-only.
-
-No winner is selected. Keep this exploration on `prototype/calendar-sync-layouts`;
-rewrite the chosen layout for production once a direction is agreed.
+The initial three drafts are preserved in commit `74be8c4` on `prototype/calendar-sync-layouts`.
+A was selected for keeping conditions and sync together. This remains a development-only draft.

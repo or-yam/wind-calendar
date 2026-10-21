@@ -1,54 +1,55 @@
 import { useState } from "react";
-import { ArrowUpRight, Copy, Download } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 
 const PROVIDERS = [
   ["Apple Calendar", "/macos-calendar_logo.png"],
   ["Google Calendar", "/google_calendar_logo.svg"],
   ["Outlook", "/outlook-calendar_logo.svg"],
 ];
+const square =
+  "grid size-[44px] shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-[#04090b] transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d]";
 
-export function PrototypeSync({ stacked = false }: { stacked?: boolean }) {
+export function PrototypeSync() {
   const [notice, setNotice] = useState("");
   const simulate = (action: string) =>
     setNotice(`${action} selected. This draft does not create a subscription or download.`);
   return (
-    <div>
-      <div
-        className={`grid gap-2 ${stacked ? "grid-cols-1" : "grid-cols-1 min-[480px]:grid-cols-3"}`}
-      >
+    <div className="max-w-full">
+      <div className="flex flex-wrap items-center gap-1">
         {PROVIDERS.map(([label, logo]) => (
           <button
             key={label}
             type="button"
+            aria-label={label}
+            title={label}
             onClick={() => simulate(label)}
-            className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-sm border-2 border-[#04090b] bg-[#0c171a] px-3 py-2.5 text-sm font-bold text-[#c9e4dd] transition hover:-translate-y-0.5 hover:border-[#ff3d8d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d]"
+            className={square}
           >
-            <img src={logo} alt="" className="size-5 object-contain" />
-            {label}
-            <ArrowUpRight className="ml-auto size-3.5 opacity-60" />
+            <img src={logo} alt="" className="size-[24px] object-contain" />
           </button>
         ))}
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+
         <button
           type="button"
+          aria-label="Copy subscription URL"
+          title="Copy subscription URL"
           onClick={() => simulate("Copy subscription URL")}
-          className="flex min-h-8 cursor-pointer items-center gap-1.5 text-xs font-semibold underline-offset-4 hover:underline"
+          className={square}
         >
-          <Copy size={13} />
-          Copy subscription URL
+          <Copy size={24} />
         </button>
         <button
           type="button"
+          aria-label="Download .ics"
+          title="Download .ics"
           onClick={() => simulate("Download .ics")}
-          className="flex min-h-8 cursor-pointer items-center gap-1.5 text-xs font-semibold underline-offset-4 hover:underline"
+          className={square}
         >
-          <Download size={13} />
-          Download .ics
+          <Download size={24} />
         </button>
       </div>
       <p className="mt-2 text-xs opacity-65">Design preview · calendar actions are simulated.</p>
-      <p role="status" className="mt-1 text-xs font-semibold">
+      <p role="status" className="mt-1 max-w-sm text-xs font-semibold">
         {notice}
       </p>
     </div>
