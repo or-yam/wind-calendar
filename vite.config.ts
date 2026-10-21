@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
 import path from "node:path";
@@ -27,6 +28,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [
       nitro(),
       react(),
+      babel({ presets: [reactCompilerPreset({ compilationMode: "annotation" })] }),
       tailwindcss(),
       injectCSP(errorReportingOrigin),
       portless(),

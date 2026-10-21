@@ -1,0 +1,185 @@
+.diagram-lesson {
+  max-width: 680px;
+}
+.diagram-lesson h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.diagram-lesson h2 {
+  font-size: 18px;
+  margin: 16px 0 10px;
+}
+.diagram-lesson .choices {
+  gap: 6px;
+  margin: 12px 0 20px;
+}
+.diagram-lesson .choices button {
+  padding: 8px 10px;
+}
+.flow-map {
+  max-width: 560px;
+  margin: 16px auto;
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.node {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 9px);
+  padding: 16px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.3;
+  background: var(--panel);
+}
+.node small {
+  display: block;
+  font-size: 12px;
+  color: var(--soft);
+  margin-top: 4px;
+}
+.node code {
+  font-size: 12px;
+}
+.node.input {
+  border-color: var(--info-foreground, #6397c4);
+}
+.node.work {
+  border-color: var(--blue);
+}
+.node.output {
+  border-color: var(--success-foreground, #589773);
+}
+.node.error {
+  border-color: var(--destructive-foreground, #d17c7c);
+}
+.spine {
+  width: 72%;
+  margin: 0 auto;
+}
+.arrow {
+  text-align: center;
+  color: var(--soft);
+  line-height: 1;
+  font-size: 25px;
+  height: 29px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.arrow.label {
+  height: 43px;
+  gap: 8px;
+  font-size: 21px;
+}
+.arrow.label small {
+  font: 12px var(--font-sans, system-ui);
+}
+.bridge {
+  display: block;
+  width: 100%;
+  height: 34px;
+  color: var(--soft);
+}
+.diagram-caption {
+  text-align: center;
+  font-size: 13px;
+  color: var(--soft);
+  margin: 12px 0 0;
+}
+.weather-row {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  align-items: center;
+}
+.side-arrow {
+  text-align: center;
+  color: var(--soft);
+  font-size: 25px;
+}
+.weather-down {
+  width: calc(50% - 20px);
+}
+.mini-flow {
+  margin: 20px 0 26px;
+}
+.mini-flow .node {
+  max-width: 390px;
+  margin: auto;
+}
+.diagram-lesson .quiz {
+  margin-top: 20px;
+}
+.diagram-lesson .quiz .choices {
+  margin-bottom: 0;
+}
+.diagram-lesson .feedback:empty {
+  display: none;
+}
+.diagram-lesson footer {
+  margin-top: 18px;
+}
+.rule {
+  font-size: 13px;
+  text-align: center;
+  margin: 10px 0;
+}
+.diagram-lesson .client-panel {
+  animation: appear 0.12s ease-in;
+}
+@keyframes appear {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 430px) {
+  .node {
+    font-size: 13px;
+    padding: 16px;
+  }
+  .node code {
+    font-size: 11px;
+  }
+  .pair {
+    gap: 10px;
+  }
+  .spine {
+    width: 88%;
+  }
+  .diagram-lesson h1 {
+    font-size: 25px;
+  }
+  .weather-row {
+    grid-template-columns: 1fr 26px 1fr;
+  }
+  .weather-down {
+    width: calc(50% - 13px);
+  }
+  .diagram-lesson .choices button {
+    font-size: 12px;
+    padding: 8px;
+  }
+  .node small {
+    font-size: 11px;
+  }
+}
+@media print {
+  .diagram-lesson .client-panel {
+    break-before: page;
+  }
+  .diagram-lesson #main-flow {
+    break-before: auto;
+  }
+  .node {
+    background: white;
+  }
+  .diagram-lesson details {
+    display: none;
+  }
+}

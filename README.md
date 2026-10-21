@@ -63,6 +63,8 @@ Returns an ICS calendar feed with windsurfing/kitesurfing sessions filtered by w
 
 ## How It Works
 
+See the [backend flow diagrams](docs/backend-flows.html) and the [wind-or-waves example](docs/wind-or-waves.html). Open the HTML files in a browser for the interactive diagrams and questions.
+
 1. Fetch - Pulls wind and wave forecast data from Open-Meteo (primary) or [Windguru](https://www.windguru.cz/) (fallback)
 2. Filter - Removes forecasts outside your wind speed range, during darkness, or below minimum wave height
 3. Rank - Picks the best spot for each forecast interval by wind, then wave
@@ -140,7 +142,7 @@ cp .env.example .env
 
 Set `OPENAI_API_KEY` in `.env` for local free-text configuration and in the Vercel project environment for deployment. Create a boolean Vercel Flag named `free-text-config-builder`, then run `vercel link && vercel env pull` to evaluate it locally. The key and flag credentials are server-only; never expose them through a `VITE_` variable. Manual configuration works without either.
 
-Sentry is optional. Set `VITE_SENTRY_DSN` and `SENTRY_DSN` for browser and Nitro errors. Set `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in Vercel to upload hidden browser and server source maps during builds. `SENTRY_ENVIRONMENT` only overrides the event's dashboard environment label; it does not enable or disable reporting. Reporting is gated independently by `VERCEL_ENV` and runs only on Vercel Preview and Production deployments. `SENTRY_RELEASE` is also optional; Vercel's environment and Git commit SHA are used as defaults. The SDKs do not initialize in tests or local development, and request bodies, query strings, headers, cookies, user data, IP addresses, and AI inputs/outputs are not collected.
+Sentry is optional. Set `VITE_SENTRY_DSN` and `SENTRY_DSN` for browser and Nitro errors. Set `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in Vercel to upload hidden browser and server source maps during builds. `SENTRY_ENVIRONMENT` only overrides the event's dashboard environment label; it does not enable or disable reporting. Reporting is gated independently by `VERCEL_ENV` and runs only on Vercel Preview and Production deployments. `SENTRY_RELEASE` is also optional; Vercel's environment and Git commit SHA are used as defaults. The SDKs do not initialize in tests or local development, and request bodies, query strings, headers, cookies, user data, IP addresses, AI inputs/outputs, and console breadcrumbs are not collected. DSNs must use HTTPS. When source-map upload credentials are configured, upload failures fail the build.
 
 **Run locally:**
 

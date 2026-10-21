@@ -7,7 +7,7 @@ const Analytics = lazy(() =>
 );
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
-import { ForecastCards } from "./components/ForecastCards";
+import { ForecastCalendar } from "./components/ForecastCalendar";
 import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
@@ -118,7 +118,7 @@ function App() {
   const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));
   const sessions = data?.sessions ?? [];
   const forecastConfigKey = buildConfigParams(config).toString();
-  const { weekStart, today, canGoPrev, goToToday, goToPrev, goToNext } =
+  const { weekStart, today, canGoPrev, canGoNext, goToToday, goToPrev, goToNext } =
     useWeekNavigation(forecastConfigKey);
 
   const handleLocationsChange = (locations: string[]) => {
@@ -212,16 +212,18 @@ function App() {
             </div>
           }
         >
-          <ForecastCards
+          <ForecastCalendar
             sessions={sessions}
             isPending={isPending}
             error={error}
             weekStart={weekStart}
             today={today}
             canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
             onPrev={goToPrev}
             onNext={goToNext}
             onToday={goToToday}
+            resetKey={forecastConfigKey}
           />
         </ErrorBoundary>
         <SubscribeButtons config={confirmedConfig} />

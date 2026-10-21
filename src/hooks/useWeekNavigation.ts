@@ -5,6 +5,7 @@ interface UseWeekNavigationResult {
   weekStart: Date;
   today: Date;
   canGoPrev: boolean;
+  canGoNext: boolean;
   goToToday: () => void;
   goToPrev: () => void;
   goToNext: () => void;
@@ -12,12 +13,15 @@ interface UseWeekNavigationResult {
 
 const START_ON_SUNDAY = true;
 
-function clampToCurrentWeek(weekStart: Date): Date {
+function clampToAvailableWeeks(weekStart: Date): Date {
   const currentWeekStart = getWeekStart(new Date(), START_ON_SUNDAY);
-  return weekStart < currentWeekStart ? currentWeekStart : weekStart;
+  const lastWeekStart = addDays(currentWeekStart, 14);
+  if (weekStart < currentWeekStart) return currentWeekStart;
+  return weekStart > lastWeekStart ? lastWeekStart : weekStart;
 }
 
 export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
+  "use no memo"; // Render-time clock reads must refresh even when navigation state is unchanged.
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), START_ON_SUNDAY));
   const [today, setToday] = useState(() => new Date());
   const previousResetKeyRef = useRef(resetKey);
@@ -39,7 +43,7 @@ export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
       const nextWeek = getWeekStart(now, START_ON_SUNDAY).getTime();
       if (nextWeek !== currentWeek) {
         currentWeek = nextWeek;
-        setWeekStart((prev) => new Date(clampToCurrentWeek(prev)));
+        setWeekStart((prev) => new Date(clampToAvailableWeeks(prev)));
       }
       const midnight = new Date(now);
       midnight.setHours(24, 0, 0, 0);
@@ -62,15 +66,25 @@ export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
   }, []);
 
   const goToPrev = useCallback(() => {
-    setWeekStart((prev) => clampToCurrentWeek(addDays(prev, -7)));
+    setWeekStart((prev) => clampToAvailableWeeks(addDays(prev, -7)));
   }, []);
 
   const goToNext = useCallback(() => {
-    setWeekStart((prev) => addDays(clampToCurrentWeek(prev), 7));
+    setWeekStart((prev) => clampToAvailableWeeks(addDays(clampToAvailableWeeks(prev), 7)));
   }, []);
 
-  const visibleWeekStart = clampToCurrentWeek(weekStart);
+  const visibleWeekStart = clampToAvailableWeeks(weekStart);
   const canGoPrev = visibleWeekStart > getWeekStart(new Date(), START_ON_SUNDAY);
 
-  return { weekStart: visibleWeekStart, today, canGoPrev, goToToday, goToPrev, goToNext };
+  const canGoNext = visibleWeekStart < addDays(getWeekStart(new Date(), START_ON_SUNDAY), 14);
+
+  return {
+    weekStart: visibleWeekStart,
+    today,
+    canGoPrev,
+    canGoNext,
+    goToToday,
+    goToPrev,
+    goToNext,
+  };
 }
