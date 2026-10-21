@@ -19,6 +19,7 @@ export function CalendarNavigationControls({
   onNext: () => void;
   onToday: () => void;
 }) {
+  "use memo";
   return (
     <CalendarNavigation
       weekStart={weekStart}

@@ -13,6 +13,7 @@ export function CalendarRequestStatus({
   isMobile: boolean;
   mode: CalendarMode;
 }) {
+  "use memo";
   const range = isMobile ? (mode === "day" ? "day" : "range") : "week";
   return (
     <p className="sr-only" role="status">

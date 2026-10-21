@@ -1,4 +1,6 @@
 import { defineConfig } from "vitest/config";
+import { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +14,7 @@ const domTests = [
 ];
 
 export default defineConfig({
+  plugins: [babel({ presets: [reactCompilerPreset({ compilationMode: "annotation" })] })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

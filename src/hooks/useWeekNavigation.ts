@@ -21,6 +21,7 @@ function clampToAvailableWeeks(weekStart: Date): Date {
 }
 
 export function useWeekNavigation(resetKey: string): UseWeekNavigationResult {
+  "use no memo"; // Render-time clock reads must refresh even when navigation state is unchanged.
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date(), START_ON_SUNDAY));
   const [today, setToday] = useState(() => new Date());
   const previousResetKeyRef = useRef(resetKey);

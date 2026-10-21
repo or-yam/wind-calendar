@@ -2,6 +2,7 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   // ─── Base: applies to ALL files ───
   "plugins": ["typescript", "unicorn", "import", "oxc"],
+  "jsPlugins": [{ "name": "react-hooks-js", "specifier": "eslint-plugin-react-hooks" }],
   "env": {
     "es2024": true
   },
@@ -24,6 +25,13 @@
     {
       "files": ["src/**/*.ts", "src/**/*.tsx"],
       "plugins": ["typescript", "unicorn", "import", "oxc", "react"],
+      "rules": {
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "error",
+        "react/unsupported-syntax": "error",
+        "react-hooks-js/config": "error",
+        "react-hooks-js/gating": "error"
+      },
       "env": {
         "browser": true
       }
