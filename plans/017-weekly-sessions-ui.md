@@ -1,6 +1,6 @@
 # Weekly upcoming sessions UI
 
-Status: complete; all five implementation tickets, independent Sol review, and parent Vercel preview QA passed. See the [final QA report](../.scratch/weekly-sessions/evidence/preview/qa-report.md).
+Status: complete; all five implementation tickets, independent Sol review, and parent Vercel preview QA passed.
 
 Planning sources: the main worktree's `to-spec`, `to-tickets`, `tdd`, and `writing-for-agents` skills. Work in complete, verifiable feature slices, with tests and cleanup inside each slice.
 
@@ -14,10 +14,10 @@ Replace the strip with a weekly time grid in the existing theme. Show seven days
 
 Use the mockups reviewed in this conversation:
 
-- [Desktop weekly calendar with a combined wind-and-wave event](../output/design-exploration/weekly-sessions.html): **Week grid** is the reference. The alternative **Day columns** layout is out of scope.
-- [Mobile calendar](../output/design-exploration/mobile-sessions.html): **3 days** is the default; **Day** is the alternative.
+- Desktop weekly calendar with a combined wind-and-wave event: **Week grid** is the reference. The alternative **Day columns** layout is out of scope.
+- Mobile calendar: **3 days** is the default; **Day** is the alternative.
 
-Keep these reference files with the plan. Sample forecasts, fixed colors, and restricted navigation in the mockups demonstrate appearance only; production uses real forecast data and existing color functions. Build native React components rather than embedding the HTML.
+Sample forecasts, fixed colors, and restricted navigation in the mockups demonstrate appearance only; production uses real forecast data and existing color functions. Build native React components rather than embedding the HTML.
 
 ## User stories
 
@@ -59,7 +59,7 @@ Keep these reference files with the plan. Sample forecasts, fixed colors, and re
 
 **Application boundary where needed:** render the app with a controlled forecast HTTP response to verify URL preference, filter updates, history navigation, and fetch counts. Keep the query/configuration integration real; fake external network responses and clock/viewport inputs only as required.
 
-**Browser boundary for visual behavior:** use `agent-browser` against the app served through `portless`. Compare with both linked mockups at 320, 390, 768, and 1280px. Inspect actual event bounds, overlaps, text fit, touch controls, keyboard use, and resizing with details open. DOM-only tests do not establish visual correctness.
+**Browser boundary for visual behavior:** use `agent-browser` against the app served through `portless`. Compare with both reviewed mockups at 320, 390, 768, and 1280px. Inspect actual event bounds, overlaps, text fit, touch controls, keyboard use, and resizing with details open. DOM-only tests do not establish visual correctness.
 
 Use literal, worked forecast examples with independent expected dates and conditions. Cover nested overlaps, equal starts across locations, adjacent intervals, fractional hours, midnight/week boundaries, and clock rollover through these boundaries. Existing date/navigation tests remain where they protect public behavior; add no new private geometry testing boundary without agreement.
 
@@ -69,11 +69,11 @@ For each behavior: one failing test → minimal working implementation → passi
 
 Each ticket delivers working user behavior and fits a fresh implementation session. Work blockers-first; tests and removal of superseded code belong to each slice. Local execution tickets:
 
-- [1. Read real sessions in a timed calendar](../.scratch/weekly-sessions/issues/01-timed-calendar.md)
-- [2. Compare crowded sessions and inspect full details](../.scratch/weekly-sessions/issues/02-overlaps-and-details.md)
-- [3. Navigate a three-day mobile calendar](../.scratch/weekly-sessions/issues/03-mobile-navigation.md)
-- [4. Preserve calendar state through filters, history, and rollover](../.scratch/weekly-sessions/issues/04-state-and-rollover.md)
-- [5. Finish replacement, cleanup, and reference verification](../.scratch/weekly-sessions/issues/05-cleanup-and-verification.md)
+1. Read real sessions in a timed calendar
+2. Compare crowded sessions and inspect full details
+3. Navigate a three-day mobile calendar
+4. Preserve calendar state through filters, history, and rollover
+5. Finish replacement, cleanup, and reference verification
 
 ### 1. Read real sessions in a timed calendar
 
@@ -161,4 +161,4 @@ None.
 
 ## Review follow-up status (2026-10-20)
 
-All local findings from the first standards/spec review round are implemented. Transition weeks use one elapsed-hours axis across all columns and offset-qualified local event/detail times. Calendar source and rendered tests are split into focused files under 100 lines. Browser bounds verify overlap lanes, adjacent intervals, fractional starts, overnight segments, and the 45-minute rollback fixture. `pnpm check` passes (58 suites / 613 tests); `pnpm build` passes. Independent Sol standards/spec reviews passed after the [round 1](../.scratch/weekly-sessions/reviews/round1-resolution.md) and [round 2](../.scratch/weekly-sessions/reviews/round2-resolution.md) corrections. Parent QA passed on the protected Vercel preview, including live APIs and controlled browser fixtures. See the [final QA report](../.scratch/weekly-sessions/evidence/preview/qa-report.md).
+All local findings from the first standards/spec review round are implemented. Transition weeks use one elapsed-hours axis across all columns and offset-qualified local event/detail times. Calendar source and rendered tests are split into focused files under 100 lines. Browser bounds verify overlap lanes, adjacent intervals, fractional starts, overnight segments, and the 45-minute rollback fixture. `pnpm check` passes (58 suites / 613 tests); `pnpm build` passes. Independent Sol standards/spec reviews passed after the round 1 and round 2 corrections. Parent QA passed on the protected Vercel preview, including live APIs and controlled browser fixtures.
