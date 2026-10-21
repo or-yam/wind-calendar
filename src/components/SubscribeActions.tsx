@@ -14,7 +14,7 @@ interface SubscribeActionsProps {
 }
 
 const actionClass =
-  "grid size-11 shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-[#04090b] transition hover:-translate-y-0.5 hover:text-[#ff3d8d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d] active:translate-y-0";
+  "grid size-[44px] shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-[#04090b] transition hover:-translate-y-0.5 hover:text-[#ff3d8d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d] active:translate-y-0";
 
 const providers = (config: CalendarConfig) => [
   {
@@ -89,7 +89,7 @@ export function SubscribeActions({ config }: SubscribeActionsProps) {
             className={actionClass}
             {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
-            <img src={icon} alt="" className="size-6 object-contain" />
+            <img src={icon} alt="" className="size-[24px] object-contain" />
           </a>
         ))}
 

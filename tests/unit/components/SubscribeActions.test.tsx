@@ -71,11 +71,11 @@ describe("SubscribeActions", () => {
 
   it("downloads the configured feed as an .ics file", async () => {
     const clicked: { link?: HTMLAnchorElement } = {};
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-      function (this: HTMLAnchorElement) {
-        clicked.link = this;
-      },
-    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicked.link = this;
+    });
     await act(async () => root.render(createElement(SubscribeActions, { config })));
 
     await act(async () => button("Download .ics").click());
