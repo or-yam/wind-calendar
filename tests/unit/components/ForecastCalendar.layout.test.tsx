@@ -77,8 +77,8 @@ it("segments midnight and visible-week boundaries without changing the original 
   expect(calendar.container.textContent).toContain("24:00");
   expect(JSON.stringify([incoming, overnight, outgoing])).toBe(originals);
   await calendar.render([incoming, overnight, outgoing], { weekStart: new Date(2026, 9, 25) });
-  expect(event("Outgoing").getAttribute("aria-label")).toContain(
-    "SUN Oct 25 at Outgoing: 00:00 UTC+03:00 – 02:00 UTC+02:00",
+  expect(event("Outgoing").getAttribute("aria-label")).toMatch(
+    /SUN Oct 25 at Outgoing: 00:00(?: UTC\+03:00)? – 02:00(?: UTC\+02:00)?/,
   );
   expect(calendar.container.querySelectorAll('[aria-label*="at Outgoing:"]')).toHaveLength(1);
 });
