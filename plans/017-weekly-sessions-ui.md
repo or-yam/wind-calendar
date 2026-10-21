@@ -30,7 +30,7 @@ Sample forecasts, fixed colors, and restricted navigation in the mockups demonst
 7. As a reader of a combined match, I want both forecast badges and their own directions so I can assess both conditions.
 8. As a reader, I want complete session details on activation so small blocks do not hide essential information.
 9. As a reader, I want date controls and Today so I can move through the forecast and return to the current date.
-10. As a returning reader, I want my explicit mobile Day preference retained through URL updates and browser navigation.
+10. As a returning reader, I want my mobile view preference saved locally across reload, filter edits, and browser navigation without including UI preferences in shared forecast links.
 11. As a reader adjusting filters, I want the calendar to update using the existing forecast and subscription behavior.
 12. As a reader, I want loading, errors, and no matches clearly distinguished so I know what the calendar is showing.
 13. As a keyboard or screen-reader user, I want named controls, usable events, and predictable focus so the calendar is accessible.
@@ -50,14 +50,14 @@ Sample forecasts, fixed colors, and restricted navigation in the mockups demonst
 - Preserve existing week-navigation rules: Sunday start, current-week lower bound, Today, filter-change reset, future-week selection, and midnight/focus refresh without unsolicited focus changes.
 - Mobile initially starts at today, clamped so three days fit within the selected week. A future week starts on Sunday. Selecting a date starts the range there, with the same end-of-week clamp. Day mode shows the selected date alone.
 - Mobile arrows move by the visible day count; at a boundary they enter the adjacent week, respecting the current-week lower bound. Today returns to the current week and makes today visible.
-- Preserve the selected date across mode changes and resize. Keep explicit Day preference in URL-backed presentation state, separate from forecast/subscription parameters, and preserve it when filters rewrite the URL. Layout changes alone do not refetch forecasts.
+- Preserve the selected date across mode changes and resize. Save the Day/3 days preference in localStorage, owned by a focused calendar-mode hook. Ignore legacy calendarView URL parameters and remove them during normal forecast URL normalization. View changes do not change the URL or add history entries; forecast config remains URL-backed. If storage is unavailable, retain the preference in memory for the current visit. Layout changes alone do not refetch forecasts.
 - Use native buttons and roughly 44px navigation targets. Announce loading, errors, and visible-range emptiness. Render calendar-shaped skeletons; show No match only after a successful response. Add a separate No forecast state only if the data can support that distinction.
 
 ## Testing decisions — approved boundaries
 
 **Primary automated boundary: the rendered calendar through its public inputs and user controls.** Follow the existing rendered forecast component/navigation/accessibility suites. Exercise real date grouping, layout calculation, condition formatting, and event rendering together. Observe dates, event content, accessible names, navigation, and focus; do not test private helpers or component structure.
 
-**Application boundary where needed:** render the app with a controlled forecast HTTP response to verify URL preference, filter updates, history navigation, and fetch counts. Keep the query/configuration integration real; fake external network responses and clock/viewport inputs only as required.
+**Application boundary where needed:** render the app with a controlled forecast HTTP response to verify local view persistence, clean shared URLs, filter updates, history navigation, and fetch counts. Keep the query/configuration integration real; fake external network responses and clock/viewport inputs only as required.
 
 **Browser boundary for visual behavior:** use `agent-browser` against the app served through `portless`. Compare with both reviewed mockups at 320, 390, 768, and 1280px. Inspect actual event bounds, overlaps, text fit, touch controls, keyboard use, and resizing with details open. DOM-only tests do not establish visual correctness.
 
@@ -123,10 +123,10 @@ Each ticket delivers working user behavior and fits a fresh implementation sessi
 
 **Delivers:** calendar preferences and navigation remain predictable while filters, browser history, background refresh, and the date change.
 
-- [x] Explicit Day preference survives filter updates, reload, and browser back/forward; malformed presentation state falls back safely.
-- [x] Presentation state stays out of forecast requests and subscription URLs; resizing alone does not fetch forecasts.
+- [x] Explicit Day preference survives filter updates, reload, and browser back/forward; unknown or unavailable local storage falls back safely.
+- [x] Presentation state stays out of shared page URLs, forecast requests, and subscription URLs; resizing alone does not fetch forecasts.
 - [x] Filter reset, Today, midnight/Sunday rollover, selected future week, and focus preservation retain the existing guarantees.
-- [x] App-level regression tests cover URL/network behavior; rendered calendar tests cover lifecycle/focus behavior with controlled time.
+- [x] App-level regression tests cover local preferences and URL/network behavior; rendered calendar tests cover lifecycle/focus behavior with controlled time.
 - [x] Remove superseded state synchronization or effects introduced by earlier slices.
 
 **Done when:** app-boundary tests demonstrate the behavior without mocking internal query or navigation collaborators.
@@ -162,3 +162,21 @@ None.
 ## Review follow-up status (2026-10-20)
 
 All local findings from the first standards/spec review round are implemented. Transition weeks use one elapsed-hours axis across all columns and offset-qualified local event/detail times. Calendar source and rendered tests are split into focused files under 100 lines. Browser bounds verify overlap lanes, adjacent intervals, fractional starts, overnight segments, and the 45-minute rollback fixture. `pnpm check` passes (58 suites / 613 tests); `pnpm build` passes. Independent Sol standards/spec reviews passed after the round 1 and round 2 corrections. Parent QA passed on the protected Vercel preview, including live APIs and controlled browser fixtures.
+
+## PR review follow-up — 2026-10-21
+
+The URL-backed view preference was a mistake in the original plan. Forecast settings belong in shared links; Day/3 days is a local UI preference.
+
+1. Strengthen rendered tests before production edits: assert the complete visible date range and selected date through mode changes, real viewport transitions, week boundaries, Today, and filter resets.
+2. Replace URL-preference coverage with app tests for local persistence, invalid/blocked storage, clean share URLs, unchanged history, and no extra forecast requests.
+3. Remove overlapping column-count tests; verify useful assertions reject deliberate selection-loss regressions.
+4. Generalize the existing mobile hook after confirming no shared equivalent exists. Keep AbortController cleanup, use native media-query change events, separate the mode hook from navigation, store the selected date directly, and name skeleton dimensions.
+5. Run the full checks/build and targeted browser verification.
+
+TDD evidence: before production edits, four preference cases failed against the URL implementation. Existing navigation passed the stronger date assertions. Temporary regressions resetting the selected date on viewport changes and mode changes both failed at the expected selected/visible-date assertions; both mutations were restored before implementation.
+
+Additional regression checks rejected omitted filter resets, omitted Today selection resets, and a next-week transition selecting Monday instead of Sunday. All temporary mutations were restored.
+
+Real-browser Back navigation exposed a stale view when restoring a cached page after another page saved a new preference. A failing pageshow regression test reproduced it before adding preference refresh on page restoration. Blocked storage still preserves the in-memory choice. Browser Back and Forward now retain the latest saved preference.
+
+Validation: `TZ=UTC pnpm check` passes (59 suites / 627 tests); `pnpm build` passes with bundle-size and bundler-reporting warnings. Focused navigation/preference suites also passed in Asia/Jerusalem before the cache-restoration follow-up. Agent-browser against the portless dev app verified real 767px/768px transitions, selected-date preservation, reload, Today, filter resets, clean legacy URLs, unchanged history/request counts on mode changes, and Back/Forward restoration; no page errors were reported.

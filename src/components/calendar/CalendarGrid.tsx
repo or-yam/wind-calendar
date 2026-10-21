@@ -6,7 +6,7 @@ import { HourScale } from "./HourScale";
 import { SessionDetails } from "./SessionDetails";
 import { intersects, isOffsetTransitionWeek, weekHours } from "./sessionSegments";
 import { sessionKey } from "./overlapLanes";
-import { useMobileCalendar } from "@/hooks/useMobileCalendar";
+import { useMobileView } from "@/hooks/useMobileView";
 
 const DESKTOP_HOUR_HEIGHT = 36;
 const MOBILE_HOUR_HEIGHT = 40;
@@ -22,7 +22,7 @@ export function CalendarGrid({
   today: Date;
   weekStart: Date;
 }) {
-  const isMobile = useMobileCalendar();
+  const isMobile = useMobileView();
   const hourHeight = isMobile ? MOBILE_HOUR_HEIGHT : DESKTOP_HOUR_HEIGHT;
   const elapsedAxis = isOffsetTransitionWeek(weekStart);
   const { startHour, endHour } = weekHours(sessions, weekStart, elapsedAxis);

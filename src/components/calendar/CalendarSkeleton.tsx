@@ -1,5 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+const HOUR_HEIGHT = 36;
+const VISIBLE_HOURS = 14;
+const PLACEHOLDER_START_HOUR = 2;
+const PLACEHOLDER_DURATION_HOURS = 3;
+const PLACEHOLDER_OFFSET_VARIANTS = 3;
+
 export function CalendarSkeleton({ dayCount }: { dayCount: number }) {
   return (
     <div
@@ -20,15 +26,18 @@ export function CalendarSkeleton({ dayCount }: { dayCount: number }) {
               <Skeleton className="h-8 w-8" />
             </div>
             <div
-              className="relative h-[504px]"
+              className="relative"
               style={{
-                backgroundImage:
-                  "repeating-linear-gradient(to bottom, transparent 0, transparent 35px, var(--border) 35px, var(--border) 36px)",
+                height: VISIBLE_HOURS * HOUR_HEIGHT,
+                backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px)`,
               }}
             >
               <Skeleton
-                className="absolute inset-x-1 h-[108px]"
-                style={{ top: 72 + (i % 3) * 36 }}
+                className="absolute inset-x-1"
+                style={{
+                  top: (PLACEHOLDER_START_HOUR + (i % PLACEHOLDER_OFFSET_VARIANTS)) * HOUR_HEIGHT,
+                  height: PLACEHOLDER_DURATION_HOURS * HOUR_HEIGHT,
+                }}
               />
             </div>
           </div>

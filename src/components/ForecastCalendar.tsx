@@ -2,8 +2,9 @@ import { useRef } from "react";
 import type { ForecastCalendarProps } from "./forecastCalendarTypes";
 import { addDays } from "@/lib/date-utils";
 import { intersects } from "./calendar/sessionSegments";
-import { useMobileCalendar } from "@/hooks/useMobileCalendar";
-import { useCalendarPresentation } from "@/hooks/useCalendarPresentation";
+import { useMobileView } from "@/hooks/useMobileView";
+import { useCalendarMode } from "@/hooks/useCalendarMode";
+import { useMobileCalendarNavigation } from "@/hooks/useMobileCalendarNavigation";
 import { CalendarRequestStatus } from "./CalendarRequestStatus";
 import { CalendarNavigationControls } from "./CalendarNavigationControls";
 import { CalendarDayControls } from "./CalendarDayControls";
@@ -21,14 +22,11 @@ export function ForecastCalendar({
   onPrev,
   onNext,
   onToday,
-  mode: controlledMode,
-  onModeChange,
   resetKey = "",
 }: ForecastCalendarProps) {
-  const isMobile = useMobileCalendar();
+  const isMobile = useMobileView();
+  const { mode, changeMode } = useCalendarMode();
   const {
-    mode,
-    changeMode,
     weekDays,
     selectedDay,
     visibleDays,
@@ -37,7 +35,7 @@ export function ForecastCalendar({
     selectDay,
     selectToday,
     moveRange,
-  } = useCalendarPresentation({
+  } = useMobileCalendarNavigation({
     weekStart,
     today,
     isMobile,
@@ -46,8 +44,7 @@ export function ForecastCalendar({
     onPrev,
     onNext,
     onToday,
-    controlledMode,
-    onModeChange,
+    mode,
     resetKey,
   });
   const calendarRef = useRef<HTMLDivElement>(null);

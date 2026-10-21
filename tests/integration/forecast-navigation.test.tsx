@@ -1,10 +1,11 @@
-import { act, createElement, useState } from "react";
+import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ForecastSession } from "../../shared/forecast-types";
 import { useWeekNavigation } from "../../src/hooks/useWeekNavigation";
 import { ForecastCalendar } from "../../src/components/ForecastCalendar";
+import { calendarControls } from "../helpers/calendar-controls";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -14,7 +15,6 @@ const NO_SESSIONS: ForecastSession[] = [];
 
 function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
   navigation = useWeekNavigation("default");
-  const [mode, setMode] = useState<"three-days" | "day">("three-days");
   return createElement(ForecastCalendar, {
     sessions,
     isPending: false,
@@ -26,8 +26,6 @@ function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
     onPrev: navigation.goToPrev,
     onNext: navigation.goToNext,
     onToday: navigation.goToToday,
-    mode,
-    onModeChange: setMode,
     resetKey: "default",
   });
 }
@@ -75,77 +73,52 @@ describe("forecast navigation with rendered calendar", () => {
     vi.useRealTimers();
   });
 
-  it("shows three selectable days on mobile and lets the reader switch to one day", async () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query === "(max-width: 767px)",
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
-    await act(async () => root.render(createElement(Harness)));
-
-    expect(
-      container.querySelector('[role="region"]')!.querySelectorAll('[role="group"]'),
-    ).toHaveLength(3);
-    const friday = [...container.querySelectorAll("button")].find((button) =>
-      button.getAttribute("aria-label")?.includes("FRI Jul 31"),
-    );
-    expect(friday).toBeDefined();
-    await act(async () => friday!.click());
-    expect(
-      container.querySelector('[role="region"]')!.querySelectorAll('[role="group"]'),
-    ).toHaveLength(3);
-
-    const dayMode = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "Day",
-    );
-    expect(dayMode).toBeDefined();
-    await act(async () => dayMode!.click());
-    expect(
-      container.querySelector('[role="region"]')!.querySelectorAll('[role="group"]'),
-    ).toHaveLength(1);
-    expect(container.querySelector('[role="group"][aria-label*="FRI Jul 31"]')).not.toBeNull();
-  });
+  it.each([
+    {
+      mode: "Day",
+      current: ["SAT Aug 1"],
+      next: ["SUN Aug 2"],
+      previous: ["SAT Aug 1"],
+      selected: "SAT Aug 1",
+    },
+    {
+      mode: "3 days",
+      current: ["THU Jul 30", "FRI Jul 31", "SAT Aug 1"],
+      next: ["SUN Aug 2", "MON Aug 3", "TUE Aug 4"],
+      previous: ["THU Jul 30", "FRI Jul 31", "SAT Aug 1"],
+      selected: "SAT Aug 1",
+    },
+  ])(
+    "crosses both week boundaries with the correct dates in $mode mode",
+    async ({ mode, current, next, previous, selected }) => {
+      vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener: vi.fn() }));
+      await act(async () => root.render(createElement(Harness)));
+      const controls = calendarControls(container);
+      await act(async () => controls.button(mode).click());
+      await act(async () => controls.button("SAT Aug 1").click());
+      expect(controls.visibleDays()).toEqual(current);
+      await act(async () => controls.button("Next range").click());
+      expect(weekLabel()).toBe("Aug 2 – 8, 2026");
+      expect(controls.selectedDay()).toBe("SUN Aug 2");
+      expect(controls.visibleDays()).toEqual(next);
+      await act(async () => controls.button("Previous range").click());
+      expect(weekLabel()).toBe("Jul 26 – Aug 1, 2026");
+      expect(controls.selectedDay()).toBe(selected);
+      expect(controls.visibleDays()).toEqual(previous);
+    },
+  );
 
   it("moves backward within the current week and stops at Sunday", async () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query === "(max-width: 767px)",
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
+    vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener: vi.fn() }));
     await act(async () => root.render(createElement(Harness)));
-    const previous = () =>
-      container.querySelector<HTMLButtonElement>('button[aria-label="Previous range"]')!;
-
-    expect(previous().disabled).toBe(false);
-    await act(async () => previous().click());
-
-    expect(weekLabel()).toBe("Jul 26 – Aug 1, 2026");
-    expect(
-      container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
-    ).toContain("SUN Jul 26");
-    expect(previous().disabled).toBe(true);
-  });
-
-  it("advances mobile ranges and enters the next week at its Sunday boundary", async () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query === "(max-width: 767px)",
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
-    await act(async () => root.render(createElement(Harness)));
-    const next = () =>
-      container.querySelector<HTMLButtonElement>('button[aria-label="Next range"]')!;
-
-    await act(async () => next().click());
-    expect(
-      container.querySelector('[role="region"]')!.querySelectorAll('[role="group"]'),
-    ).toHaveLength(3);
-    await act(async () => next().click());
-
-    expect(weekLabel()).toBe("Aug 2 – 8, 2026");
-    expect(
-      container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
-    ).toContain("SUN Aug 2");
+    const controls = calendarControls(container);
+    expect(controls.visibleDays()).toEqual(["WED Jul 29", "THU Jul 30", "FRI Jul 31"]);
+    await act(async () => controls.button("Previous range").click());
+    expect(controls.visibleDays()).toEqual(["SUN Jul 26", "MON Jul 27", "TUE Jul 28"]);
+    expect(controls.selectedDay()).toBe("SUN Jul 26");
+    expect(controls.button("Previous range").disabled).toBe(true);
+    await act(async () => controls.button("Previous range").click());
+    expect(controls.visibleDays()).toEqual(["SUN Jul 26", "MON Jul 27", "TUE Jul 28"]);
   });
 
   it("disables desktop Next after advancing two weeks and restores it on Today", async () => {
@@ -179,10 +152,12 @@ describe("forecast navigation with rendered calendar", () => {
     }
     expect(weekLabel()).toBe("Aug 9 – 15, 2026");
     expect(nextButton().disabled).toBe(true);
-    const days = container.querySelectorAll('[role="region"] [role="group"]');
-    expect(days[days.length - 1]?.getAttribute("aria-label")).toContain("SAT Aug 15");
+    const controls = calendarControls(container);
+    const finalDays = mode === "Day" ? ["SAT Aug 15"] : ["THU Aug 13", "FRI Aug 14", "SAT Aug 15"];
+    expect(controls.visibleDays()).toEqual(finalDays);
     await act(async () => nextButton().click());
     expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    expect(controls.visibleDays()).toEqual(finalDays);
     const previous = container.querySelector<HTMLButtonElement>(
       'button[aria-label="Previous range"]',
     )!;
@@ -206,9 +181,9 @@ describe("forecast navigation with rendered calendar", () => {
       'button[aria-label="Previous range"]',
     )!;
     await act(async () => previous.click());
-    expect(
-      container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
-    ).toContain("MON Jul 27");
+    const controls = calendarControls(container);
+    expect(controls.visibleDays()).toEqual(["MON Jul 27", "TUE Jul 28", "WED Jul 29"]);
+    expect(controls.selectedDay()).toBe("MON Jul 27");
   });
 
   it("focuses today's day when returning from a future week with no sessions", async () => {

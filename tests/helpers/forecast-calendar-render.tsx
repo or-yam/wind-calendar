@@ -31,6 +31,7 @@ const defaults = {
 type Overrides = Partial<Parameters<typeof ForecastCalendar>[0]>;
 
 export function createCalendarHarness() {
+  localStorage.clear();
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);

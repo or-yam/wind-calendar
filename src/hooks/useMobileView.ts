@@ -1,18 +1,17 @@
 import { useSyncExternalStore } from "react";
 
-const query = "(max-width: 767px)";
+const MOBILE_QUERY = "(max-width: 767px)";
 function subscribe(onChange: () => void) {
-  const media = window.matchMedia?.(query);
+  const media = window.matchMedia?.(MOBILE_QUERY);
   const controller = new AbortController();
   media?.addEventListener("change", onChange, { signal: controller.signal });
-  window.addEventListener("resize", onChange, { signal: controller.signal });
   return () => controller.abort();
 }
 
-export function useMobileCalendar() {
+export function useMobileView() {
   return useSyncExternalStore(
     subscribe,
-    () => window.matchMedia?.(query).matches ?? false,
+    () => window.matchMedia?.(MOBILE_QUERY).matches ?? false,
     () => false,
   );
 }

@@ -1,5 +1,4 @@
 import type { ForecastSession } from "@shared/forecast-types";
-import type { CalendarMode } from "./calendar/CalendarMobileControls";
 
 export interface ForecastCalendarProps {
   sessions: ForecastSession[];
@@ -12,7 +11,5 @@ export interface ForecastCalendarProps {
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
-  mode?: CalendarMode;
-  onModeChange?: (mode: CalendarMode) => void;
   resetKey?: string;
 }

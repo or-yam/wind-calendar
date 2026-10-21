@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { addDays, sameDay } from "@/lib/date-utils";
+import { addDays } from "@/lib/date-utils";
 import type { CalendarMode } from "@/components/calendar/CalendarMobileControls";
-
-const dayCount = (mode: CalendarMode) => (mode === "day" ? 1 : 3);
 
 export function useMobileCalendarNavigation({
   weekStart,
@@ -27,75 +25,54 @@ export function useMobileCalendarNavigation({
   mode: CalendarMode;
   resetKey: string;
 }) {
-  const [selection, setSelection] = useState<{ week: number; day: number } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const previousResetKey = useRef(resetKey);
   useEffect(() => {
     if (previousResetKey.current === resetKey) return;
     previousResetKey.current = resetKey;
-    setSelection(null);
+    setSelectedDate(null);
   }, [resetKey]);
-  const count = dayCount(mode);
+
+  const count = mode === "day" ? 1 : 3;
+  const weekEnd = addDays(weekStart, 7);
+  const inWeek = (day: Date) => day >= weekStart && day < weekEnd;
+  const defaultDay = inWeek(today) ? today : weekStart;
+  const selectedDay = selectedDate && inWeek(selectedDate) ? selectedDate : defaultDay;
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const initialDay = today >= weekStart && today < addDays(weekStart, 7) ? today : weekStart;
-  const initialIndex = Math.max(
-    weekDays.findIndex((day) => sameDay(day, initialDay)),
-    0,
-  );
-  const selectedIndex = selection?.week === weekStart.getTime() ? selection.day : initialIndex;
-  const selectedDay = weekDays[selectedIndex];
-  const rangeStartIndex = Math.min(selectedIndex, 7 - count);
+  const rangeStartIndex = Math.min(selectedDay.getDay(), 7 - count);
+  const visibleDays = weekDays.slice(rangeStartIndex, rangeStartIndex + count);
   const canMoveNext = canGoNext || (isMobile && rangeStartIndex < 7 - count);
   const canMovePrev = canGoPrev || (isMobile && rangeStartIndex > 0);
-  const visibleDays = Array.from({ length: count }, (_, i) =>
-    addDays(weekDays[rangeStartIndex], i),
-  );
-  const selectDay = (day: Date) =>
-    setSelection({
-      week: weekStart.getTime(),
-      day: weekDays.findIndex((item) => sameDay(item, day)),
-    });
+
   const selectToday = () => {
-    setSelection({
-      week: weekStart.getTime(),
-      day: Math.max(
-        weekDays.findIndex((day) => sameDay(day, today)),
-        0,
-      ),
-    });
+    setSelectedDate(null);
     onToday();
   };
   const moveRange = (direction: -1 | 1) => {
     if (direction === 1 && !canMoveNext) return;
-    const candidate = addDays(weekDays[rangeStartIndex], direction * count);
-    if (candidate < weekStart) {
+    if (direction === -1 && !canMovePrev) return;
+    const nextIndex = rangeStartIndex + direction * count;
+    if (nextIndex < 0) {
       if (canGoPrev) {
+        setSelectedDate(addDays(weekStart, -1));
         onPrev();
-        setSelection({ week: addDays(weekStart, -7).getTime(), day: 6 });
-      } else setSelection({ week: weekStart.getTime(), day: 0 });
+      } else setSelectedDate(weekStart);
       return;
     }
-    if (candidate >= addDays(weekStart, 7)) {
-      if (!canGoNext) return;
+    if (nextIndex >= 7) {
+      setSelectedDate(weekEnd);
       onNext();
-      setSelection({ week: addDays(weekStart, 7).getTime(), day: 0 });
       return;
     }
-    setSelection({
-      week: weekStart.getTime(),
-      day: Math.max(
-        weekDays.findIndex((day) => sameDay(day, candidate)),
-        0,
-      ),
-    });
+    setSelectedDate(weekDays[nextIndex]);
   };
   return {
-    mode,
     weekDays,
     selectedDay,
     visibleDays,
     canMovePrev,
     canMoveNext,
-    selectDay,
+    selectDay: setSelectedDate,
     selectToday,
     moveRange,
   };
