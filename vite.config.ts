@@ -38,6 +38,9 @@ export default defineConfig(({ command, mode }) => {
               authToken: env.SENTRY_AUTH_TOKEN,
               release: release ? { name: release } : undefined,
               telemetry: false,
+              errorHandler: (error) => {
+                throw error;
+              },
               sourcemaps: {
                 filesToDeleteAfterUpload: ["./.vercel/output/static/**/*.map"],
               },

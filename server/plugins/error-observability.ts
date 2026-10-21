@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nitro";
 import { definePlugin } from "nitro";
+import { getErrorReportingOrigin } from "../../shared/error-observability-config.js";
 import {
   isMonitoredDeployment,
   scrubErrorBreadcrumb,
@@ -12,7 +13,7 @@ export default definePlugin(() => {
   const environment = process.env.SENTRY_ENVIRONMENT || deploymentEnvironment;
 
   if (
-    !dsn ||
+    !getErrorReportingOrigin(dsn) ||
     !environment ||
     process.env.NODE_ENV === "test" ||
     !isMonitoredDeployment(deploymentEnvironment)

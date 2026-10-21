@@ -3,7 +3,7 @@ export function getErrorReportingOrigin(dsn: string | undefined): string | undef
 
   try {
     const url = new URL(dsn);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return undefined;
+    if (url.protocol !== "https:") return undefined;
     return url.origin;
   } catch {
     return undefined;

@@ -1,4 +1,4 @@
-import { reportReactError } from "./error-observability";
+import { reactErrorHandlers } from "./error-observability";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,11 +16,7 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById("root")!, {
-  onUncaughtError: reportReactError,
-  onCaughtError: reportReactError,
-  onRecoverableError: reportReactError,
-}).render(
+createRoot(document.getElementById("root")!, reactErrorHandlers).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />

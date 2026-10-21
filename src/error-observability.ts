@@ -1,4 +1,6 @@
 import * as Sentry from "@sentry/react";
+import type { RootOptions } from "react-dom/client";
+import { getErrorReportingOrigin } from "@shared/error-observability-config";
 import {
   isMonitoredDeployment,
   scrubErrorBreadcrumb,
@@ -9,12 +11,14 @@ const dsn = import.meta.env.VITE_SENTRY_DSN;
 const deploymentEnvironment = import.meta.env.VITE_SENTRY_DEPLOYMENT_ENVIRONMENT;
 const environment = import.meta.env.VITE_SENTRY_ENVIRONMENT || deploymentEnvironment;
 
-if (
-  dsn &&
+const monitoringEnabled = Boolean(
+  getErrorReportingOrigin(dsn) &&
   import.meta.env.PROD &&
   import.meta.env.MODE !== "test" &&
-  isMonitoredDeployment(deploymentEnvironment)
-) {
+  isMonitoredDeployment(deploymentEnvironment),
+);
+
+if (monitoringEnabled) {
   Sentry.init({
     dsn,
     environment,
@@ -33,4 +37,16 @@ if (
   });
 }
 
-export const reportReactError = Sentry.reactErrorHandler();
+const reportUnhandledError = Sentry.reactErrorHandler();
+const logReactError = (error: unknown) => console.error(error);
+
+export const reactErrorHandlers: RootOptions | undefined = monitoringEnabled
+  ? {
+      onUncaughtError: (error, errorInfo) => {
+        logReactError(error);
+        reportUnhandledError(error, errorInfo);
+      },
+      onCaughtError: Sentry.reactErrorHandler(logReactError),
+      onRecoverableError: Sentry.reactErrorHandler(logReactError),
+    }
+  : undefined;

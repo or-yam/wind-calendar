@@ -1,7 +1,7 @@
-import { routes, deploymentEnv, type VercelConfig } from "@vercel/config/v1";
-import { getErrorReportingOrigin } from "./shared/error-observability-config.js";
+import { routes, type VercelConfig } from "@vercel/config/v1";
+import { getErrorReportingOrigin } from "./shared/error-observability-config.ts";
 
-const isProd = deploymentEnv("VERCEL_ENV") === "production";
+const isProd = process.env.VERCEL_ENV === "production";
 const errorReportingOrigin = getErrorReportingOrigin(process.env.VITE_SENTRY_DSN);
 
 const headers = [

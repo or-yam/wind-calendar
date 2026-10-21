@@ -24,5 +24,8 @@ export default withSentryConfig(config, {
       ? { name: process.env.SENTRY_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA }
       : undefined,
   telemetry: false,
+  errorHandler: (error) => {
+    throw error;
+  },
   sourcemaps: { disable: !canUploadSourceMaps },
 });
