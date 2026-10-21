@@ -12,6 +12,7 @@ function readMode(fallback: CalendarMode = "three-days"): CalendarMode {
 }
 
 export function useCalendarMode() {
+  "use memo";
   const [mode, setMode] = useState(readMode);
   useEffect(() => {
     const controller = new AbortController();

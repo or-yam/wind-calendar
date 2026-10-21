@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
 import path from "node:path";
@@ -11,7 +12,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [nitro(), react(), tailwindcss(), injectCSP(), portless()],
+  plugins: [
+    nitro(),
+    react(),
+    babel({ presets: [reactCompilerPreset({ compilationMode: "annotation" })] }),
+    tailwindcss(),
+    injectCSP(),
+    portless(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -63,6 +63,8 @@ Returns an ICS calendar feed with windsurfing/kitesurfing sessions filtered by w
 
 ## How It Works
 
+See the [backend flow diagrams](docs/backend-flows.html) and the [wind-or-waves example](docs/wind-or-waves.html). Open the HTML files in a browser for the interactive diagrams and questions.
+
 1. Fetch - Pulls wind and wave forecast data from Open-Meteo (primary) or [Windguru](https://www.windguru.cz/) (fallback)
 2. Filter - Removes forecasts outside your wind speed range, during darkness, or below minimum wave height
 3. Rank - Picks the best spot for each forecast interval by wind, then wave

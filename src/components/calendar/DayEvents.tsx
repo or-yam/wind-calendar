@@ -1,7 +1,7 @@
 import type { ForecastSession } from "@shared/forecast-types";
-import { addDays } from "@/lib/date-utils";
+import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { laneBox, overlapLanes, sessionKey } from "./overlapLanes";
-import { segmentHours, segmentTime, sessionSegmentTime } from "./sessionSegments";
+import { segmentHours } from "./sessionSegments";
 import { SessionEvent } from "./SessionEvent";
 
 export function DayEvents({
@@ -10,7 +10,6 @@ export function DayEvents({
   sessions,
   startHour,
   hourHeight,
-  elapsedAxis,
   selectedKey,
   detailsId,
   onActivate,
@@ -20,15 +19,15 @@ export function DayEvents({
   sessions: ForecastSession[];
   startHour: number;
   hourHeight: number;
-  elapsedAxis: boolean;
   selectedKey: string | null;
   detailsId: string;
   onActivate: (session: ForecastSession, button: HTMLButtonElement) => void;
 }) {
   return overlapLanes(sessions).map(({ session, lane, lanes }) => {
-    const { start, end } = segmentHours(session, day, elapsedAxis);
+    const { start, end } = segmentHours(session, day);
+    const nextDayMs = addDays(day, 1).getTime();
     const segmentStart = Math.max(Date.parse(session.start), day.getTime());
-    const segmentEnd = Math.min(Date.parse(session.end), addDays(day, 1).getTime());
+    const segmentEnd = Math.min(Date.parse(session.end), nextDayMs);
     return (
       <SessionEvent
         key={sessionKey(session)}
@@ -37,16 +36,8 @@ export function DayEvents({
         detailsId={detailsId}
         onActivate={(button) => onActivate(session, button)}
         dayLabel={dayName}
-        startTime={
-          !elapsedAxis && start === 0
-            ? segmentTime(start)
-            : sessionSegmentTime(new Date(segmentStart).toISOString(), start, elapsedAxis)
-        }
-        endTime={
-          !elapsedAxis && end === 24
-            ? segmentTime(end)
-            : sessionSegmentTime(new Date(segmentEnd).toISOString(), end, elapsedAxis)
-        }
+        startTime={formatTimeFromDate(new Date(segmentStart))}
+        endTime={segmentEnd === nextDayMs ? "24:00" : formatTimeFromDate(new Date(segmentEnd))}
         style={{
           ...laneBox(lane, lanes),
           top: (start - startHour) * hourHeight,
