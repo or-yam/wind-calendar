@@ -91,11 +91,20 @@ it.each([
     expect(
       calendar.container.querySelector('[aria-label="Local clock hours"]')?.textContent,
     ).toContain("09:00");
-    expect(calendar.container.textContent).not.toContain("Clock-change week");
+    const note = [...calendar.container.querySelectorAll("p")].find((p) =>
+      p.textContent?.startsWith("Clock-change week"),
+    )!;
+    expect(note.textContent).toBe("Clock-change week · all times shown in local time.");
+    expect(note.classList.contains("invisible")).toBe(false);
     await act(async () => session.click());
     const details = calendar.container.querySelector('[aria-label="Session details"]')!;
     expect(details.textContent).toContain("09:00 – 11:00");
     expect(details.textContent).not.toContain("UTC");
+    const previousWeek = new Date(`${date}T00:00:00`);
+    previousWeek.setDate(previousWeek.getDate() - 7);
+    await calendar.render([], { weekStart: previousWeek, today: previousWeek });
+    expect(note.isConnected).toBe(true);
+    expect(note.classList.contains("invisible")).toBe(true);
   },
 );
 

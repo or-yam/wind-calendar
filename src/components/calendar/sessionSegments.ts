@@ -7,6 +7,13 @@ export function intersects(session: ForecastSession, start: Date, end: Date) {
 
 const hour = (date: Date) => date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
 
+export function isOffsetTransitionWeek(weekStart: Date) {
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = addDays(weekStart, index);
+    return (addDays(day, 1).getTime() - day.getTime()) / 3_600_000 !== 24;
+  }).some(Boolean);
+}
+
 export function segmentHours(session: ForecastSession, day: Date) {
   const next = addDays(day, 1);
   const startMs = Math.max(Date.parse(session.start), day.getTime());

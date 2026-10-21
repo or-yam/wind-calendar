@@ -1,10 +1,11 @@
 import { useId, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays } from "@/lib/date-utils";
+import { cn } from "@/lib/utils";
 import { DayColumn } from "./DayColumn";
 import { HourScale } from "./HourScale";
 import { SessionDetails } from "./SessionDetails";
-import { intersects, weekHours } from "./sessionSegments";
+import { intersects, isOffsetTransitionWeek, weekHours } from "./sessionSegments";
 import { sessionKey } from "./overlapLanes";
 import { useMobileView } from "@/hooks/useMobileView";
 
@@ -24,6 +25,7 @@ export function CalendarGrid({
 }) {
   const isMobile = useMobileView();
   const hourHeight = isMobile ? MOBILE_HOUR_HEIGHT : DESKTOP_HOUR_HEIGHT;
+  const clockChangeWeek = isOffsetTransitionWeek(weekStart);
   const { startHour, endHour } = weekHours(sessions, weekStart);
   const detailsId = useId();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -45,6 +47,9 @@ export function CalendarGrid({
   };
   return (
     <>
+      <p className={cn("mb-2 text-xs text-muted-foreground", !clockChangeWeek && "invisible")}>
+        Clock-change week · all times shown in local time.
+      </p>
       <div
         role="region"
         aria-label="Weekly forecast calendar"
