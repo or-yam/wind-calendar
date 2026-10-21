@@ -44,3 +44,9 @@ Geometry: [320px](geometry-320.json), [390px](geometry-390.json), [768px](geomet
 Reference screenshots use readable sample forecasts after the edge-case checks: [320px](fixture-320.png), [390px](fixture-390.png), [768px](fixture-768.png), [1280px](fixture-1280.png). They preserve the approved theme; crowded lanes intentionally use compact badges, and transition weeks use the documented elapsed-hours axis.
 
 Limit: browser QA used Chromium. Live wave-provider behavior was not exercised because the preview feature flag is disabled; combined and wave rendering were verified through controlled HTTP fixtures.
+
+## CI timezone follow-up — 2026-10-21
+
+GitHub's UTC runner exposed a boundary test that assumed Jerusalem DST offsets. Commit `e444f608ecd02c59d0f9d8febdc288a92c6ff817` explicitly controls UTC and both render dates, retaining exact midnight/week-boundary assertions. Dedicated DST coverage and production code are unchanged from `43922d8`.
+
+Parent `TZ=UTC pnpm check` passed: 58 suites / 617 tests, formatting, lint, and TypeScript. Production logging regression checks also passed (4 tests, including a production build). Independent Sol Standards and Spec review passed with no findings; layout and conditions tests passed 9/9 under UTC, Asia/Jerusalem, Europe/Berlin, and Australia/Sydney. GitHub's rerun result is tracked on PR #43.
