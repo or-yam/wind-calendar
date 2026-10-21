@@ -51,6 +51,7 @@ it("keeps fractional and short sessions inside their time boundaries on an expan
 });
 
 it("segments midnight and visible-week boundaries without changing the original session times", async () => {
+  vi.stubEnv("TZ", "UTC");
   const incoming = {
     ...makeSession("Incoming", 1, 2),
     start: new Date(2026, 9, 17, 23, 30).toISOString(),
@@ -63,7 +64,10 @@ it("segments midnight and visible-week boundaries without changing the original 
     end: new Date(2026, 9, 25, 2).toISOString(),
   };
   const originals = JSON.stringify([incoming, overnight, outgoing]);
-  await calendar.render([incoming, overnight, outgoing]);
+  await calendar.render([incoming, overnight, outgoing], {
+    weekStart: new Date(Date.UTC(2026, 9, 18)),
+    today: new Date(Date.UTC(2026, 9, 20)),
+  });
   expect(event("Incoming").getAttribute("aria-label")).toContain(
     "SUN Oct 18 at Incoming: 00:00 – 01:15",
   );
@@ -76,9 +80,12 @@ it("segments midnight and visible-week boundaries without changing the original 
   expect(event("Outgoing").getAttribute("aria-label")).toContain("22:30 – 24:00");
   expect(calendar.container.textContent).toContain("24:00");
   expect(JSON.stringify([incoming, overnight, outgoing])).toBe(originals);
-  await calendar.render([incoming, overnight, outgoing], { weekStart: new Date(2026, 9, 25) });
-  expect(event("Outgoing").getAttribute("aria-label")).toMatch(
-    /SUN Oct 25 at Outgoing: 00:00(?: UTC\+03:00)? – 02:00(?: UTC\+02:00)?/,
+  await calendar.render([incoming, overnight, outgoing], {
+    weekStart: new Date(Date.UTC(2026, 9, 25)),
+    today: new Date(Date.UTC(2026, 9, 25)),
+  });
+  expect(event("Outgoing").getAttribute("aria-label")).toContain(
+    "SUN Oct 25 at Outgoing: 00:00 – 02:00",
   );
   expect(calendar.container.querySelectorAll('[aria-label*="at Outgoing:"]')).toHaveLength(1);
 });
