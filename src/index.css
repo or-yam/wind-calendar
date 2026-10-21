@@ -98,13 +98,6 @@
     padding-block: 4.5rem;
   }
 
-  .grit-text {
-    -webkit-mask: url("/grit-mask.svg") repeat;
-    -webkit-mask-size: 260px 146px;
-    mask: url("/grit-mask.svg") repeat;
-    mask-size: 260px 146px;
-  }
-
   .sticker-heading {
     display: inline-block;
     margin-bottom: 1.75rem;
@@ -148,35 +141,11 @@
     --control-off: var(--panel-control);
     --control-thumb: var(--panel-light);
     --range: var(--panel-pink);
-    transform: rotate(-0.35deg);
     border: 5px solid #080808;
     border-radius: 22px 7px 20px 8px;
     background: var(--background);
     box-shadow: 9px 10px 0 #ff3d8d;
     color: var(--foreground);
-  }
-
-  .action-card {
-    min-height: 4.25rem;
-    border: 2px solid var(--secondary);
-    border-radius: 4px;
-    background: var(--card);
-    box-shadow: 5px 5px 0 var(--primary);
-    transition:
-      transform 150ms ease,
-      box-shadow 150ms ease,
-      border-color 150ms ease;
-  }
-
-  .action-card:hover {
-    transform: translate(-2px, -2px);
-    border-color: var(--foreground);
-    box-shadow: 7px 7px 0 var(--primary);
-  }
-
-  .action-card:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 var(--primary);
   }
 
   .session-card {

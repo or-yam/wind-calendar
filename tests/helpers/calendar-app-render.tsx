@@ -7,12 +7,6 @@ import { calendarControls } from "./calendar-controls";
 import { stubViewport } from "./viewport";
 
 vi.mock("@vercel/analytics/react", () => ({ Analytics: () => null }));
-vi.mock("../../src/components/canvasui/VHS", async () => {
-  const { createElement } = await import("react");
-  return {
-    default: (props: { children?: React.ReactNode }) => createElement("div", null, props.children),
-  };
-});
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 export function createCalendarApp() {

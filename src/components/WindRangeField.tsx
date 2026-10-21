@@ -46,7 +46,7 @@ export function WindRangeField({ min, max, onChange }: WindRangeFieldProps) {
   return (
     <fieldset aria-describedby={error ? "wind-range-error" : undefined}>
       <legend className="sr-only">Wind speed range in knots</legend>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
         <WindNumberField
           id="wind-min"
           label="Minimum"

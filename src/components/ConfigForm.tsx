@@ -18,7 +18,7 @@ import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
 import { WindRangeField } from "./WindRangeField";
 
-interface ConfigFormProps {
+export interface ConfigFormProps {
   locations: string[];
   model: ModelId;
   availableModels: number[];
@@ -89,7 +89,7 @@ export function ConfigForm({
     (which === "wave" && waveEnabled && !windEnabled);
 
   return (
-    <form className="config-panel grid grid-cols-1 gap-x-10 gap-y-7 p-6 md:grid-cols-2 md:p-8">
+    <form className="grid grid-cols-1 gap-x-10 gap-y-7 md:grid-cols-2">
       <div className="flex flex-col gap-3">
         <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
           Spots

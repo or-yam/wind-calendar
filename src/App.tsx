@@ -5,13 +5,10 @@ import { forecastQueryOptions } from "./lib/forecast-query";
 const Analytics = lazy(() =>
   import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
 );
-const PrototypeSetup = import.meta.env.DEV
-  ? lazy(() => import("./components/prototype/PrototypeSetup"))
-  : null;
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
+import { ConditionsPanel } from "./components/ConditionsPanel";
 import { ForecastCalendar } from "./components/ForecastCalendar";
-import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
 import { useWeekNavigation } from "./hooks/useWeekNavigation";
@@ -25,11 +22,6 @@ import { featuresQueryOptions } from "./lib/features-query";
 import { useDebouncedValue } from "./hooks/useDebouncedValue";
 
 const FORECAST_DEBOUNCE_MS = 500;
-
-function prototypeVariant() {
-  const variant = new URLSearchParams(window.location.search).get("variant");
-  return import.meta.env.DEV && variant && ["A", "B", "C"].includes(variant) ? "A" : null;
-}
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -107,8 +99,6 @@ function App() {
 
   useEffect(() => {
     const params = buildConfigParams(config);
-    const variant = prototypeVariant();
-    if (variant) params.set("variant", variant);
     const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
     window.history.replaceState(null, "", newUrl);
   }, [config]);
@@ -154,70 +144,55 @@ function App() {
     updateConfig((c) => ({ ...c, model }));
   };
 
-  const isPrototype = Boolean(prototypeVariant());
-  const Setup = isPrototype && PrototypeSetup ? PrototypeSetup : Hero;
+  const confirmConfig = () => {
+    const validated = calendarConfigSchema.parse(config);
+    setConfirmedConfig(validated);
+    setConfirmationPending(false);
+  };
 
   return (
     <div className="flex min-h-screen flex-col text-foreground">
-      <Suspense fallback={null}>
-        <Setup
-          locations={config.locations}
-          model={config.model}
-          availableModels={availableModels}
-          windEnabled={config.windEnabled}
-          windMin={config.windMin}
-          windMax={config.windMax}
-          waveEnabled={config.waveEnabled}
-          waveSource={config.waveSource}
-          waveHeightMin={config.waveHeightMin}
-          waveHeightMax={config.waveHeightMax}
-          wavePeriodMin={config.wavePeriodMin}
-          minSessionHours={config.minSessionHours}
-          onLocationsChange={handleLocationsChange}
-          onModelChange={handleModelChange}
-          onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-          onWindRangeChange={([windMin, windMax]) =>
-            updateConfig((c) => ({ ...c, windMin, windMax }))
-          }
-          onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
-          onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-          onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
-            updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
-          }
-          onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
-          onMinSessionHoursChange={(minSessionHours) =>
-            updateConfig((c) => ({ ...c, minSessionHours }))
-          }
-          onFreeTextConfig={(nextConfig) => {
-            setConfig(calendarConfigSchema.parse(nextConfig));
-            setConfirmationPending(true);
-          }}
-          freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
-          wavesForecastEnabled={features?.wavesForecast ?? false}
-          windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
-        />
-      </Suspense>
+      <Hero />
+      <ConditionsPanel
+        locations={config.locations}
+        model={config.model}
+        availableModels={availableModels}
+        windEnabled={config.windEnabled}
+        windMin={config.windMin}
+        windMax={config.windMax}
+        waveEnabled={config.waveEnabled}
+        waveSource={config.waveSource}
+        waveHeightMin={config.waveHeightMin}
+        waveHeightMax={config.waveHeightMax}
+        wavePeriodMin={config.wavePeriodMin}
+        minSessionHours={config.minSessionHours}
+        onLocationsChange={handleLocationsChange}
+        onModelChange={handleModelChange}
+        onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
+        onWindRangeChange={([windMin, windMax]) =>
+          updateConfig((c) => ({ ...c, windMin, windMax }))
+        }
+        onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
+        onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
+        onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
+          updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
+        }
+        onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
+        onMinSessionHoursChange={(minSessionHours) =>
+          updateConfig((c) => ({ ...c, minSessionHours }))
+        }
+        onFreeTextConfig={(nextConfig) => {
+          setConfig(calendarConfigSchema.parse(nextConfig));
+          setConfirmationPending(true);
+        }}
+        confirmedConfig={confirmedConfig}
+        confirmationPending={confirmationPending}
+        onConfirmConfig={confirmConfig}
+        freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
+        wavesForecastEnabled={features?.wavesForecast ?? false}
+        windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
+      />
       <main>
-        {confirmationPending && (
-          <section className="night-section pb-0">
-            <div className="content-wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-bold">
-                Review the extracted settings above before updating subscription links.
-              </p>
-              <button
-                type="button"
-                className="rounded-sm bg-primary px-5 py-3 font-bold text-primary-foreground"
-                onClick={() => {
-                  const validated = calendarConfigSchema.parse(config);
-                  setConfirmedConfig(validated);
-                  setConfirmationPending(false);
-                }}
-              >
-                Confirm configuration
-              </button>
-            </div>
-          </section>
-        )}
         <div id="upcoming-preview" className="scroll-mt-6">
           <ErrorBoundary
             fallback={
@@ -243,7 +218,6 @@ function App() {
             />
           </ErrorBoundary>
         </div>
-        {!isPrototype && <SubscribeButtons config={confirmedConfig} />}
         <section className="night-section">
           <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
             <h2 className="sticker-heading mb-0">About</h2>
@@ -258,7 +232,9 @@ function App() {
         <Caveats />
       </main>
       <Footer />
-      <Suspense fallback={null}>{!isPrototype && <Analytics />}</Suspense>
+      <Suspense fallback={null}>
+        <Analytics />
+      </Suspense>
     </div>
   );
 }

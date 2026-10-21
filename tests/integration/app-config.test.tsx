@@ -5,13 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@vercel/analytics/react", () => ({ Analytics: () => null }));
 
-vi.mock("../../src/components/canvasui/VHS", async () => {
-  const { createElement } = await import("react");
-  return {
-    default: (props: { children?: React.ReactNode }) => createElement("div", null, props.children),
-  };
-});
-
 import App from "../../src/App";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
