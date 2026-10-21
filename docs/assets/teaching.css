@@ -1,0 +1,272 @@
+:root {
+  color-scheme: light dark;
+  --ink: var(--foreground, light-dark(#242b32, #e8ecf0));
+  --soft: var(--muted-foreground, light-dark(#65717b, #a3afb9));
+  --line: var(--border, light-dark(#d9dfe3, #3a424a));
+  --panel: var(--card, light-dark(#f4f6f7, #191c20));
+  --blue: var(--accent-foreground, light-dark(#236da0, #83c3ea));
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: var(--ink);
+  line-height: 1.6;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: transparent;
+}
+main {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 12px 0 32px;
+}
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+h1 {
+  font:
+    normal 34px/1.15 Georgia,
+    serif;
+  margin: 10px 0 18px;
+}
+h2 {
+  font-size: 21px;
+  margin: 28px 0 12px;
+}
+h3 {
+  font-size: 16px;
+  margin: 18px 0 6px;
+}
+p {
+  margin: 10px 0;
+}
+a {
+  color: var(--blue);
+  text-underline-offset: 3px;
+}
+.eyebrow,
+.source {
+  font-size: 12px;
+  color: var(--soft);
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+.lead {
+  font-size: 18px;
+  max-width: 740px;
+}
+.muted {
+  color: var(--soft);
+}
+code,
+pre {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.86em;
+}
+code {
+  overflow-wrap: anywhere;
+}
+pre {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+button {
+  font: inherit;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+button:hover {
+  background: var(--panel);
+}
+button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--background, light-dark(#fff, #111));
+  border-color: var(--ink);
+}
+button:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+[hidden] {
+  display: none !important;
+}
+.flow {
+  list-style: none;
+  counter-reset: stage;
+  padding: 0;
+  margin: 16px 0;
+}
+.flow li {
+  counter-increment: stage;
+  border-left: 2px solid var(--line);
+  padding: 0 0 16px 22px;
+  margin-left: 12px;
+  position: relative;
+}
+.flow li:before {
+  content: counter(stage);
+  position: absolute;
+  left: -13px;
+  top: 0;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 23px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.flow li:last-child {
+  padding-bottom: 0;
+  border-color: transparent;
+}
+.flow strong {
+  display: block;
+}
+.flow p {
+  margin: 2px 0 0;
+}
+.note,
+.quiz {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.note p:first-child,
+.quiz p:first-child {
+  margin-top: 0;
+}
+.note p:last-child {
+  margin-bottom: 0;
+}
+.quiz .feedback {
+  min-height: 1.6em;
+  margin-bottom: 0;
+}
+.feedback[data-correct="true"] {
+  color: var(--success-foreground, #367644);
+}
+details {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+}
+th:first-child,
+td:first-child {
+  padding-left: 0;
+}
+ul,
+ol {
+  padding-left: 23px;
+}
+footer {
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  font-size: 13px;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 520px) {
+  h1 {
+    font-size: 28px;
+  }
+  .lead {
+    font-size: 16px;
+  }
+  .two {
+    grid-template-columns: 1fr;
+  }
+  button {
+    font-size: 13px;
+  }
+  th,
+  td {
+    padding: 8px 5px;
+  }
+}
+@media print {
+  :root {
+    color-scheme: light;
+    --ink: #111;
+    --soft: #444;
+    --line: #bbb;
+    --panel: #fff;
+    --blue: #111;
+  }
+  main {
+    max-width: none;
+    padding: 0;
+  }
+  .choices,
+  .quiz button {
+    display: none;
+  }
+  .client-panel[hidden] {
+    display: block !important;
+  }
+  .client-panel {
+    break-inside: avoid;
+  }
+  details > * {
+    display: block;
+  }
+  details {
+    break-inside: avoid;
+  }
+  a {
+    color: #111;
+  }
+  pre,
+  .note,
+  .quiz {
+    break-inside: avoid;
+  }
+}

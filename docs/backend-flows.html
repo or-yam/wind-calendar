@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Backend flows</title>
+    <link rel="stylesheet" href="assets/teaching.css" />
+    <link rel="stylesheet" href="assets/flow-diagrams.css" />
+    <script defer src="assets/teaching.js"></script>
+  </head>
+  <body>
+    <main class="diagram-lesson">
+      <div class="eyebrow">Backend diagrams · Follow the arrows</div>
+      <h1>How the backend works</h1>
+      <div class="choices" aria-label="Choose a diagram">
+        <button data-client="main-flow" aria-pressed="true">Main flow</button
+        ><button data-client="pick-times" aria-pressed="false">Pick times</button
+        ><button data-client="failures" aria-pressed="false">Weather fails</button
+        ><button data-client="other-calls" aria-pressed="false">Other calls</button>
+      </div>
+      <section class="client-panel" id="main-flow" aria-label="Main flow diagram">
+        <div class="flow-map">
+          <div class="pair">
+            <div class="node input">Apps, scripts, services</div>
+            <div class="node input">Calendar apps</div>
+          </div>
+          <div class="pair">
+            <div class="arrow">↓</div>
+            <div class="arrow">↓</div>
+          </div>
+          <div class="pair">
+            <div class="node"><code>GET /api/forecast</code></div>
+            <div class="node"><code>GET /api/calendar</code></div>
+          </div>
+          <svg class="bridge" viewBox="0 0 560 34" preserveAspectRatio="none" aria-hidden="true">
+            <path
+              d="M135 0 V12 H425 V0 M280 12 V31 M275 26 L280 31 L285 26"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+          <div class="spine">
+            <div class="node work">
+              Check your settings<small>Places, wind range, wave range</small>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="node work">Get weather<small>Open-Meteo or Windguru</small></div>
+            <div class="arrow">↓</div>
+            <div class="node work">Keep matching times</div>
+            <div class="arrow">↓</div>
+            <div class="node work">Choose the best place per time</div>
+            <div class="arrow">↓</div>
+            <div class="node work">Remove short time slots</div>
+          </div>
+          <svg class="bridge" viewBox="0 0 560 34" preserveAspectRatio="none" aria-hidden="true">
+            <path
+              d="M280 0 V12 H135 V31 M280 12 H425 V31 M130 26 L135 31 L140 26 M420 26 L425 31 L430 26"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+          <div class="pair">
+            <div class="node output">JSON data<small>Back to your app or script</small></div>
+            <div class="node output">Calendar events<small>Back to your calendar app</small></div>
+          </div>
+          <p class="diagram-caption">Same weather logic. Different output.</p>
+        </div>
+      </section>
+      <section class="client-panel" id="pick-times" hidden aria-label="Time selection diagram">
+        <div class="flow-map">
+          <div class="spine">
+            <div class="node input">Weather times for each place</div>
+            <div class="arrow">↓</div>
+            <div class="node work">Keep future times</div>
+            <div class="arrow">↓</div>
+            <div class="node work">Keep daylight times</div>
+            <div class="arrow">↓</div>
+            <div class="node work">
+              Wind matches OR waves match<small>Only check filters you enabled</small>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="node work">
+              Choose one place per time<small>Wind first → waves next → your place order</small>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="node work">
+              Join nearby matching times<small>Split when place or match type changes</small>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="node output">
+              Keep slots long enough<small>Your minSessionHours setting</small>
+            </div>
+          </div>
+          <p class="diagram-caption">Wind alone can pass, even when both filters are on.</p>
+        </div>
+      </section>
+      <section class="client-panel" id="failures" hidden aria-label="Weather fallback diagram">
+        <p class="rule">
+          For an <code>om_*</code> model, start at the top.<br />For a number model, start at
+          Windguru.
+        </p>
+        <div class="flow-map">
+          <div class="weather-row">
+            <div class="node work">Open-Meteo</div>
+            <div class="side-arrow">→</div>
+            <div class="node output">Works? Use its weather</div>
+          </div>
+          <div class="weather-down">
+            <div class="arrow label">↓ <small>fails</small></div>
+          </div>
+          <div class="weather-row">
+            <div class="node work">Windguru<small>Matching or chosen model</small></div>
+            <div class="side-arrow">→</div>
+            <div class="node output">Works? Use its weather</div>
+          </div>
+          <div class="weather-down">
+            <div class="arrow label">↓ <small>fails · not GFS yet</small></div>
+          </div>
+          <div class="weather-row">
+            <div class="node work">Windguru GFS<small>Backup model 3</small></div>
+            <div class="side-arrow">→</div>
+            <div class="node output">Works? Use its weather</div>
+          </div>
+          <div class="weather-down">
+            <div class="arrow label">↓ <small>fails</small></div>
+            <div class="node error">Return an error</div>
+          </div>
+          <p class="diagram-caption">If GFS already failed, return an error.</p>
+          <h2>Wave requests are optional</h2>
+          <div class="weather-row">
+            <div class="node">Wave request fails</div>
+            <div class="side-arrow">→</div>
+            <div class="node output">Continue with wind</div>
+          </div>
+          <p class="diagram-caption">One place still fails? The whole request fails.</p>
+        </div>
+      </section>
+      <section class="client-panel" id="other-calls" hidden aria-label="Other endpoint diagrams">
+        <div class="mini-flow">
+          <h2>Turn text into settings</h2>
+          <div class="node input">“Beit Yanai, wind 16–25 knots”</div>
+          <div class="arrow">↓</div>
+          <div class="node">
+            <code>POST /api/interpret-config</code
+            ><small>Check feature, request, and API key</small>
+          </div>
+          <div class="arrow">↓</div>
+          <div class="node work">AI makes settings</div>
+          <div class="arrow">↓</div>
+          <div class="node output">
+            Caller checks the result<small>Then sends settings to forecast or calendar</small>
+          </div>
+          <p class="diagram-caption">This call does not fetch weather.</p>
+        </div>
+        <div class="mini-flow">
+          <h2>Check available features</h2>
+          <div class="node"><code>GET /api/features</code></div>
+          <div class="arrow">↓</div>
+          <div class="node output">Feature switches: on or off</div>
+        </div>
+        <div class="mini-flow">
+          <h2>Check the server is running</h2>
+          <div class="node"><code>GET /api/health</code></div>
+          <div class="arrow">↓</div>
+          <div class="node output">
+            OK + current time<small>Does not check weather providers</small>
+          </div>
+        </div>
+      </section>
+      <div class="quiz">
+        <p><strong>Does the JSON forecast include every weather hour?</strong></p>
+        <div class="choices">
+          <button
+            data-correct="false"
+            data-feedback="It only returns times kept by the filters and place selection."
+          >
+            Yes</button
+          ><button
+            data-correct="true"
+            data-feedback="It only returns matching time slots that are long enough."
+          >
+            No
+          </button>
+        </div>
+        <p class="feedback" aria-live="polite"></p>
+      </div>
+      <details>
+        <summary>Code behind these arrows</summary>
+        <p class="source">
+          <a href="../server/utils/location-sessions.ts">Main flow</a> ·
+          <a href="../server/utils/select-location-sessions.ts">Pick places</a> ·
+          <a href="../server/utils/api-handler.ts">Provider choice</a> ·
+          <a href="backend-reference.html">Full reference</a> ·
+          <a href="https://nitro.build/docs/routing">Nitro route guide</a>
+        </p>
+      </details>
+      <footer><a href="wind-or-waves.html">Try the wind-or-waves example</a>.</footer>
+    </main>
+  </body>
+</html>
