@@ -15,7 +15,6 @@ export function DayColumn({
   startHour,
   endHour,
   hourHeight,
-  elapsedAxis,
   selectedKey,
   detailsId,
   onActivate,
@@ -26,7 +25,6 @@ export function DayColumn({
   startHour: number;
   endHour: number;
   hourHeight: number;
-  elapsedAxis: boolean;
   selectedKey: string | null;
   detailsId: string;
   onActivate: (session: ForecastSession, button: HTMLButtonElement) => void;
@@ -73,7 +71,6 @@ export function DayColumn({
           sessions={matches}
           startHour={startHour}
           hourHeight={hourHeight}
-          elapsedAxis={elapsedAxis}
           selectedKey={selectedKey}
           detailsId={detailsId}
           onActivate={onActivate}

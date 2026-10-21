@@ -1,11 +1,10 @@
 import { useId, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays } from "@/lib/date-utils";
-import { cn } from "@/lib/utils";
 import { DayColumn } from "./DayColumn";
 import { HourScale } from "./HourScale";
 import { SessionDetails } from "./SessionDetails";
-import { intersects, isOffsetTransitionWeek, weekHours } from "./sessionSegments";
+import { intersects, weekHours } from "./sessionSegments";
 import { sessionKey } from "./overlapLanes";
 import { useMobileView } from "@/hooks/useMobileView";
 
@@ -25,8 +24,7 @@ export function CalendarGrid({
 }) {
   const isMobile = useMobileView();
   const hourHeight = isMobile ? MOBILE_HOUR_HEIGHT : DESKTOP_HOUR_HEIGHT;
-  const elapsedAxis = isOffsetTransitionWeek(weekStart);
-  const { startHour, endHour } = weekHours(sessions, weekStart, elapsedAxis);
+  const { startHour, endHour } = weekHours(sessions, weekStart);
   const detailsId = useId();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -47,21 +45,13 @@ export function CalendarGrid({
   };
   return (
     <>
-      <p className={cn("mb-2 text-xs text-muted-foreground", !elapsedAxis && "invisible")}>
-        Clock-change week · elapsed hours since local midnight; event times include UTC offsets.
-      </p>
       <div
         role="region"
         aria-label="Weekly forecast calendar"
         className="grid overflow-hidden rounded border border-border bg-card"
         style={{ gridTemplateColumns: `40px repeat(${days.length}, minmax(0, 1fr))` }}
       >
-        <HourScale
-          startHour={startHour}
-          endHour={endHour}
-          hourHeight={hourHeight}
-          elapsedAxis={elapsedAxis}
-        />
+        <HourScale startHour={startHour} endHour={endHour} hourHeight={hourHeight} />
         {days.map((day) => (
           <DayColumn
             key={day.toDateString()}
@@ -71,7 +61,6 @@ export function CalendarGrid({
             startHour={startHour}
             endHour={endHour}
             hourHeight={hourHeight}
-            elapsedAxis={elapsedAxis}
             selectedKey={selectedKey}
             detailsId={detailsId}
             onActivate={(session, button) => {
@@ -81,14 +70,7 @@ export function CalendarGrid({
           />
         ))}
       </div>
-      {selected && (
-        <SessionDetails
-          session={selected}
-          id={detailsId}
-          onClose={close}
-          showOffset={elapsedAxis}
-        />
-      )}
+      {selected && <SessionDetails session={selected} id={detailsId} onClose={close} />}
     </>
   );
 }

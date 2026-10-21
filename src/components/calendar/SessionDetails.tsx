@@ -4,18 +4,9 @@ import { formatTimeFromDate } from "@/lib/date-utils";
 import { DirectionIndicator } from "./DirectionIndicator";
 import { waveRangeLabel, windRangeLabel } from "./conditionLabels";
 
-const utcOffset = (date: Date) => {
-  const minutes = -date.getTimezoneOffset();
-  const sign = minutes < 0 ? "-" : "+";
-  return `${sign}${String(Math.floor(Math.abs(minutes) / 60)).padStart(2, "0")}:${String(Math.abs(minutes) % 60).padStart(2, "0")}`;
-};
-
-const localTime = (date: Date, showOffset: boolean) =>
-  `${formatTimeFromDate(date)}${showOffset ? ` UTC${utcOffset(date)}` : ""}`;
-
-const timestamp = (value: string, showOffset: boolean) => {
+const timestamp = (value: string) => {
   const date = new Date(value);
-  return `${date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${localTime(date, showOffset)}`;
+  return `${date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${formatTimeFromDate(date)}`;
 };
 
 const sameCalendarDay = (start: string, end: string) =>
@@ -25,12 +16,10 @@ export function SessionDetails({
   session,
   id,
   onClose,
-  showOffset,
 }: {
   session: ForecastSession;
   id: string;
   onClose: () => void;
-  showOffset: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -54,10 +43,10 @@ export function SessionDetails({
     >
       <h3 className="text-lg font-bold">{session.location.label}</h3>
       <p className="text-muted-foreground">
-        {timestamp(session.start, showOffset)} –{" "}
+        {timestamp(session.start)} –{" "}
         {sameCalendarDay(session.start, session.end)
-          ? localTime(new Date(session.end), showOffset)
-          : timestamp(session.end, showOffset)}
+          ? formatTimeFromDate(new Date(session.end))
+          : timestamp(session.end)}
       </p>
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
         {session.matchType !== "wave" && (
