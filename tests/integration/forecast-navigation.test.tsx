@@ -4,7 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ForecastSession } from "../../shared/forecast-types";
 import { useWeekNavigation } from "../../src/hooks/useWeekNavigation";
-import { ForecastCards } from "../../src/components/ForecastCards";
+import { ForecastCalendar } from "../../src/components/ForecastCalendar";
+import { calendarControls } from "../helpers/calendar-controls";
+import { stubViewport } from "../helpers/viewport";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -14,16 +16,18 @@ const NO_SESSIONS: ForecastSession[] = [];
 
 function Harness({ sessions = NO_SESSIONS }: { sessions?: ForecastSession[] }) {
   navigation = useWeekNavigation("default");
-  return createElement(ForecastCards, {
+  return createElement(ForecastCalendar, {
     sessions,
     isPending: false,
     error: null,
     weekStart: navigation.weekStart,
     today: navigation.today,
     canGoPrev: navigation.canGoPrev,
+    canGoNext: navigation.canGoNext,
     onPrev: navigation.goToPrev,
     onNext: navigation.goToNext,
     onToday: navigation.goToToday,
+    resetKey: "default",
   });
 }
 
@@ -41,17 +45,17 @@ function session(day: number, hour: number): ForecastSession {
   };
 }
 
-describe("forecast navigation with rendered cards", () => {
+describe("forecast navigation with rendered calendar", () => {
   let container: HTMLDivElement;
   let root: Root;
 
   const todayButton = () =>
     [...container.querySelectorAll("button")].find((b) => b.textContent === "Today")!;
   const nextButton = () =>
-    [...container.querySelectorAll("button")].find((b) => b.textContent?.startsWith("Next"))!;
+    [...container.querySelectorAll("button")].find((b) => b.textContent?.includes("Next"))!;
   const todayCard = () => container.querySelector<HTMLElement>('[data-today="true"]');
   const weekLabel = () =>
-    container.querySelector('nav[aria-label="Week navigation"] span')?.textContent;
+    container.querySelector('nav[aria-label="Week navigation"] .week-range')?.textContent;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -66,10 +70,116 @@ describe("forecast navigation with rendered cards", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
-  it("focuses today's card when returning from a future week with no sessions", async () => {
+  it.each([
+    {
+      mode: "Day",
+      current: ["SAT Aug 1"],
+      next: ["SUN Aug 2"],
+      previous: ["SAT Aug 1"],
+      selected: "SAT Aug 1",
+    },
+    {
+      mode: "3 days",
+      current: ["THU Jul 30", "FRI Jul 31", "SAT Aug 1"],
+      next: ["SUN Aug 2", "MON Aug 3", "TUE Aug 4"],
+      previous: ["THU Jul 30", "FRI Jul 31", "SAT Aug 1"],
+      selected: "SAT Aug 1",
+    },
+  ])(
+    "crosses both week boundaries with the correct dates in $mode mode",
+    async ({ mode, current, next, previous, selected }) => {
+      stubViewport(390);
+      await act(async () => root.render(createElement(Harness)));
+      const controls = calendarControls(container);
+      await act(async () => controls.button(mode).click());
+      await act(async () => controls.button("SAT Aug 1").click());
+      expect(controls.visibleDays()).toEqual(current);
+      await act(async () => controls.button("Next range").click());
+      expect(weekLabel()).toBe("Aug 2 – 8, 2026");
+      expect(controls.selectedDay()).toBe("SUN Aug 2");
+      expect(controls.visibleDays()).toEqual(next);
+      await act(async () => controls.button("Previous range").click());
+      expect(weekLabel()).toBe("Jul 26 – Aug 1, 2026");
+      expect(controls.selectedDay()).toBe(selected);
+      expect(controls.visibleDays()).toEqual(previous);
+    },
+  );
+
+  it("moves backward within the current week and stops at Sunday", async () => {
+    stubViewport(390);
+    await act(async () => root.render(createElement(Harness)));
+    const controls = calendarControls(container);
+    expect(controls.visibleDays()).toEqual(["WED Jul 29", "THU Jul 30", "FRI Jul 31"]);
+    await act(async () => controls.button("Previous range").click());
+    expect(controls.visibleDays()).toEqual(["SUN Jul 26", "MON Jul 27", "TUE Jul 28"]);
+    expect(controls.selectedDay()).toBe("SUN Jul 26");
+    expect(controls.button("Previous range").disabled).toBe(true);
+    await act(async () => controls.button("Previous range").click());
+    expect(controls.visibleDays()).toEqual(["SUN Jul 26", "MON Jul 27", "TUE Jul 28"]);
+  });
+
+  it("disables desktop Next after advancing two weeks and restores it on Today", async () => {
+    await act(async () => root.render(createElement(Harness)));
+    await act(async () => nextButton().click());
+    expect(nextButton().disabled).toBe(false);
+    await act(async () => nextButton().click());
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    expect(nextButton().disabled).toBe(true);
+    await act(async () => nextButton().click());
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    await act(async () => todayButton().click());
+    expect(nextButton().disabled).toBe(false);
+  });
+
+  it.each(["Day", "3 days"])("caps mobile %s navigation at the final range", async (mode) => {
+    stubViewport(390);
+    await act(async () => root.render(createElement(Harness)));
+    if (mode === "Day") {
+      const dayButton = [...container.querySelectorAll("button")].find(
+        (b) => b.textContent === "Day",
+      )!;
+      await act(async () => dayButton.click());
+    }
+    for (let i = 0; i < 25 && !nextButton().disabled; i++) {
+      await act(async () => nextButton().click());
+    }
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    expect(nextButton().disabled).toBe(true);
+    const controls = calendarControls(container);
+    const finalDays = mode === "Day" ? ["SAT Aug 15"] : ["THU Aug 13", "FRI Aug 14", "SAT Aug 15"];
+    expect(controls.visibleDays()).toEqual(finalDays);
+    await act(async () => nextButton().click());
+    expect(weekLabel()).toBe("Aug 9 – 15, 2026");
+    expect(controls.visibleDays()).toEqual(finalDays);
+    const previous = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Previous range"]',
+    )!;
+    await act(async () => previous.click());
+    expect(nextButton().disabled).toBe(false);
+  });
+
+  it("moves backward by three days from the clamped Saturday range", async () => {
+    stubViewport(390);
+    await act(async () => root.render(createElement(Harness)));
+    const saturday = container.querySelector<HTMLButtonElement>('button[aria-label="SAT Aug 1"]')!;
+    await act(async () => saturday.click());
+    expect(
+      container.querySelector('[role="region"] [role="group"]')?.getAttribute("aria-label"),
+    ).toContain("THU Jul 30");
+    const previous = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Previous range"]',
+    )!;
+    await act(async () => previous.click());
+    const controls = calendarControls(container);
+    expect(controls.visibleDays()).toEqual(["MON Jul 27", "TUE Jul 28", "WED Jul 29"]);
+    expect(controls.selectedDay()).toBe("MON Jul 27");
+  });
+
+  it("focuses today's day when returning from a future week with no sessions", async () => {
     await act(async () => root.render(createElement(Harness)));
 
     const next = nextButton();
@@ -86,7 +196,7 @@ describe("forecast navigation with rendered cards", () => {
     expect(todayCard()?.getAttribute("aria-label")).toBe("WED Jul 29: No sessions");
   });
 
-  it("focuses today's card when returning from a future week with sessions", async () => {
+  it("focuses today's day when returning from a future week with sessions", async () => {
     await act(async () =>
       root.render(createElement(Harness, { sessions: [session(29, 9), session(29, 14)] })),
     );
@@ -97,10 +207,11 @@ describe("forecast navigation with rendered cards", () => {
     await act(async () => today.click());
 
     expect(document.activeElement).toBe(todayCard());
-    expect(todayCard()?.getAttribute("aria-label")).toContain("WED Jul 29 at Beit Yanai: 09:00");
+    expect(todayCard()?.getAttribute("aria-label")).toBe("WED Jul 29");
+    expect(todayCard()?.textContent).toContain("09:00 – 11:00");
   });
 
-  it("focuses today's card when Today is pressed while already on the current week", async () => {
+  it("focuses today's day when Today is pressed while already on the current week", async () => {
     await act(async () => root.render(createElement(Harness)));
 
     const today = todayButton();
@@ -153,7 +264,7 @@ describe("forecast navigation with rendered cards", () => {
     expect(todayCard()?.getAttribute("aria-label")).toBe("FRI Mar 27: No sessions");
   });
 
-  it("does not steal focus or reposition the strip when the day changes", async () => {
+  it("preserves navigation focus without scrolling on day rollover", async () => {
     vi.setSystemTime(new Date(2026, 11, 31, 23, 59, 59));
     await act(async () => root.render(createElement(Harness)));
 
