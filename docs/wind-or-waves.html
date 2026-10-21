@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Wind or waves</title>
+    <link rel="stylesheet" href="assets/teaching.css" />
+    <link rel="stylesheet" href="assets/flow-diagrams.css" />
+    <script defer src="assets/teaching.js"></script>
+  </head>
+  <body>
+    <main class="diagram-lesson">
+      <div class="eyebrow">Inside “Keep matching times”</div>
+      <h1>One passing rule is enough</h1>
+      <p>Both filters are on.</p>
+      <div class="flow-map">
+        <div class="spine"><div class="node input">One future, daylight time</div></div>
+        <svg class="bridge" viewBox="0 0 560 34" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            d="M280 0 V12 H135 V31 M280 12 H425 V31 M130 26 L135 31 L140 26 M420 26 L425 31 L430 26"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
+        <div class="pair">
+          <div class="node error">Wind too weak ✕</div>
+          <div class="node output">Waves fit ✓</div>
+        </div>
+        <svg class="bridge" viewBox="0 0 560 34" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            d="M135 0 V12 H425 V0 M280 12 V31 M275 26 L280 31 L285 26"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
+        <div class="quiz">
+          <p><strong>Does this box keep the time?</strong></p>
+          <div class="choices">
+            <button
+              data-correct="false"
+              data-feedback="The wave rule passed. Wind OR waves can keep a time."
+            >
+              Drop</button
+            ><button
+              data-correct="true"
+              data-feedback="The wave rule passed. Wind OR waves can keep a time."
+            >
+              Keep
+            </button>
+          </div>
+          <p class="feedback" aria-live="polite"></p>
+        </div>
+      </div>
+      <p class="diagram-caption">Later boxes can still remove it.</p>
+      <footer>
+        Source: <a href="../server/utils/filterEvents.ts">filterEvents.ts</a> ·
+        <a href="backend-flows.html">Main diagram</a> ·
+        <a href="backend-reference.html#selection">Reference</a><br />Ask me about either branch.
+      </footer>
+    </main>
+  </body>
+</html>
