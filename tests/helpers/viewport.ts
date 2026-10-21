@@ -1,7 +1,8 @@
 import { vi } from "vitest";
 
-export function stubViewport(initialWidth: number) {
+export function stubViewport(initialWidth: number, breakpoint = "48rem") {
   let width = initialWidth;
+  document.documentElement.style.setProperty("--breakpoint-md", breakpoint);
   const queries = new Map<string, MediaQueryList>();
   vi.stubGlobal("innerWidth", width);
   vi.stubGlobal("matchMedia", (query: string) => {
@@ -9,7 +10,13 @@ export function stubViewport(initialWidth: number) {
       const media = new EventTarget();
       Object.defineProperties(media, {
         media: { value: query },
-        matches: { get: () => query === "(max-width: 767px)" && width < 768 },
+        matches: {
+          get: () => {
+            const limit = query.match(/^\(width < ([\d.]+)(rem|px)\)$/);
+            if (limit) return width < Number(limit[1]) * (limit[2] === "rem" ? 16 : 1);
+            return false;
+          },
+        },
       });
       queries.set(query, media as MediaQueryList);
     }

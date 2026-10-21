@@ -1,3 +1,4 @@
+import { stubViewport } from "../../helpers/viewport";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,10 +22,7 @@ describe("ForecastCalendar", () => {
   });
 
   it("announces an empty selected phone day even when another day has sessions", async () => {
-    vi.stubGlobal(
-      "matchMedia",
-      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
-    );
+    stubViewport(390);
     await act(async () =>
       root.render(
         createElement(ForecastCalendar, {

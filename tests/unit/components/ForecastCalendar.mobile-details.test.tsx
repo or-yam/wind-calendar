@@ -1,3 +1,4 @@
+import { stubViewport } from "../../helpers/viewport";
 import { act } from "react";
 
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -15,10 +16,7 @@ afterEach(() => {
 const event = (id: string) => calendar.event(id);
 
 it("closes details when the session leaves the visible days and does not reopen them on return", async () => {
-  vi.stubGlobal(
-    "matchMedia",
-    vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
-  );
+  stubViewport(390);
   const sessions = [makeSession("Bat Galim", 11, 15)];
   await calendar.render(sessions, { today: new Date(2026, 9, 23) });
   await act(async () => event("Bat Galim").click());
@@ -40,10 +38,7 @@ it("closes details when the session leaves the visible days and does not reopen 
 });
 
 it("returns focus to the remaining overnight segment after Day mode removes the trigger", async () => {
-  vi.stubGlobal(
-    "matchMedia",
-    vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
-  );
+  stubViewport(390);
   const overnight = { ...makeSession("Bat Galim", 23, 25) };
   await calendar.render([overnight], { today: new Date(2026, 9, 23) });
   await act(async () => event("Bat Galim").click());

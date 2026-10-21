@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme static {
+  --breakpoint-md: 48rem;
+}
+
 @font-face {
   font-family: "Barlow Condensed";
   src: url("/fonts/barlow-condensed-400.woff2") format("woff2");

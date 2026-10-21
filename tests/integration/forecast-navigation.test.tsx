@@ -6,6 +6,7 @@ import type { ForecastSession } from "../../shared/forecast-types";
 import { useWeekNavigation } from "../../src/hooks/useWeekNavigation";
 import { ForecastCalendar } from "../../src/components/ForecastCalendar";
 import { calendarControls } from "../helpers/calendar-controls";
+import { stubViewport } from "../helpers/viewport";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -91,7 +92,7 @@ describe("forecast navigation with rendered calendar", () => {
   ])(
     "crosses both week boundaries with the correct dates in $mode mode",
     async ({ mode, current, next, previous, selected }) => {
-      vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener: vi.fn() }));
+      stubViewport(390);
       await act(async () => root.render(createElement(Harness)));
       const controls = calendarControls(container);
       await act(async () => controls.button(mode).click());
@@ -109,7 +110,7 @@ describe("forecast navigation with rendered calendar", () => {
   );
 
   it("moves backward within the current week and stops at Sunday", async () => {
-    vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener: vi.fn() }));
+    stubViewport(390);
     await act(async () => root.render(createElement(Harness)));
     const controls = calendarControls(container);
     expect(controls.visibleDays()).toEqual(["WED Jul 29", "THU Jul 30", "FRI Jul 31"]);
@@ -135,11 +136,7 @@ describe("forecast navigation with rendered calendar", () => {
   });
 
   it.each(["Day", "3 days"])("caps mobile %s navigation at the final range", async (mode) => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query === "(max-width: 767px)",
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
+    stubViewport(390);
     await act(async () => root.render(createElement(Harness)));
     if (mode === "Day") {
       const dayButton = [...container.querySelectorAll("button")].find(
@@ -166,11 +163,7 @@ describe("forecast navigation with rendered calendar", () => {
   });
 
   it("moves backward by three days from the clamped Saturday range", async () => {
-    vi.stubGlobal("matchMedia", (query: string) => ({
-      matches: query === "(max-width: 767px)",
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
+    stubViewport(390);
     await act(async () => root.render(createElement(Harness)));
     const saturday = container.querySelector<HTMLButtonElement>('button[aria-label="SAT Aug 1"]')!;
     await act(async () => saturday.click());
