@@ -152,7 +152,37 @@ describe("ConfigForm", () => {
     expect(container.textContent).not.toContain("Enter a session duration.");
   });
 
-  it("offers quick duration presets and keeps Custom open across preset values", async () => {
+  it("selects an external preset after a same-value Custom commit", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    const renderDuration = (minSessionHours: number) =>
+      root.render(
+        createElement(ConfigForm, { ...props, minSessionHours, onMinSessionHoursChange }),
+      );
+    await act(async () => renderDuration(2));
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () => {
+      input.focus();
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "2.0");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => input.blur());
+    await act(async () => renderDuration(1.5));
+    await act(async () => renderDuration(2));
+
+    expect(container.querySelector("#min-session")).toBeNull();
+    expect(
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "2 hours")
+        ?.getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
+  it("offers quick duration presets and restores non-preset values in Custom", async () => {
     const onMinSessionHoursChange = vi.fn();
     await act(async () =>
       root.render(createElement(ConfigForm, { ...props, onMinSessionHoursChange })),
@@ -178,13 +208,7 @@ describe("ConfigForm", () => {
         }),
       ),
     );
-    const customInput = container.querySelector<HTMLInputElement>("#min-session")!;
-    await act(async () =>
-      customInput.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true })),
-    );
-
-    expect(customInput.value).toBe("2");
-    expect(container.querySelector("#min-session")).not.toBeNull();
+    expect(container.querySelector<HTMLInputElement>("#min-session")?.value).toBe("1.5");
   });
 
   it("commits wind range changes as an atomic pair", async () => {

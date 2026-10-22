@@ -129,6 +129,18 @@ describe("App wave height configuration", () => {
     const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
     expect(linkParams.get("model")).toBe("om_icon");
     expect(linkParams.get("minSessionHours")).toBe("1.5");
+
+    await pressArrowOn(input, "ArrowUp");
+
+    expect(container.querySelector<HTMLInputElement>("#min-session")?.value).toBe("2");
+    expect(params().get("minSessionHours")).toBe("2");
+    expect(forecastCalls.at(-1)!.params.get("minSessionHours")).toBe("2");
+    const updatedSubscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    expect(
+      new URL(updatedSubscription.href.replace("webcal:", "https:")).searchParams.get(
+        "minSessionHours",
+      ),
+    ).toBe("2");
   });
 
   it("keeps spot and wind edits together in the URL, forecast, and calendar link", async () => {

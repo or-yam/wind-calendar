@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { NumberStepper } from "./NumberStepper";
+import { ConditionRow } from "./ConditionRow";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 interface MinSessionFieldProps {
   value: number;
@@ -13,43 +16,53 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
 
   useEffect(() => {
     setDraft(value);
+    const isCustomCommit = pendingCustomValue.current === value;
+    pendingCustomValue.current = null;
     if (![1, 2, 3].includes(value)) setCustom(true);
-    else if (pendingCustomValue.current === value) pendingCustomValue.current = null;
-    else setCustom(false);
+    else if (!isCustomCommit) setCustom(false);
   }, [value]);
 
   const selectPreset = (hours: number) => {
+    pendingCustomValue.current = null;
     setCustom(false);
     setDraft(hours);
     onChange(hours);
   };
 
   return (
-    <div className="grid grid-cols-1 items-start gap-3 border-b-2 border-foreground/20 py-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-5 sm:py-5">
+    <ConditionRow>
       <div>
         <p className="text-sm font-bold tracking-[0.09em] uppercase">Min Session</p>
       </div>
       <div className="min-w-0">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Minimum session length">
           {[1, 2, 3].map((hours) => (
-            <button
+            <Button
               key={hours}
               type="button"
+              variant={!custom && draft === hours ? "default" : "outline"}
               aria-pressed={!custom && draft === hours}
               onClick={() => selectPreset(hours)}
-              className={`min-h-11 rounded-sm border-2 px-3 font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${!custom && draft === hours ? "border-primary bg-primary text-primary-foreground" : "border-input bg-transparent text-foreground hover:bg-accent"}`}
+              className={cn(
+                "rounded-sm border-2 px-3 font-bold",
+                !custom && draft === hours ? "border-primary" : "border-input",
+              )}
             >
               {hours} hour{hours > 1 ? "s" : ""}
-            </button>
+            </Button>
           ))}
-          <button
+          <Button
             type="button"
+            variant={custom ? "default" : "outline"}
             aria-pressed={custom}
             onClick={() => setCustom(true)}
-            className={`min-h-11 rounded-sm border-2 px-3 font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${custom ? "border-primary bg-primary text-primary-foreground" : "border-input bg-transparent text-foreground hover:bg-accent"}`}
+            className={cn(
+              "rounded-sm border-2 px-3 font-bold",
+              custom ? "border-primary" : "border-input",
+            )}
           >
             Custom
-          </button>
+          </Button>
         </div>
         {custom && (
           <div className="mt-3 max-w-60">
@@ -68,7 +81,7 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
                 if (next === null) return;
                 const hours = Math.max(0.5, Math.min(8, Math.round(next * 2) / 2));
                 setDraft(hours);
-                pendingCustomValue.current = hours;
+                pendingCustomValue.current = hours === value ? null : hours;
                 onChange(hours);
               }}
             />
@@ -80,6 +93,6 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
           </div>
         )}
       </div>
-    </div>
+    </ConditionRow>
   );
 }

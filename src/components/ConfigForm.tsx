@@ -18,6 +18,7 @@ import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
 import { WindRangeField } from "./WindRangeField";
 import { MinSessionField } from "./MinSessionField";
+import { ConditionRow } from "./ConditionRow";
 
 export interface ConfigFormProps {
   locations: string[];
@@ -87,7 +88,7 @@ export function ConfigForm({
 
   return (
     <form className="flex flex-col">
-      <div className="grid grid-cols-1 items-center gap-3 border-b-2 border-foreground/20 py-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-5 sm:py-5">
+      <ConditionRow>
         <div>
           <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
             Spots
@@ -97,10 +98,10 @@ export function ConfigForm({
           <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
           <p className="mt-1 text-xs text-muted-foreground">Select up to 3 spots.</p>
         </div>
-      </div>
+      </ConditionRow>
 
       {/* Wind Section */}
-      <div className="grid grid-cols-1 items-start gap-3 border-b-2 border-foreground/20 py-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-5 sm:py-5">
+      <ConditionRow>
         <div>
           <div className="flex items-center gap-2">
             {wavesForecastEnabled && (
@@ -125,11 +126,11 @@ export function ConfigForm({
             <WindRangeField min={windMin} max={windMax} onChange={onWindRangeChange} />
           )}
         </div>
-      </div>
+      </ConditionRow>
 
       {/* Wave Section */}
       {wavesForecastEnabled && (
-        <div className="grid grid-cols-1 items-start gap-3 border-b-2 border-foreground/20 py-4 sm:grid-cols-[8rem_minmax(0,1fr)] sm:gap-5 sm:py-5">
+        <ConditionRow>
           <div>
             <div className="flex items-center gap-2">
               <Switch
@@ -207,7 +208,7 @@ export function ConfigForm({
               </div>
             )}
           </div>
-        </div>
+        </ConditionRow>
       )}
 
       <MinSessionField value={minSessionHours} onChange={onMinSessionHoursChange} />
