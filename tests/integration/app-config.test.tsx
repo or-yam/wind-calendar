@@ -5,13 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@vercel/analytics/react", () => ({ Analytics: () => null }));
 
-vi.mock("../../src/components/canvasui/VHS", async () => {
-  const { createElement } = await import("react");
-  return {
-    default: (props: { children?: React.ReactNode }) => createElement("div", null, props.children),
-  };
-});
-
 import App from "../../src/App";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -36,6 +29,7 @@ describe("App wave height configuration", () => {
   let queryClient: QueryClient;
   let forecastCalls: ForecastCall[];
   let features: typeof WAVES_ON;
+  let featuresStatus: number;
   let interpretConfig: unknown;
 
   const waveHeightRange = () => {
@@ -52,6 +46,7 @@ describe("App wave height configuration", () => {
     HTMLElement.prototype.scrollTo = vi.fn();
     forecastCalls = [];
     features = WAVES_ON;
+    featuresStatus = 200;
     interpretConfig = null;
     window.history.replaceState(null, "", WAVE_URL);
     vi.stubGlobal(
@@ -60,6 +55,7 @@ describe("App wave height configuration", () => {
         const url = new URL(String(input), window.location.origin);
         if (url.pathname === "/api/features") {
           return new Response(JSON.stringify(features), {
+            status: featuresStatus,
             headers: { "Content-Type": "application/json" },
           });
         }
@@ -111,6 +107,90 @@ describe("App wave height configuration", () => {
     });
     await act(async () => vi.advanceTimersByTime(600));
   }
+
+  it("starts with ICON and one hour, and keeps session edits in the URL, feed and forecast", async () => {
+    window.history.replaceState(null, "", "/");
+    await renderApp();
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    expect(input.value).toBe("1");
+    expect(params().get("model")).toBe("om_icon");
+    expect(params().get("minSessionHours")).toBe("1");
+    expect(forecastCalls.at(-1)!.params.get("model")).toBe("om_icon");
+
+    await pressArrowOn(input, "ArrowUp");
+
+    expect(input.value).toBe("1.5");
+    expect(params().get("minSessionHours")).toBe("1.5");
+    expect(forecastCalls.at(-1)!.params.get("minSessionHours")).toBe("1.5");
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
+    expect(linkParams.get("model")).toBe("om_icon");
+    expect(linkParams.get("minSessionHours")).toBe("1.5");
+
+    await pressArrowOn(input, "ArrowUp");
+
+    expect(container.querySelector<HTMLInputElement>("#min-session")?.value).toBe("2");
+    expect(params().get("minSessionHours")).toBe("2");
+    expect(forecastCalls.at(-1)!.params.get("minSessionHours")).toBe("2");
+    const updatedSubscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    expect(
+      new URL(updatedSubscription.href.replace("webcal:", "https:")).searchParams.get(
+        "minSessionHours",
+      ),
+    ).toBe("2");
+  });
+
+  it("keeps spot and wind edits together in the URL, forecast, and calendar link", async () => {
+    await renderApp();
+
+    const picker = container.querySelector("details")!;
+    await act(async () =>
+      picker.querySelector("summary")!.dispatchEvent(new MouseEvent("click", { bubbles: true })),
+    );
+    const atlit = [...picker.querySelectorAll<HTMLButtonElement>('[role="checkbox"]')].find(
+      (option) => option.textContent?.includes("Atlit"),
+    )!;
+    await act(async () => atlit.click());
+    await pressArrowOn(container.querySelector<HTMLInputElement>("#wind-min")!, "ArrowUp");
+
+    expect(params().get("locations")).toBe("beit-yanai,atlit");
+    expect(params().get("windMin")).toBe("15");
+    expect(forecastCalls.at(-1)!.params.get("locations")).toBe("beit-yanai,atlit");
+    expect(forecastCalls.at(-1)!.params.get("windMin")).toBe("15");
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
+    expect(linkParams.get("locations")).toBe("beit-yanai,atlit");
+    expect(linkParams.get("windMin")).toBe("15");
+  });
+
+  it("does not publish an invalid typed wind range to the URL, forecast, or calendar link", async () => {
+    await renderApp();
+
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const originalSubscription = subscription.href;
+    const minimum = container.querySelector<HTMLInputElement>("#wind-min")!;
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(minimum, "4");
+      minimum.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => minimum.blur());
+    await act(async () => vi.advanceTimersByTime(600));
+
+    expect(params().get("windMin")).toBe("14");
+    expect(forecastCalls.at(-1)!.params.get("windMin")).toBe("14");
+    expect(minimum.getAttribute("aria-invalid")).toBe("true");
+    expect(container.textContent).toContain("Wind speed must be between 5 and 50 knots.");
+    expect(container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!.href).toBe(
+      originalSubscription,
+    );
+  });
 
   it("keeps an edited wave minimum in the URL, subscription link and forecast request", async () => {
     await renderApp();
@@ -239,5 +319,37 @@ describe("App wave height configuration", () => {
     await renderApp();
 
     expect(container.querySelector('[aria-label="Wave height range in meters"]')).toBeNull();
+  });
+
+  it.each([
+    ["disabled", 200],
+    ["unavailable", 503],
+  ])("keeps wind editable from a wave-only URL when waves are %s", async (_, status) => {
+    features = { ...WAVES_ON, wavesForecast: false };
+    featuresStatus = status;
+    window.history.replaceState(
+      null,
+      "",
+      WAVE_URL.replace("windEnabled=true", "windEnabled=false"),
+    );
+    await renderApp();
+    await act(async () => vi.advanceTimersByTime(600));
+
+    expect(container.querySelector('[aria-label="Toggle wind forecast"]')).toBeNull();
+    expect(container.querySelector("#wind-min")).not.toBeNull();
+    expect(params().get("windEnabled")).toBe("true");
+    expect(forecastCalls.at(-1)!.params.get("windEnabled")).toBe("true");
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
+    expect(linkParams.get("windEnabled")).toBe("true");
+
+    await pressArrowOn(container.querySelector<HTMLInputElement>("#wind-min")!, "ArrowUp");
+
+    expect(params().get("windMin")).toBe("15");
+    expect(forecastCalls.at(-1)!.params.get("windMin")).toBe("15");
+    const editedSubscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    expect(
+      new URL(editedSubscription.href.replace("webcal:", "https:")).searchParams.get("windMin"),
+    ).toBe("15");
   });
 });

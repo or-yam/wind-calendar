@@ -34,7 +34,7 @@ describe.each([
     expect(res.body.trimEnd()).toMatch(/END:VCALENDAR$/);
     const marine = provider === "openmeteo";
     const events = readIcsEvents(res.body);
-    expect(events).toHaveLength(2);
+    expect(events).toHaveLength(3);
     expect(events[0]).toMatchObject({
       DTSTART: "20990615T030000Z",
       DTEND: "20990615T060000Z",
@@ -56,11 +56,15 @@ describe.each([
         `14:00  17kn  gusts 24kn  W  waves 0.3m${marine ? " 4s" : ""}`,
       ].join("\n"),
     });
+    expect(events[2]).toMatchObject({
+      DTSTART: "20990615T150000Z",
+      DTEND: "20990615T160000Z",
+    });
     for (const event of events) {
       expect(event.UID).toBeTruthy();
       expect(event.DTSTAMP).toMatch(/^\d{8}T\d{6}Z$/);
     }
-    expect(new Set(events.map((event) => event.UID)).size).toBe(2);
+    expect(new Set(events.map((event) => event.UID)).size).toBe(3);
   });
 
   it("returns a valid empty calendar when the overridden wind threshold excludes all daylight", async () => {

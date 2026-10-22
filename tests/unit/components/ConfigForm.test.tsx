@@ -48,7 +48,7 @@ describe("ConfigForm", () => {
     container.remove();
   });
 
-  it("keeps model selection under Advanced and explains the main filters", async () => {
+  it("keeps model selection under Advanced and uses concise field labels", async () => {
     await act(async () => root.render(createElement(ConfigForm, props)));
 
     const advanced = [...container.querySelectorAll("details")].find((details) =>
@@ -57,14 +57,16 @@ describe("ConfigForm", () => {
     expect(advanced).toBeDefined();
     expect(advanced?.querySelector("label")?.textContent).toContain("Forecast Model");
     expect(advanced?.hasAttribute("open")).toBe(false);
-    expect(container.textContent).toContain("wind stays within your preferred speed range");
-    expect(container.textContent).toContain("wave height and period match");
-    expect(container.textContent).toContain("Ignore short weather windows");
+    expect(container.textContent).not.toContain("wind stays within your preferred speed range");
+    expect(container.textContent).not.toContain("wave height and period match");
+    expect(container.textContent).not.toContain("Ignore short weather windows");
+    expect(container.textContent).toContain("Spots");
+    expect(container.textContent).toContain("Wind");
+    expect(container.textContent).toContain("Min Session");
   });
 
-  it("updates single-value ranges while they move and caps waves at 3 meters", async () => {
+  it("updates wave ranges while they move and caps waves at 3 meters", async () => {
     const onWavePeriodMinChange = vi.fn();
-    const onMinSessionHoursChange = vi.fn();
     const onWaveHeightRangeChange = vi.fn();
     await act(async () =>
       root.render(
@@ -72,7 +74,6 @@ describe("ConfigForm", () => {
           ...props,
           waveEnabled: true,
           onWavePeriodMinChange,
-          onMinSessionHoursChange,
           onWaveHeightRangeChange,
         }),
       ),
@@ -83,20 +84,137 @@ describe("ConfigForm", () => {
       (range) => range.max === "3" && range.getAttribute("aria-label") === "Maximum wave height",
     );
     const minPeriod = ranges.find((range) => range.max === "20");
-    const minSession = ranges.find((range) => range.max === "8");
 
     expect(waveMax?.max).toBe("3");
     await act(async () => {
       minPeriod?.dispatchEvent(new InputEvent("input", { bubbles: true }));
       minPeriod?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
-      minSession?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
     expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
-    expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
+
+  it.each([
+    [0.5, "ArrowDown", 0.5],
+    [0.5, "ArrowUp", 1],
+    [8, "ArrowUp", 8],
+    [8, "ArrowDown", 7.5],
+  ])("steps session duration from %s with %s to %s hours", async (initial, key, expected) => {
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, { ...props, minSessionHours: initial, onMinSessionHoursChange }),
+      ),
+    );
+
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () =>
+      input.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })),
+    );
+
+    expect(Number(input.value)).toBe(expected);
+    if (initial !== expected) expect(onMinSessionHoursChange).toHaveBeenCalledWith(expected);
+    else expect(onMinSessionHoursChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps the committed session when cleared and restores external duration changes", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, onMinSessionHoursChange })),
+    );
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () => {
+      input.focus();
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(input, "");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => input.blur());
+
+    expect(onMinSessionHoursChange).not.toHaveBeenCalled();
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(container.textContent).toContain("Enter a session duration.");
+
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, { ...props, minSessionHours: 3, onMinSessionHoursChange }),
+      ),
+    );
+    expect(container.querySelector("#min-session")).toBeNull();
+    expect(
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "3 hours")
+        ?.getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(container.textContent).not.toContain("Enter a session duration.");
+  });
+
+  it("selects an external preset after a same-value Custom commit", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    const renderDuration = (minSessionHours: number) =>
+      root.render(
+        createElement(ConfigForm, { ...props, minSessionHours, onMinSessionHoursChange }),
+      );
+    await act(async () => renderDuration(2));
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () => {
+      input.focus();
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "2.0");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => input.blur());
+    await act(async () => renderDuration(1.5));
+    await act(async () => renderDuration(2));
+
+    expect(container.querySelector("#min-session")).toBeNull();
+    expect(
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "2 hours")
+        ?.getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
+  it("offers quick duration presets and restores non-preset values in Custom", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, onMinSessionHoursChange })),
+    );
+
+    const preset = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent === "3 hours",
+    )!;
+    await act(async () => preset.click());
+    expect(onMinSessionHoursChange).toHaveBeenCalledWith(3);
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          minSessionHours: 1.5,
+          onMinSessionHoursChange,
+        }),
+      ),
+    );
+    expect(container.querySelector<HTMLInputElement>("#min-session")?.value).toBe("1.5");
   });
 
   it("localizes Base UI controls and reverses horizontal slider keys in RTL", async () => {
-    const onMinSessionHoursChange = vi.fn();
+    const onWaveHeightRangeChange = vi.fn();
     await i18n.changeLanguage("he");
     applyDocumentLocale("he");
     await act(async () =>
@@ -104,19 +222,19 @@ describe("ConfigForm", () => {
         createElement(
           DirectionProvider,
           { direction: "rtl" },
-          createElement(ConfigForm, { ...props, onMinSessionHoursChange }),
+          createElement(ConfigForm, { ...props, waveEnabled: true, onWaveHeightRangeChange }),
         ),
       ),
     );
 
-    const minSession = [
+    const waveMinimum = [
       ...container.querySelectorAll<HTMLInputElement>('input[type="range"]'),
-    ].find((range) => range.getAttribute("aria-label") === "משך גלישה מינימלי")!;
-    expect(minSession.getAttribute("aria-valuetext")).toContain("שעות");
+    ].find((range) => range.getAttribute("aria-label") === "גובה גלים מינימלי")!;
+    expect(waveMinimum.getAttribute("aria-valuetext")).toContain("m");
     await act(async () =>
-      minSession.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })),
+      waveMinimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })),
     );
-    expect(onMinSessionHoursChange).toHaveBeenCalledWith(1.5);
+    expect(onWaveHeightRangeChange).toHaveBeenCalledWith([0.4, 3]);
     expect(container.querySelector("[data-checked] > span")?.className).toContain(
       "rtl:data-checked:-translate-x-5",
     );
@@ -198,13 +316,16 @@ describe("ConfigForm", () => {
     expect(onWaveHeightRangeChange).toHaveBeenNthCalledWith(2, [0.6, 2.9]);
   });
 
-  it("hides wave controls when the Waves forecast flag is disabled", async () => {
+  it("hides forecast toggles but keeps wind fields when the Waves forecast flag is disabled", async () => {
     await act(async () =>
       root.render(createElement(ConfigForm, { ...props, wavesForecastEnabled: false })),
     );
 
     expect(container.textContent).not.toContain("Waves");
     expect(container.querySelector('[aria-label="Toggle wave forecast"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Toggle wind forecast"]')).toBeNull();
+    expect(container.querySelector("#wind-min")).not.toBeNull();
+    expect(container.querySelector("#wind-max")).not.toBeNull();
   });
 
   it("hides Windguru models when their feature flag is disabled", async () => {

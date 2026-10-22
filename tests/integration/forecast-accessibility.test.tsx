@@ -3,12 +3,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ForecastSession } from "../../shared/forecast-types";
+import { DEFAULTS } from "../../shared/constants";
 import { ForecastCalendar } from "../../src/components/ForecastCalendar";
-import { Hero } from "../../src/components/Hero";
-
-vi.mock("../../src/components/canvasui/VHS", () => ({
-  default: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
-}));
+import { ConditionsPanel } from "../../src/components/ConditionsPanel";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -107,19 +104,13 @@ describe("forecast calendar accessibility", () => {
   it("names the conditions section so its content sits in a landmark", async () => {
     await act(async () =>
       root.render(
-        createElement(Hero, {
-          locations: ["beit-yanai"],
-          model: "om_gfs",
+        createElement(ConditionsPanel, {
+          ...DEFAULTS,
+          locations: [...DEFAULTS.locations],
           availableModels: [],
-          windEnabled: true,
-          windMin: 14,
-          windMax: 35,
-          waveEnabled: false,
-          waveSource: "total",
-          waveHeightMin: 0.5,
-          waveHeightMax: 3,
-          wavePeriodMin: 0,
-          minSessionHours: 2,
+          confirmedConfig: { ...DEFAULTS, locations: [...DEFAULTS.locations] },
+          confirmationPending: false,
+          onConfirmConfig: vi.fn(),
           onLocationsChange: vi.fn(),
           onModelChange: vi.fn(),
           onWindEnabledChange: vi.fn(),

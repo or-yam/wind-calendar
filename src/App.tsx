@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { forecastQueryOptions } from "./lib/forecast-query";
 
@@ -7,8 +7,8 @@ const Analytics = lazy(() =>
 );
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
+import { ConditionsPanel } from "./components/ConditionsPanel";
 import { ForecastCalendar } from "./components/ForecastCalendar";
-import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
 import { useWeekNavigation } from "./hooks/useWeekNavigation";
@@ -19,12 +19,12 @@ import { isValidModelId, type ModelId } from "@shared/models";
 import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
+import { useDebouncedValue } from "./hooks/useDebouncedValue";
 import { Trans, useTranslation } from "react-i18next";
 import { DirectionProvider } from "./components/ui/direction";
 import { LanguagePicker } from "./components/LanguagePicker";
 import { addLocaleParam, localeMetadata, resolveLocale, type Locale } from "./i18n/locale";
 import { applyDocumentLocale } from "./i18n";
-import { useDebouncedValue } from "./hooks/useDebouncedValue";
 
 const FORECAST_DEBOUNCE_MS = 500;
 
@@ -91,12 +91,17 @@ function parseValidatedUrlParams(): CalendarConfig {
 function App() {
   const { t, i18n } = useTranslation();
   const [locale, setLocale] = useState<Locale>(() => resolveLocale(window.location.search));
-  const [config, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
+  const [storedConfig, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
   );
   const [confirmationPending, setConfirmationPending] = useState(false);
   const { data: features } = useQuery(featuresQueryOptions);
+  const wavesForecastEnabled = features?.wavesForecast ?? false;
+  const config = useMemo(
+    () => (wavesForecastEnabled ? storedConfig : { ...storedConfig, windEnabled: true }),
+    [storedConfig, wavesForecastEnabled],
+  );
 
   const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
     const nextConfig = update(config);
@@ -115,22 +120,21 @@ function App() {
 
   useEffect(() => {
     const params = addLocaleParam(buildConfigParams(config), locale);
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
     window.history.replaceState(null, "", newUrl);
   }, [config, locale]);
 
   useEffect(() => {
     const handler = () => {
-      const nextLocale = resolveLocale(window.location.search);
       const nextConfig = parseValidatedUrlParams();
-      changeLocale(nextLocale);
       setConfig(nextConfig);
       setConfirmedConfig(nextConfig);
       setConfirmationPending(false);
+      changeLocale(resolveLocale(window.location.search));
     };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, [changeLocale]);
+  }, [i18n, changeLocale]);
 
   const forecastConfig = useDebouncedValue(config, FORECAST_DEBOUNCE_MS);
   const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));
@@ -162,11 +166,18 @@ function App() {
     updateConfig((c) => ({ ...c, model }));
   };
 
+  const confirmConfig = () => {
+    const validated = calendarConfigSchema.parse(config);
+    setConfirmedConfig(validated);
+    setConfirmationPending(false);
+  };
+
   return (
     <DirectionProvider direction={localeMetadata[locale].direction}>
       <div className="flex min-h-screen flex-col text-foreground">
         <LanguagePicker locale={locale} onChange={changeLocale} />
-        <Hero
+        <Hero />
+        <ConditionsPanel
           locations={config.locations}
           model={config.model}
           availableModels={availableModels}
@@ -198,51 +209,39 @@ function App() {
             setConfig(calendarConfigSchema.parse(nextConfig));
             setConfirmationPending(true);
           }}
+          confirmedConfig={
+            wavesForecastEnabled ? confirmedConfig : { ...confirmedConfig, windEnabled: true }
+          }
+          confirmationPending={confirmationPending}
+          onConfirmConfig={confirmConfig}
           freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
-          wavesForecastEnabled={features?.wavesForecast ?? false}
+          wavesForecastEnabled={wavesForecastEnabled}
           windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
         />
         <main>
-          {confirmationPending && (
-            <section className="night-section pb-0">
-              <div className="content-wrap flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="font-bold">{t("reviewConfiguration")}</p>
-                <button
-                  type="button"
-                  className="rounded-sm bg-primary px-5 py-3 font-bold text-primary-foreground"
-                  onClick={() => {
-                    const validated = calendarConfigSchema.parse(config);
-                    setConfirmedConfig(validated);
-                    setConfirmationPending(false);
-                  }}
-                >
-                  {t("confirmConfiguration")}
-                </button>
-              </div>
-            </section>
-          )}
-          <ErrorBoundary
-            fallback={
-              <div className="night-section px-5 text-center">
-                <p className="text-red-400 text-sm">{t("genericError")}</p>
-              </div>
-            }
-          >
-            <ForecastCalendar
-              sessions={sessions}
-              isPending={isPending}
-              error={error}
-              weekStart={weekStart}
-              today={today}
-              canGoPrev={canGoPrev}
-              canGoNext={canGoNext}
-              resetKey={forecastConfigKey}
-              onPrev={goToPrev}
-              onNext={goToNext}
-              onToday={goToToday}
-            />
-          </ErrorBoundary>
-          <SubscribeButtons config={confirmedConfig} />
+          <div id="upcoming-preview" className="scroll-mt-6">
+            <ErrorBoundary
+              fallback={
+                <div className="night-section px-5 text-center">
+                  <p className="text-red-400 text-sm">{t("genericError")}</p>
+                </div>
+              }
+            >
+              <ForecastCalendar
+                sessions={sessions}
+                isPending={isPending}
+                error={error}
+                weekStart={weekStart}
+                today={today}
+                canGoPrev={canGoPrev}
+                canGoNext={canGoNext}
+                onPrev={goToPrev}
+                onNext={goToNext}
+                onToday={goToToday}
+                resetKey={forecastConfigKey}
+              />
+            </ErrorBoundary>
+          </div>
           <section className="night-section">
             <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
               <h2 className="sticker-heading mb-0">{t("about")}</h2>

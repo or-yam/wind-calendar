@@ -32,9 +32,7 @@ it("localizes the wind steppers and validation while keeping valid changes atomi
     ),
   );
   expect(container.querySelector("legend")?.textContent).toBe("טווח מהירות רוח בקשרים");
-  expect(
-    container.querySelector('button[aria-label="הקטנת מהירות הרוח המינימלית"]'),
-  ).not.toBeNull();
+  expect(container.querySelector('button[aria-label="הקטנת מהירות רוח מינימלית"]')).not.toBeNull();
   const input = container.querySelector<HTMLInputElement>("#wind-min")!;
   expect(input.dir).toBe("ltr");
   await act(async () =>

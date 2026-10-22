@@ -1,6 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CalendarConfig } from "../../shared/types";
 import i18n from "../../src/i18n";
 
 vi.mock("@tanstack/react-query", () => ({
@@ -23,25 +24,37 @@ vi.mock("@vercel/analytics/react", () => ({
   Analytics: () => null,
 }));
 
-vi.mock("../../src/components/Hero", async () => {
+vi.mock("../../src/components/ConditionsPanel", async () => {
   const { createElement } = await import("react");
+  const { buildWebcalUrl } = await import("../../src/lib/subscribe-urls");
   return {
-    Hero: (props: {
+    ConditionsPanel: (props: {
+      confirmedConfig: CalendarConfig;
       model: string | number;
       onLocationsChange: (locations: string[]) => void;
       onWindRangeChange: (range: [number, number]) => void;
       onFreeTextConfig: (config: unknown, message: string) => void;
+      confirmationPending: boolean;
+      onConfirmConfig: () => void;
       freeTextConfigBuilderEnabled: boolean;
       wavesForecastEnabled: boolean;
       windguruForecastModelsEnabled: boolean;
     }) =>
       createElement(
-        "div",
+        "section",
         {
           "data-free-text-config-enabled": props.freeTextConfigBuilderEnabled,
           "data-waves-enabled": props.wavesForecastEnabled,
           "data-windguru-models-enabled": props.windguruForecastModelsEnabled,
         },
+        createElement("h3", null, "Add to your calendar"),
+        createElement("a", { href: buildWebcalUrl(props.confirmedConfig) }, "Apple Calendar"),
+        props.confirmationPending &&
+          createElement(
+            "button",
+            { type: "button", onClick: props.onConfirmConfig },
+            "Confirm configuration",
+          ),
         createElement(
           "button",
           {
@@ -156,17 +169,17 @@ describe("App location selection", () => {
     expect(subscriptionLink().href).toContain("locations=tel-aviv");
   });
 
-  it("shows the forecast before subscription actions", async () => {
+  it("shows subscription actions before the forecast", async () => {
     await act(async () => root.render(createElement(App)));
 
+    const actionHeading = [...container.querySelectorAll("h3")].find(
+      (heading) => heading.textContent === "Add to your calendar",
+    )!;
     const forecastHeading = [...container.querySelectorAll("h2")].find(
       (heading) => heading.textContent === "Upcoming sessions",
     )!;
-    const subscriptionHeading = [...container.querySelectorAll("h2")].find(
-      (heading) => heading.textContent === "Sync with your calendar",
-    )!;
 
-    expect(forecastHeading.compareDocumentPosition(subscriptionHeading)).toBe(
+    expect(actionHeading.compareDocumentPosition(forecastHeading)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
