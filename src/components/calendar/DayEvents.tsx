@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays, formatTimeFromDate } from "@/lib/date-utils";
 import { laneBox, overlapLanes, sessionKey } from "./overlapLanes";
@@ -23,6 +24,7 @@ export function DayEvents({
   detailsId: string;
   onActivate: (session: ForecastSession, button: HTMLButtonElement) => void;
 }) {
+  const { locale } = useLocale();
   return overlapLanes(sessions).map(({ session, lane, lanes }) => {
     const { start, end } = segmentHours(session, day);
     const nextDayMs = addDays(day, 1).getTime();
@@ -36,8 +38,10 @@ export function DayEvents({
         detailsId={detailsId}
         onActivate={(button) => onActivate(session, button)}
         dayLabel={dayName}
-        startTime={formatTimeFromDate(new Date(segmentStart))}
-        endTime={segmentEnd === nextDayMs ? "24:00" : formatTimeFromDate(new Date(segmentEnd))}
+        startTime={formatTimeFromDate(new Date(segmentStart), locale)}
+        endTime={
+          segmentEnd === nextDayMs ? "24:00" : formatTimeFromDate(new Date(segmentEnd), locale)
+        }
         style={{
           ...laneBox(lane, lanes),
           top: (start - startHour) * hourHeight,

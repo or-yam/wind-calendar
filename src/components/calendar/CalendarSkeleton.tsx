@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HOUR_HEIGHT = 36;
@@ -7,10 +8,11 @@ const PLACEHOLDER_DURATION_HOURS = 3;
 const PLACEHOLDER_OFFSET_VARIANTS = 3;
 
 export function CalendarSkeleton({ dayCount }: { dayCount: number }) {
+  const { t } = useLocale();
   return (
     <div
       role="region"
-      aria-label="Weekly forecast calendar"
+      aria-label={t("weeklyForecastCalendar")}
       aria-busy="true"
       className="overflow-hidden rounded border border-border bg-card"
     >
@@ -21,7 +23,7 @@ export function CalendarSkeleton({ dayCount }: { dayCount: number }) {
       >
         <div />
         {Array.from({ length: dayCount }, (_, i) => (
-          <div key={i} className="border-l border-border">
+          <div key={i} className="border-s border-border">
             <div className="flex h-16 items-center justify-center border-b border-border">
               <Skeleton className="h-8 w-8" />
             </div>

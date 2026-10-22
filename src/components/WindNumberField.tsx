@@ -1,10 +1,11 @@
+import { useLocale } from "@/hooks/useLocale";
 import { NumberField } from "@base-ui/react/number-field";
 import { Minus, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 interface WindNumberFieldProps {
   id: string;
-  label: string;
+  bound: "minimum" | "maximum";
   value: number | null;
   min: number;
   max: number;
@@ -15,7 +16,7 @@ interface WindNumberFieldProps {
 
 export function WindNumberField({
   id,
-  label,
+  bound,
   value,
   min,
   max,
@@ -23,11 +24,13 @@ export function WindNumberField({
   onValueChange,
   onValueCommitted,
 }: WindNumberFieldProps) {
+  const { t, intl } = useLocale();
   const stepperClass =
     "grid size-11 shrink-0 place-items-center border-2 border-input bg-background text-foreground outline-none hover:bg-accent focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
 
   return (
     <NumberField.Root
+      locale={intl}
       id={id}
       value={value}
       min={min}
@@ -38,17 +41,18 @@ export function WindNumberField({
       onValueCommitted={onValueCommitted}
     >
       <Label htmlFor={id} className="mb-1.5 block text-xs font-bold text-foreground/80">
-        {label} (kn)
+        {t(bound)} ({t("unitKnots")})
       </Label>
       <NumberField.Group className="flex">
         <NumberField.Decrement
-          aria-label={`Decrease ${label.toLowerCase()} wind speed`}
-          className={`${stepperClass} rounded-l-sm border-r-0`}
+          aria-label={t(bound === "minimum" ? "decreaseWindMinimum" : "decreaseWindMaximum")}
+          className={`${stepperClass} rounded-s-sm border-e-0`}
         >
           <Minus className="size-4" />
         </NumberField.Decrement>
         <div className="min-w-0 flex-1">
           <NumberField.Input
+            dir="ltr"
             aria-describedby={invalid ? "wind-range-error" : undefined}
             aria-invalid={invalid}
             inputMode="numeric"
@@ -56,8 +60,8 @@ export function WindNumberField({
           />
         </div>
         <NumberField.Increment
-          aria-label={`Increase ${label.toLowerCase()} wind speed`}
-          className={`${stepperClass} rounded-r-sm border-l-0`}
+          aria-label={t(bound === "minimum" ? "increaseWindMinimum" : "increaseWindMaximum")}
+          className={`${stepperClass} rounded-e-sm border-s-0`}
         >
           <Plus className="size-4" />
         </NumberField.Increment>

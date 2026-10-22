@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import type { CalendarMode } from "./calendar/CalendarMobileControls";
 
 export function CalendarRequestStatus({
@@ -14,16 +15,23 @@ export function CalendarRequestStatus({
   mode: CalendarMode;
 }) {
   "use memo";
+  const { t } = useLocale();
   const range = isMobile ? (mode === "day" ? "day" : "range") : "week";
   return (
     <p className="sr-only" role="status">
       {isPending
-        ? "Loading the forecast"
+        ? t("forecastLoading")
         : error
-          ? error.message
+          ? t("forecastError")
           : hasSessions
             ? ""
-            : `No sessions match this ${range}`}
+            : t(
+                range === "day"
+                  ? "noSessionsMatchDay"
+                  : range === "range"
+                    ? "noSessionsMatchRange"
+                    : "noSessionsMatchWeek",
+              )}
     </p>
   );
 }

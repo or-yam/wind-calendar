@@ -99,7 +99,8 @@ describe("forecast calendar accessibility", () => {
       root.render(renderCards({ sessions: NO_SESSIONS, error: new Error("QA unavailable") })),
     );
 
-    expect(container.textContent).toContain("QA unavailable");
+    expect(container.textContent).toContain("The forecast could not be loaded. Please try again.");
+    expect(container.textContent).not.toContain("QA unavailable");
     expect(container.querySelectorAll('[aria-label$=": No sessions"]')).toHaveLength(0);
   });
 
