@@ -62,7 +62,7 @@ export function formatWeekRange(weekStart: Date, locale: Locale = "en"): string 
     year: "numeric",
   });
   return typeof formatter.formatRange === "function"
-    ? formatter.formatRange(weekStart, weekEnd)
+    ? formatter.formatRange(weekStart, weekEnd).replace(/\u2009/g, " ")
     : `${formatter.format(weekStart)} – ${formatter.format(weekEnd)}`;
 }
 

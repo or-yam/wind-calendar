@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { forecastQueryOptions } from "./lib/forecast-query";
 
@@ -7,7 +7,7 @@ const Analytics = lazy(() =>
 );
 import { ErrorBoundary } from "react-error-boundary";
 import { Hero } from "./components/Hero";
-import { ForecastCards } from "./components/ForecastCards";
+import { ForecastCalendar } from "./components/ForecastCalendar";
 import { SubscribeButtons } from "./components/SubscribeButtons";
 import { Caveats } from "./components/Caveats";
 import { Footer } from "./components/Footer";
@@ -24,6 +24,9 @@ import { DirectionProvider } from "./components/ui/direction";
 import { LanguagePicker } from "./components/LanguagePicker";
 import { addLocaleParam, localeMetadata, resolveLocale, type Locale } from "./i18n/locale";
 import { applyDocumentLocale } from "./i18n";
+import { useDebouncedValue } from "./hooks/useDebouncedValue";
+
+const FORECAST_DEBOUNCE_MS = 500;
 
 function parseNumParam(params: URLSearchParams, key: string, fallback: number): number {
   const raw = params.get(key);
@@ -101,11 +104,14 @@ function App() {
     if (!confirmationPending) setConfirmedConfig(nextConfig);
   };
 
-  const changeLocale = (nextLocale: Locale) => {
-    setLocale(nextLocale);
-    void i18n.changeLanguage(nextLocale);
-    applyDocumentLocale(nextLocale);
-  };
+  const changeLocale = useCallback(
+    (nextLocale: Locale) => {
+      setLocale(nextLocale);
+      void i18n.changeLanguage(nextLocale);
+      applyDocumentLocale(nextLocale);
+    },
+    [i18n],
+  );
 
   useEffect(() => {
     const params = addLocaleParam(buildConfigParams(config), locale);
@@ -124,12 +130,14 @@ function App() {
     };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, [i18n]);
+  }, [changeLocale]);
 
-  const { data, isPending, error } = useQuery(forecastQueryOptions(config));
+  const forecastConfig = useDebouncedValue(config, FORECAST_DEBOUNCE_MS);
+  const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));
   const sessions = data?.sessions ?? [];
   const forecastConfigKey = buildConfigParams(config).toString();
-  const { weekStart, goToToday, goToPrev, goToNext } = useWeekNavigation(forecastConfigKey);
+  const { weekStart, today, canGoPrev, canGoNext, goToToday, goToPrev, goToNext } =
+    useWeekNavigation(forecastConfigKey);
 
   const handleLocationsChange = (locations: string[]) => {
     if (
@@ -174,12 +182,14 @@ function App() {
           onLocationsChange={handleLocationsChange}
           onModelChange={handleModelChange}
           onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-          onWindMinChange={(windMin) => updateConfig((c) => ({ ...c, windMin }))}
-          onWindMaxChange={(windMax) => updateConfig((c) => ({ ...c, windMax }))}
+          onWindRangeChange={([windMin, windMax]) =>
+            updateConfig((c) => ({ ...c, windMin, windMax }))
+          }
           onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
           onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-          onWaveHeightMinChange={(waveHeightMin) => updateConfig((c) => ({ ...c, waveHeightMin }))}
-          onWaveHeightMaxChange={(waveHeightMax) => updateConfig((c) => ({ ...c, waveHeightMax }))}
+          onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
+            updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
+          }
           onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
           onMinSessionHoursChange={(minSessionHours) =>
             updateConfig((c) => ({ ...c, minSessionHours }))
@@ -189,6 +199,8 @@ function App() {
             setConfirmationPending(true);
           }}
           freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
+          wavesForecastEnabled={features?.wavesForecast ?? false}
+          windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
         />
         <main>
           {confirmationPending && (
@@ -216,11 +228,15 @@ function App() {
               </div>
             }
           >
-            <ForecastCards
+            <ForecastCalendar
               sessions={sessions}
               isPending={isPending}
               error={error}
               weekStart={weekStart}
+              today={today}
+              canGoPrev={canGoPrev}
+              canGoNext={canGoNext}
+              resetKey={forecastConfigKey}
               onPrev={goToPrev}
               onNext={goToNext}
               onToday={goToToday}

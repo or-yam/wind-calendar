@@ -1,6 +1,14 @@
 {
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    // Effect LSP: editor features only. Oxlint enforces diagnostics via .oxlintrc.effect.json.
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostics": false
+      }
+    ],
     "target": "ES2023",
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",

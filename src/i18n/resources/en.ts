@@ -4,7 +4,7 @@ export const en = {
   hebrew: "Hebrew",
   documentDescription: "Get wind forecast events in your calendar",
   heroAlt: "Wind Calendar windsurf icon",
-  heroTagline: "Only the days worth surfing. No doom-scrolling the forecast.",
+  heroTagline: "Only the days worth surfing.",
   chooseConditions: "Choose your conditions",
   spots: "Spots",
   spotsHelp: "Select up to 3 spots.",

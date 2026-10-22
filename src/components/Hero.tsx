@@ -22,16 +22,16 @@ export interface HeroProps {
   onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
-  onWindMinChange: (value: number) => void;
-  onWindMaxChange: (value: number) => void;
+  onWindRangeChange: (range: [number, number]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
-  onWaveHeightMinChange: (value: number) => void;
-  onWaveHeightMaxChange: (value: number) => void;
+  onWaveHeightRangeChange: (range: [number, number]) => void;
   onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
   onFreeTextConfig: (config: CalendarConfig, message: string) => void;
   freeTextConfigBuilderEnabled: boolean;
+  wavesForecastEnabled: boolean;
+  windguruForecastModelsEnabled: boolean;
 }
 
 export function Hero(props: HeroProps) {
@@ -42,7 +42,7 @@ export function Hero(props: HeroProps) {
         <div className="content-wrap grid gap-y-3 md:gap-y-4">
           <VHS
             className="h-72 w-full min-[480px]:h-38 md:h-76"
-            speed={0.7}
+            speed={0.3}
             wave={1.8}
             jitter={0.9}
             crease={0.65}
@@ -81,9 +81,11 @@ export function Hero(props: HeroProps) {
         </div>
       </header>
 
-      <section className="night-section">
+      <section className="night-section" aria-labelledby="conditions-heading">
         <div className="content-wrap">
-          <h2 className="sticker-heading">{t("chooseConditions")}</h2>
+          <h2 id="conditions-heading" className="sticker-heading">
+            {t("chooseConditions")}
+          </h2>
           {props.freeTextConfigBuilderEnabled && (
             <FreeTextConfigBuilder onConfig={props.onFreeTextConfig} />
           )}

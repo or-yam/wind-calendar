@@ -2,6 +2,8 @@ import { queryOptions } from "@tanstack/react-query";
 
 interface Features {
   freeTextConfigBuilder: boolean;
+  wavesForecast: boolean;
+  windguruForecastModels: boolean;
 }
 
 export const featuresQueryOptions = queryOptions({

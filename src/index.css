@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme static {
+  --breakpoint-md: 48rem;
+}
+
 @font-face {
   font-family: "Barlow Condensed";
   src: url("/fonts/barlow-condensed-400.woff2") format("woff2");
@@ -191,55 +195,6 @@
     background: var(--card);
     box-shadow: 5px 5px 0 var(--primary);
   }
-}
-
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: #ff3d8d transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  height: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #ff3d8d;
-  border-radius: 9999px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #3ee6cf;
-}
-
-.forecast-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #ff3d8d transparent;
-}
-
-.forecast-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.forecast-scroll::-webkit-scrollbar-track {
-  background: #102126;
-  border-radius: 9999px;
-  margin: 0 40px;
-}
-
-.forecast-scroll::-webkit-scrollbar-thumb {
-  background: #ff3d8d;
-  border-radius: 9999px;
-  border: 2px solid #102126;
-  background-clip: padding-box;
-}
-
-.forecast-scroll::-webkit-scrollbar-thumb:hover {
-  background: #3ee6cf;
-  background-clip: padding-box;
 }
 
 @layer base {

@@ -16,6 +16,7 @@ import {
 import { MODELS, isValidModelId, type ModelId } from "@shared/models";
 import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
+import { WindRangeField } from "./WindRangeField";
 import { useTranslation } from "react-i18next";
 import type { Locale } from "@/i18n/locale";
 import { localeMetadata } from "@/i18n/locale";
@@ -34,15 +35,15 @@ interface ConfigFormProps {
   waveHeightMax: number;
   wavePeriodMin: number;
   minSessionHours: number;
+  wavesForecastEnabled: boolean;
+  windguruForecastModelsEnabled: boolean;
   onLocationsChange: (locations: string[]) => void;
   onModelChange: (model: ModelId) => void;
   onWindEnabledChange: (enabled: boolean) => void;
-  onWindMinChange: (value: number) => void;
-  onWindMaxChange: (value: number) => void;
+  onWindRangeChange: (range: [number, number]) => void;
   onWaveEnabledChange: (enabled: boolean) => void;
   onWaveSourceChange: (source: WaveSource) => void;
-  onWaveHeightMinChange: (value: number) => void;
-  onWaveHeightMaxChange: (value: number) => void;
+  onWaveHeightRangeChange: (range: [number, number]) => void;
   onWavePeriodMinChange: (value: number) => void;
   onMinSessionHoursChange: (value: number) => void;
 }
@@ -60,15 +61,15 @@ export function ConfigForm({
   waveHeightMax,
   wavePeriodMin,
   minSessionHours,
+  wavesForecastEnabled,
+  windguruForecastModelsEnabled,
   onLocationsChange,
   onModelChange,
   onWindEnabledChange,
-  onWindMinChange,
-  onWindMaxChange,
+  onWindRangeChange,
   onWaveEnabledChange,
   onWaveSourceChange,
-  onWaveHeightMinChange,
-  onWaveHeightMaxChange,
+  onWaveHeightRangeChange,
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
@@ -76,14 +77,10 @@ export function ConfigForm({
   const locale = i18n.language as Locale;
   const intlLocale = localeMetadata[locale].intl;
   const number = (value: number) => formatNumber(value, locale, { maximumFractionDigits: 1 });
-  const [localWind, setLocalWind] = useState([windMin, windMax]);
   const [localSession, setLocalSession] = useState(minSessionHours);
   const [localWaveHeight, setLocalWaveHeight] = useState([waveHeightMin, waveHeightMax]);
   const [localWavePeriod, setLocalWavePeriod] = useState(wavePeriodMin);
 
-  useEffect(() => {
-    setLocalWind([windMin, windMax]);
-  }, [windMin, windMax]);
   useEffect(() => {
     setLocalSession(minSessionHours);
   }, [minSessionHours]);
@@ -129,121 +126,103 @@ export function ConfigForm({
           </div>
           {windEnabled && (
             <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
-              {number(localWind[0])} – {number(localWind[1])} {t("unitKnots")}
+              {number(windMin)} – {number(windMax)} {t("unitKnots")}
             </span>
           )}
         </div>
         <p className="text-xs leading-relaxed text-muted-foreground">{t("windHelp")}</p>
-        {windEnabled && (
-          <div aria-label={t("windRange")}>
-            <Slider
-              locale={intlLocale}
-              getAriaLabel={(index) => t(index === 0 ? "windMinimum" : "windMaximum")}
-              getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitKnots")}`}
-              value={localWind}
-              onValueChange={setLocalWind}
-              onValueCommitted={([min, max]) => {
-                onWindMinChange(min);
-                onWindMaxChange(max);
-              }}
-              min={5}
-              max={50}
-              step={1}
-            />
-          </div>
-        )}
+        {windEnabled && <WindRangeField min={windMin} max={windMax} onChange={onWindRangeChange} />}
       </div>
 
       {/* Wave Section */}
-      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="wave-toggle"
-              aria-label={t("toggleWaves")}
-              checked={waveEnabled}
-              onCheckedChange={onWaveEnabledChange}
-              disabled={isOnlyActive("wave")}
-            />
-            <Label
-              htmlFor="wave-toggle"
-              className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
-            >
-              {t("waves")}
-            </Label>
+      {wavesForecastEnabled && (
+        <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="wave-toggle"
+                aria-label={t("toggleWaves")}
+                checked={waveEnabled}
+                onCheckedChange={onWaveEnabledChange}
+                disabled={isOnlyActive("wave")}
+              />
+              <Label
+                htmlFor="wave-toggle"
+                className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+              >
+                {t("waves")}
+              </Label>
+            </div>
+            {waveEnabled && (
+              <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
+                {number(localWaveHeight[0])} – {number(localWaveHeight[1])} {t("unitMeters")}
+              </span>
+            )}
           </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">{t("wavesHelp")}</p>
           {waveEnabled && (
-            <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
-              {number(localWaveHeight[0])} – {number(localWaveHeight[1])} {t("unitMeters")}
-            </span>
+            <div className="flex flex-col gap-3 ps-1">
+              <RadioGroup
+                value={waveSource}
+                onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
+                className="flex gap-4"
+              >
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="total" id="wave-total" />
+                  <Label htmlFor="wave-total" className="text-sm text-foreground/80">
+                    {t("total")}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="swell" id="wave-swell" />
+                  <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
+                    {t("swell")}
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              <div aria-label={t("waveRange")}>
+                <Slider
+                  locale={intlLocale}
+                  getAriaLabel={(index) => t(index === 0 ? "waveMinimum" : "waveMaximum")}
+                  getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitMeters")}`}
+                  value={localWaveHeight}
+                  onValueChange={setLocalWaveHeight}
+                  onValueCommitted={([min, max]) => onWaveHeightRangeChange([min, max])}
+                  min={0}
+                  max={3}
+                  step={0.1}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="min-period" className="text-foreground/80 text-sm">
+                  {t("minPeriod")}
+                </Label>
+                <span dir="ltr" className="text-foreground text-sm tabular-nums">
+                  {number(localWavePeriod)} {t("unitSeconds")}
+                </span>
+              </div>
+              <div aria-label={t("minPeriodA11y")}>
+                <Slider
+                  locale={intlLocale}
+                  getAriaLabel={() => t("minPeriod")}
+                  getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitSeconds")}`}
+                  id="min-period"
+                  value={localWavePeriod}
+                  onValueChange={(v) => {
+                    setLocalWavePeriod(v);
+                    onWavePeriodMinChange(v);
+                  }}
+                  min={0}
+                  max={20}
+                  step={1}
+                />
+              </div>
+            </div>
           )}
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">{t("wavesHelp")}</p>
-        {waveEnabled && (
-          <div className="flex flex-col gap-3 ps-1">
-            <RadioGroup
-              value={waveSource}
-              onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
-              className="flex gap-4"
-            >
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value="total" id="wave-total" />
-                <Label htmlFor="wave-total" className="text-sm text-foreground/80">
-                  {t("total")}
-                </Label>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <RadioGroupItem value="swell" id="wave-swell" />
-                <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
-                  {t("swell")}
-                </Label>
-              </div>
-            </RadioGroup>
-
-            <div aria-label={t("waveRange")}>
-              <Slider
-                locale={intlLocale}
-                getAriaLabel={(index) => t(index === 0 ? "waveMinimum" : "waveMaximum")}
-                getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitMeters")}`}
-                value={localWaveHeight}
-                onValueChange={setLocalWaveHeight}
-                onValueCommitted={([min, max]) => {
-                  onWaveHeightMinChange(min);
-                  onWaveHeightMaxChange(max);
-                }}
-                min={0}
-                max={3}
-                step={0.1}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="min-period" className="text-foreground/80 text-sm">
-                {t("minPeriod")}
-              </Label>
-              <span dir="ltr" className="text-foreground text-sm tabular-nums">
-                {number(localWavePeriod)} {t("unitSeconds")}
-              </span>
-            </div>
-            <div aria-label={t("minPeriodA11y")}>
-              <Slider
-                locale={intlLocale}
-                getAriaLabel={() => t("minPeriod")}
-                getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitSeconds")}`}
-                id="min-period"
-                value={localWavePeriod}
-                onValueChange={(v) => {
-                  setLocalWavePeriod(v);
-                  onWavePeriodMinChange(v);
-                }}
-                min={0}
-                max={20}
-                step={1}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:col-span-2">
         <div className="flex items-center justify-between">
@@ -317,24 +296,28 @@ export function ConfigForm({
                     </SelectItem>
                   ))}
               </SelectGroup>
-              <SelectSeparator />
-              <SelectGroup>
-                <SelectLabel>
-                  <bdi>Windguru</bdi>
-                </SelectLabel>
-                {Object.values(MODELS)
-                  .filter((m) => m.provider === "windguru")
-                  .map((m) => (
-                    <SelectItem
-                      key={m.id}
-                      value={m.id.toString()}
-                      disabled={!availableModels.includes(m.id as number)}
-                    >
-                      <bdi>{m.name}</bdi>
-                      {!availableModels.includes(m.id as number) && ` (${t("unavailable")})`}
-                    </SelectItem>
-                  ))}
-              </SelectGroup>
+              {windguruForecastModelsEnabled && (
+                <>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>
+                      <bdi>Windguru</bdi>
+                    </SelectLabel>
+                    {Object.values(MODELS)
+                      .filter((m) => m.provider === "windguru")
+                      .map((m) => (
+                        <SelectItem
+                          key={m.id}
+                          value={m.id.toString()}
+                          disabled={!availableModels.includes(m.id as number)}
+                        >
+                          <bdi>{m.name}</bdi>
+                          {!availableModels.includes(m.id as number) && ` (${t("unavailable")})`}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>

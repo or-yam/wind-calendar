@@ -1,13 +1,61 @@
 allowBuilds:
   esbuild: true
+# Targeted security patches for vulnerable resolved dependency versions.
+overrides:
+  esbuild@0.27.7: 0.28.1
+  undici@6.28.0: 6.28.1
+  # vercel 58.11.0 pins @vercel/fun 1.3.0, which pins vulnerable tar 7.5.7 and
+  # @tootallnate/once 2.0.0. 1.3.6 is the same major and ships the patched
+  # tar 7.5.22 / once 2.0.1.
+  "vercel@58.11.0>@vercel/fun": 1.3.6
 minimumReleaseAgeExclude:
-  - "@vercel/container@0.2.0"
-  - "@vercel/python@6.56.2"
-  - "@vercel/rust@1.4.2"
-  - "@vercel/vc-native-darwin-arm64@58.10.0"
-  - "@vercel/vc-native-darwin-x64@58.10.0"
-  - "@vercel/vc-native-linux-arm64@58.10.0"
-  - "@vercel/vc-native-linux-x64@58.10.0"
-  - vercel@58.10.0
-  - "@ai-sdk/gateway@4.0.51"
-  - ai@7.0.64
+  - "@vercel/container@0.2.0 || 21.0.0"
+  - "@vercel/python@6.56.2 || 27.0.0"
+  - "@vercel/rust@1.4.2 || 22.0.0"
+  - "@vercel/vc-native-darwin-arm64@58.10.0 || 65.0.0"
+  - "@vercel/vc-native-darwin-x64@58.10.0 || 65.0.0"
+  - "@vercel/vc-native-linux-arm64@58.10.0 || 65.0.0"
+  - "@vercel/vc-native-linux-x64@58.10.0 || 65.0.0"
+  - vercel@58.10.0 || 65.0.0
+  - "@ai-sdk/gateway@4.0.51 || 4.0.121"
+  - ai@7.0.64 || 7.0.148
+  - "@ai-sdk/openai@4.0.99"
+  - "@ai-sdk/provider-utils@5.0.65"
+  - vite@8.3.5
+  - "@effect/tsgo-darwin-arm64@0.55.0"
+  - "@effect/tsgo-darwin-x64@0.55.0"
+  - "@effect/tsgo-linux-arm64@0.55.0"
+  - "@effect/tsgo-linux-arm@0.55.0"
+  - "@effect/tsgo-linux-x64@0.55.0"
+  - "@effect/tsgo-win32-arm64@0.55.0"
+  - "@effect/tsgo-win32-x64@0.55.0"
+  - "@effect/tsgo@0.55.0"
+  - "@vercel/backends@21.0.0"
+  - "@vercel/build-utils@14.23.0"
+  - "@vercel/cervel@0.1.85"
+  - "@vercel/cli-auth@0.3.11"
+  - "@vercel/cli-config@0.3.2"
+  - "@vercel/config@0.13.0"
+  - "@vercel/elysia@21.0.0"
+  - "@vercel/express@21.0.0"
+  - "@vercel/fastify@21.0.0"
+  - "@vercel/flags-core@1.10.1"
+  - "@vercel/gatsby-plugin-vercel-builder@2.2.77"
+  - "@vercel/go@24.0.0"
+  - "@vercel/h3@21.0.0"
+  - "@vercel/hono@21.0.0"
+  - "@vercel/hydrogen@22.0.0"
+  - "@vercel/koa@21.0.0"
+  - "@vercel/nestjs@21.0.0"
+  - "@vercel/next@25.0.0"
+  - "@vercel/node@26.0.0"
+  - "@vercel/python-analysis@0.15.2"
+  - "@vercel/redwood@23.0.0"
+  - "@vercel/remix-builder@26.0.0"
+  - "@vercel/ruby@23.0.0"
+  - "@vercel/static-build@23.0.0"
+  - "@vercel/vc-native-linux-arm64-musl@65.0.0"
+  - "@vercel/vc-native-linux-x64-musl@65.0.0"
+  - "@vercel/vc-native-win32-arm64@65.0.0"
+  - "@vercel/vc-native-win32-x64@65.0.0"
+  - lucide-react@1.61.0

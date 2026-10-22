@@ -20,15 +20,15 @@ const props = {
   waveHeightMax: 5,
   wavePeriodMin: 0,
   minSessionHours: 2,
+  wavesForecastEnabled: true,
+  windguruForecastModelsEnabled: true,
   onLocationsChange: vi.fn(),
   onModelChange: vi.fn(),
   onWindEnabledChange: vi.fn(),
-  onWindMinChange: vi.fn(),
-  onWindMaxChange: vi.fn(),
+  onWindRangeChange: vi.fn(),
   onWaveEnabledChange: vi.fn(),
   onWaveSourceChange: vi.fn(),
-  onWaveHeightMinChange: vi.fn(),
-  onWaveHeightMaxChange: vi.fn(),
+  onWaveHeightRangeChange: vi.fn(),
   onWavePeriodMinChange: vi.fn(),
   onMinSessionHoursChange: vi.fn(),
 };
@@ -65,6 +65,7 @@ describe("ConfigForm", () => {
   it("updates single-value ranges while they move and caps waves at 3 meters", async () => {
     const onWavePeriodMinChange = vi.fn();
     const onMinSessionHoursChange = vi.fn();
+    const onWaveHeightRangeChange = vi.fn();
     await act(async () =>
       root.render(
         createElement(ConfigForm, {
@@ -72,6 +73,7 @@ describe("ConfigForm", () => {
           waveEnabled: true,
           onWavePeriodMinChange,
           onMinSessionHoursChange,
+          onWaveHeightRangeChange,
         }),
       ),
     );
@@ -116,7 +118,7 @@ describe("ConfigForm", () => {
     );
     expect(onMinSessionHoursChange).toHaveBeenCalledWith(1.5);
     expect(container.querySelector("[data-checked] > span")?.className).toContain(
-      "rtl:data-checked:-translate-x-[20px]",
+      "rtl:data-checked:-translate-x-5",
     );
   });
 
@@ -151,5 +153,70 @@ describe("ConfigForm", () => {
       );
     });
     expect(onModelChange).toHaveBeenCalledWith("om_icon");
+  });
+
+  it("commits wind range changes as an atomic pair", async () => {
+    const onWindRangeChange = vi.fn();
+    await act(async () => root.render(createElement(ConfigForm, { ...props, onWindRangeChange })));
+
+    const minimum = container.querySelector<HTMLInputElement>("#wind-min")!;
+    const maximum = container.querySelector<HTMLInputElement>("#wind-max")!;
+    await act(async () => {
+      minimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    });
+    await act(async () => {
+      maximum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    });
+
+    expect(onWindRangeChange).toHaveBeenNthCalledWith(1, [13, 35]);
+    expect(onWindRangeChange).toHaveBeenNthCalledWith(2, [13, 36]);
+  });
+
+  it("commits wave height changes as an atomic pair", async () => {
+    const onWaveHeightRangeChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          waveEnabled: true,
+          waveHeightMax: 3,
+          onWaveHeightRangeChange,
+        }),
+      ),
+    );
+
+    const group = container.querySelector('[aria-label="Wave height range in meters"]')!;
+    const [minimum, maximum] = [...group.querySelectorAll<HTMLInputElement>('input[type="range"]')];
+    await act(async () => {
+      minimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    await act(async () => {
+      maximum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+    });
+
+    expect(onWaveHeightRangeChange).toHaveBeenNthCalledWith(1, [0.6, 3]);
+    expect(onWaveHeightRangeChange).toHaveBeenNthCalledWith(2, [0.6, 2.9]);
+  });
+
+  it("hides wave controls when the Waves forecast flag is disabled", async () => {
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, wavesForecastEnabled: false })),
+    );
+
+    expect(container.textContent).not.toContain("Waves");
+    expect(container.querySelector('[aria-label="Toggle wave forecast"]')).toBeNull();
+  });
+
+  it("hides Windguru models when their feature flag is disabled", async () => {
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, windguruForecastModelsEnabled: false })),
+    );
+
+    const advanced = container.querySelector("details")!;
+    advanced.open = true;
+    const trigger = advanced.querySelector<HTMLButtonElement>("button")!;
+    await act(async () => trigger.click());
+
+    expect(document.body.textContent).not.toContain("Windguru");
   });
 });

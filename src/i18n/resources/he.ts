@@ -6,7 +6,7 @@ export const he = {
   hebrew: "עברית",
   documentDescription: "תחזית רוח כאירועים ביומן שלך",
   heroAlt: "סמל גלישת הרוח של Wind Calendar",
-  heroTagline: "רק הימים ששווה לגלוש בהם. בלי לגלול בתחזית בלי סוף.",
+  heroTagline: "רק הימים ששווה לגלוש בהם.",
   chooseConditions: "בחירת תנאים",
   spots: "מיקומים",
   spotsHelp: "אפשר לבחור עד 3 מיקומים.",

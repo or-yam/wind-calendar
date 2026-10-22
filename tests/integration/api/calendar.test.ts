@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Effect } from "effect";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockSpotInfo, mockAPIRoot, mockWindData } from "../../helpers/windguru-mocks";
 
@@ -39,9 +40,8 @@ vi.mock("../../../server/utils/api-handler", async () => {
   const actual = await vi.importActual("../../../server/utils/api-handler");
   return {
     ...actual,
-    resolveForecastData: vi.fn().mockImplementation(async () => {
-      return {
-        success: true,
+    resolveForecastData: vi.fn().mockImplementation(() =>
+      Effect.succeed({
         fetchResult: {
           windData: mockWindData.fcst.WINDSPD.map((windSpeed, i) => ({
             date: new Date(
@@ -62,8 +62,8 @@ vi.mock("../../../server/utils/api-handler", async () => {
         },
         dataSource: "windguru",
         fallbackUsed: false,
-      };
-    }),
+      }),
+    ),
   };
 });
 
@@ -126,6 +126,17 @@ describe("calendar API handler", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-disposition"]).toContain("wind-forecast-beit-yanai-tel-aviv.ics");
+  });
+
+  it("normalizes mixed repeated/CSV locations in filename order", async () => {
+    const res = await callHandler(
+      handler,
+      "/api/calendar?locations=tel-aviv,herzliya&locations=tel-aviv,beit-yanai",
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-disposition"]).toContain(
+      "wind-forecast-tel-aviv-herzliya-beit-yanai.ics",
+    );
   });
 
   it("wave model failure is non-fatal — still returns ICS", async () => {

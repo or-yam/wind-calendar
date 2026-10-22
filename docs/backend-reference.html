@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Wind Calendar · Backend reference</title>
+    <link rel="stylesheet" href="assets/teaching.css" />
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">Maintenance reference · source inspected 2026-10-21</div>
+      <h1>Backend flow map</h1>
+      <p>
+        Preferences arrive over HTTP; weather providers supply forecast data; the backend filters
+        and selects sessions; an adapter returns JSON or calendar data. These routes store no user
+        preferences and perform no calendar-account synchronization.
+      </p>
+      <nav>
+        <a href="#routes">Routes</a> · <a href="#input">Inputs</a> ·
+        <a href="#providers">Providers</a> · <a href="#selection">Selection</a> ·
+        <a href="#output">Output</a> · <a href="#errors">Failures</a> ·
+        <a href="#limits">Limits</a> ·
+        <a href="backend-flows.html">Diagrams</a>
+      </nav>
+      <h2 id="routes">HTTP entry points</h2>
+      <p>
+        <a href="../nitro.config.ts">nitro.config.ts</a> configures
+        <code>serverDir: ./server</code>, the Vercel preset, and CORS for <code>/api/**</code>.
+        <a href="https://nitro.build/docs/routing">Nitro filesystem routing</a> maps the following
+        files to URLs.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Call</th>
+              <th>Flow</th>
+              <th>Output / cache</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a href="../server/api/forecast.ts"><code>GET /api/forecast</code></a>
+              </td>
+              <td>Rate check → query config → sessions → JSON</td>
+              <td><code>{meta, sessions}</code>; public weather cache</td>
+            </tr>
+            <tr>
+              <td>
+                <a href="../server/api/calendar.ts"><code>GET /api/calendar</code></a>
+              </td>
+              <td>Rate check → same config and sessions → ICS generation</td>
+              <td><code>text/calendar</code>; public weather cache</td>
+            </tr>
+            <tr>
+              <td>
+                <a href="../server/api/interpret-config.ts"
+                  ><code>POST /api/interpret-config</code></a
+                >
+              </td>
+              <td>
+                Method → flag → AI rate check → body validation → key → AI → schema validation
+              </td>
+              <td><code>{outcome, message, config}</code>; <code>no-store</code></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="../server/api/features.get.ts"><code>GET /api/features</code></a>
+              </td>
+              <td>Bulk flag evaluation; failure yields false values</td>
+              <td>Three booleans; <code>private, max-age=15</code></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="../server/api/health.ts"><code>GET /api/health</code></a>
+              </td>
+              <td>Local liveness response only</td>
+              <td><code>{status, timestamp}</code>; <code>no-store</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="source">
+        GET is the intended read flow. Forecast, calendar, and health files have no method suffix or
+        explicit method restriction. Features is GET-only by filename; interpretation explicitly
+        rejects non-POST with 405.
+      </p>
+      <h3>Caller differences</h3>
+      <ul>
+        <li>
+          <strong>Browser app:</strong> JSON endpoint; browser enforces CORS. No authentication is
+          required by these routes.
+        </li>
+        <li>
+          <strong>Native app, CLI, bot, service:</strong> same JSON contract. A shared outbound IP
+          means a shared rate budget. Inspect HTTP status before parsing a success shape.
+        </li>
+        <li>
+          <strong>Calendar subscription:</strong> periodically retrieves the configured calendar
+          URL. The server returns a feed, not a push notification. Vendor refresh behavior is
+          outside this backend.
+        </li>
+        <li>
+          <strong>One-time calendar import:</strong> downloads a snapshot; these routes do not
+          update the imported copy.
+        </li>
+        <li>
+          <strong>Monitoring:</strong> health checks show handler liveness, not end-to-end
+          dependency readiness.
+        </li>
+      </ul>
+      <h2 id="input">Input is a complete query configuration</h2>
+      <p>
+        <a href="../server/utils/query-params.ts">Query conversion</a> preserves repeated string
+        values. <a href="../server/config-query.ts">Normalization</a> adds
+        <a href="../shared/constants.ts">defaults</a>;
+        <a href="../server/config.ts">parsing</a> uses
+        <a href="../server/config-schema.ts">schemas</a> and
+        <a href="../server/config-ranges.ts">range checks</a>.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Default</th>
+              <th>Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>locations</code></td>
+              <td><code>beit-yanai</code></td>
+              <td>
+                CSV and/or repeated values; trim and deduplicate; 1–3 known IDs. When present,
+                overrides legacy singular <code>location</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>model</code></td>
+              <td><code>om_gfs</code></td>
+              <td>
+                <code>om_gfs / om_icon / om_gdps / om_ifs</code> or <code>3 / 45 / 59 / 117</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>windEnabled</code>, <code>windMin</code>, <code>windMax</code></td>
+              <td><code>true, 14, 35</code></td>
+              <td>Knots; min ≥ 0, max ≤ 200, min &lt; max</td>
+            </tr>
+            <tr>
+              <td><code>waveEnabled</code>, <code>waveSource</code></td>
+              <td><code>false, total</code></td>
+              <td>Source is <code>total</code> or <code>swell</code></td>
+            </tr>
+            <tr>
+              <td><code>waveHeightMin</code>, <code>waveHeightMax</code></td>
+              <td><code>0.5, 3</code></td>
+              <td>Meters; min ≥ 0, max ≤ 20, min &lt; max</td>
+            </tr>
+            <tr>
+              <td><code>wavePeriodMin</code></td>
+              <td><code>0</code></td>
+              <td>Seconds; ≥ 0</td>
+            </tr>
+            <tr>
+              <td><code>minSessionHours</code></td>
+              <td><code>2</code></td>
+              <td>0–24 hours; applied after selecting locations</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Only the exact query string <code>true</code> enables a supplied boolean. Omitted booleans
+        take defaults. Numeric parsing uses <code>parseFloat</code>, so it is permissive about
+        trailing text. Range validation runs even when the corresponding filter is disabled. Both
+        filters disabled is accepted here and yields no sessions.
+      </p>
+      <p>
+        Location IDs, coordinates, Windguru spot IDs, and time zones live in
+        <a href="../shared/locations.ts">shared/locations.ts</a>. Arbitrary coordinates are not
+        accepted by these routes. Model selection is shared across requested locations. There is no
+        date/week input in the parser; extra query keys are ignored.
+      </p>
+      <pre>
+# Substitute your deployment origin. Both URLs carry the same preferences.
+curl -i 'https://YOUR_HOST/api/forecast?locations=beit-yanai,tel-aviv&amp;model=om_icon&amp;windMin=16&amp;windMax=25'
+curl -i 'https://YOUR_HOST/api/calendar?locations=beit-yanai,tel-aviv&amp;model=om_icon&amp;windMin=16&amp;windMax=25'</pre>
+      <h2 id="providers">Provider resolution and fallback</h2>
+      <p>
+        <a href="../server/utils/location-sessions.ts">buildLocationSessions</a> resolves locations
+        concurrently using <code>Effect.forEach</code>. Each calls
+        <a href="../server/utils/api-handler.ts">resolveForecastData</a>. Required failure in any
+        location fails the combined request; successful locations are not returned separately.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Requested model</th>
+              <th>Primary model</th>
+              <th>On Open-Meteo failure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>om_gfs</code></td>
+              <td><code>gfs_global</code></td>
+              <td>Windguru 3</td>
+            </tr>
+            <tr>
+              <td><code>om_icon</code></td>
+              <td><code>icon_global</code></td>
+              <td>Windguru 45</td>
+            </tr>
+            <tr>
+              <td><code>om_gdps</code></td>
+              <td><code>gem_global</code></td>
+              <td>Windguru 59</td>
+            </tr>
+            <tr>
+              <td><code>om_ifs</code></td>
+              <td><code>ecmwf_ifs025</code></td>
+              <td>Windguru 117</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Numeric model IDs select Windguru directly. The fallback mapping is found by matching model
+        names in <a href="../shared/models.ts">shared/models.ts</a>, not by a second hardcoded map.
+      </p>
+      <h3>Open-Meteo path</h3>
+      <p>
+        <a href="../server/open-meteo/fetch.ts">fetchForecast + fetchMarine</a> request seven days,
+        concurrently, with a 10-second timeout per HTTP request. Wind uses the chosen model and
+        knots; marine is a separate API request without that wind-model selector.
+        <a href="../server/open-meteo/forecast.ts">fetchOpenMeteoData</a> converts local timestamp
+        strings into UTC instants and merges wave/swell values by exact timestamp.
+      </p>
+      <p>
+        Marine request failures become an absent optional result; wind can continue. Failure of the
+        required forecast or its normalization triggers provider fallback. Missing coordinates fails
+        before this recovery path. A malformed marine payload that throws during merging is outside
+        the optional HTTP failure boundary.
+      </p>
+      <h3>Windguru path</h3>
+      <p>
+        <a href="../server/windguru/api.ts">fetchWindData</a> fetches the wind model and wave model
+        84 concurrently. <a href="../server/windguru/forecast.ts">getForecast</a> first fetches spot
+        metadata, checks model availability, extracts <code>rundef</code>, then fetches the
+        forecast. Each upstream HTTP request has a 10-second timeout.
+      </p>
+      <p>
+        A failing non-GFS wind-model fetch gets another attempt using GFS 3. A failing GFS fetch is
+        terminal. Wave-fetch failure is optional. Wave merging supplies total height only; period,
+        direction, and swell remain null. Consequently, a positive required wave period or
+        swell-only criteria may eliminate every wave match after fallback.
+      </p>
+      <p>
+        Fallbacks are recovery choices, not a general retry loop. The 10-second timeout is per
+        upstream request, not a whole-request time limit. Wave requests happen even when wave
+        filtering is disabled.
+      </p>
+      <h2 id="selection">How weather becomes sessions</h2>
+      <ol>
+        <li>
+          <strong>Normalize:</strong> both adapters produce
+          <a href="../server/types/wind-conditions.ts"><code>ProviderWindData</code></a
+          >: dated wind/wave/swell points plus sunrise and sunset strings.
+        </li>
+        <li>
+          <strong>Filter:</strong>
+          <a href="../server/utils/filterEvents.ts">filterEvents</a> removes past points and points
+          outside daylight. An enabled wind criterion OR enabled wave criterion must pass. Heights
+          and wind ranges are inclusive; wave period must meet its minimum. Missing period is
+          treated as zero. Each surviving point gets <code>wind</code>, <code>wave</code>, or
+          <code>both</code>.
+        </li>
+        <li>
+          <strong>Group provisional candidates:</strong>
+          <a href="../server/utils/groupSessions.ts">groupSessions</a> sorts points; changes of
+          match type or gaps above three hours split a group. Here minimum duration is zero.
+        </li>
+        <li>
+          <strong>Pick winners:</strong>
+          <a href="../server/utils/select-location-sessions.ts">selectBestLocationSessions</a>
+          gathers candidates with identical timestamps. Wind speed wins first if wind is enabled;
+          wave height wins next if waves are enabled, using the configured total/swell source. A
+          criterion a candidate did not pass ranks as −1. Remaining ties use requested location
+          order.
+        </li>
+        <li>
+          <strong>Regroup:</strong> winner runs split when location or match type changes, then
+          grouping applies temporal gap rules. End = last point + last step, or one hour for a
+          singleton. Drop sessions shorter than <code>minSessionHours</code>. Compute summaries over
+          retained points.
+        </li>
+      </ol>
+      <p>
+        Selection is greedy per timestamp; it does not maximize total usable time. A short winning
+        run may be removed by the duration rule without reinstating a runner-up location. Comparison
+        is by exact sample timestamp, not arbitrary overlapping time intervals. The JSON field
+        <code>hourly</code> can contain three-hourly samples.
+      </p>
+      <h2 id="output">Same sessions, two output formats</h2>
+      <p>
+        <strong>JSON:</strong> <a href="../shared/forecast-types.ts">ForecastResponse</a> has
+        <code>meta</code> (requested model, requested locations, generation timestamp, provider per
+        location) and <code>sessions</code>. Dates are ISO UTC strings. Session summaries round
+        values; raw time-point fields preserve nulls. Some missing aggregate values become zero or
+        direction N, so inspect raw data when absence matters.
+      </p>
+      <p>
+        <strong>ICS:</strong>
+        <a href="../server/utils/generateIcsEvents.ts">generateIcsEvents</a> creates UTC events with
+        titles, location text, and locally formatted condition descriptions. UID = version + encoded
+        location ID + start milliseconds + end milliseconds + domain. Unchanged boundaries keep
+        identity; changed boundaries generate a new UID. Vendor reconciliation is not established
+        here.
+        <a href="https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7"
+          >RFC 5545 UID semantics</a
+        >.
+      </p>
+      <p>
+        Successful JSON/ICS use
+        <code
+          >Cache-Control: public, max-age=21600, stale-while-revalidate=86400,
+          stale-if-error=604800</code
+        >: six-hour freshness, plus advertised stale handling windows. Actual reuse depends on the
+        client/intermediary. These handlers contain no persistent weather cache; an origin request
+        executes the pipeline again. Cached JSON's <code>generatedAt</code> describes generation
+        time, not retrieval time.
+      </p>
+      <p>
+        <code>X-Data-Source</code> lists actual providers (<code>openmeteo</code>,
+        <code>windguru</code>); JSON also maps provider by location.
+        <code>X-Fallback-Used: true</code> reports Open-Meteo → Windguru fallback, but not
+        Windguru's internal GFS fallback. <code>meta.model</code> stays the requested model, so
+        metadata does not establish the actual final model.
+      </p>
+      <h2 id="errors">Failures and request tracing</h2>
+      <p>
+        <a href="../server/utils/observed-handler.ts">observedHandler</a> assigns
+        <code>X-Request-Id</code>, creates request logging context, logs completion or failure and
+        duration, and preserves request ID and <code>Retry-After</code> on errors. Forecast,
+        calendar, features, and interpretation use it; health does not.
+        <a href="../server/utils/logging.ts">runLoggedEffect</a> connects Effect logs to structured
+        JSON request logs.
+      </p>
+      <p>
+        <a href="../server/utils/http.ts">HTTP helpers</a> create typed provider errors.
+        <a href="../server/errors.ts">Error classification</a> converts them to
+        <code>ForecastError</code>;
+        <a href="../server/utils/api-handler.ts">toHttpError</a> translates pipeline failures for
+        Nitro. Configuration errors become 400. Unrecovered timeout/network errors generally become
+        504; upstream bad responses generally become 502; upstream throttling can become 429.
+        Windguru wraps some model-fetch failures as data errors, which can lose the original HTTP
+        classification. Unexpected defects become 500.
+      </p>
+      <p>
+        HTTP errors are serialized by Nitro/H3; custom error details are in <code>data</code> in the
+        integration fixtures. Do not assume a failed response has the success JSON shape, or that a
+        calendar failure returns ICS. A successful <code>sessions: []</code> or empty VCALENDAR
+        means no retained matches, not necessarily a provider outage.
+        <a href="../tests/integration/api/forecast-http.test.ts">JSON fixtures</a> ·
+        <a href="../tests/integration/api/calendar-http.test.ts">ICS fixtures</a>.
+      </p>
+      <p>
+        <a href="../server/utils/rate-limit.ts">Rate limiting</a> allows 30 requests per rolling
+        minute per IP in a process-local map. Forecast and calendar share the IP bucket;
+        interpretation uses a separate <code>ai:IP</code> bucket with the same limit. Features and
+        health do not call the limiter. This is best-effort across serverless instances, not a
+        globally enforced quota. IP comes from the first <code>X-Forwarded-For</code> value, then
+        the socket address, then <code>unknown</code>; deployment proxy behavior matters.
+      </p>
+      <h2 id="limits">Implementation details worth remembering</h2>
+      <ul>
+        <li>
+          <strong>Daylight:</strong> Open-Meteo uses the first day's sunrise/sunset for the whole
+          horizon; filtering compares only the integer local hour. Minute boundaries and changing
+          daily daylight are approximations. <a href="../server/utils/timezone.ts">Time helpers</a>.
+        </li>
+        <li>
+          <strong>DST:</strong> Open-Meteo conversion applies one returned UTC offset to every
+          point. A horizon spanning an offset transition deserves scrutiny.
+        </li>
+        <li>
+          <strong>Validation differs:</strong> AI output uses
+          <a href="../shared/calendar-config-schema.ts">a strict Zod schema</a> requiring at least
+          one filter enabled; query parsing allows both disabled. Query numeric parsing is more
+          permissive.
+        </li>
+        <li>
+          <strong>Flags:</strong> <a href="../server/feature-flags.ts">flag evaluation</a> defaults
+          to false on failure. Only the AI route enforces a flag; wave/model capability flags do not
+          restrict forecast/calendar callers.
+        </li>
+        <li>
+          <strong>Malformed data:</strong> some provider shapes are asserted rather than fully
+          decoded. Windguru missing WINDSPD can log a warning and return an empty array; not every
+          bad payload becomes a clean provider error.
+        </li>
+        <li>
+          <strong>Old code:</strong> <code>server/open-meteo/config.ts</code> is not the parser used
+          by current routes. Follow imports from the entry point before trusting a file's
+          descriptive comments.
+        </li>
+      </ul>
+      <h2>Where to change behavior</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Change</th>
+              <th>Start here</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Accepted query / defaults</td>
+              <td><code>server/config*.ts</code>, <code>shared/constants.ts</code></td>
+            </tr>
+            <tr>
+              <td>Locations / model mapping</td>
+              <td><code>shared/locations.ts</code>, <code>shared/models.ts</code></td>
+            </tr>
+            <tr>
+              <td>Upstream recovery</td>
+              <td><code>server/utils/api-handler.ts</code>, provider directories</td>
+            </tr>
+            <tr>
+              <td>Qualifying conditions</td>
+              <td><code>server/utils/filterEvents.ts</code></td>
+            </tr>
+            <tr>
+              <td>Winning locations / duration</td>
+              <td>
+                <code>server/utils/select-location-sessions.ts</code>, <code>groupSessions.ts</code>
+              </td>
+            </tr>
+            <tr>
+              <td>JSON contract / calendar identity</td>
+              <td>
+                <code>server/api/forecast.ts</code>, <code>shared/forecast-types.ts</code>,
+                <code>generateIcsEvents.ts</code>
+              </td>
+            </tr>
+            <tr>
+              <td>AI interpretation</td>
+              <td>
+                <code>server/api/interpret-config.ts</code>, <code>server/free-text-config.ts</code>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <footer>
+        <a href="backend-flows.html">Return to the interactive lesson</a>. Ask the agent to trace a
+        concrete request, then predict its behavior before reading the implementation. This
+        reference describes the inspected checkout, not independently verified production behavior.
+      </footer>
+    </main>
+  </body>
+</html>

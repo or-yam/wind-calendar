@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -39,3 +39,6 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+      - name: Production logging regression tests
+        run: pnpm run test:production-logs

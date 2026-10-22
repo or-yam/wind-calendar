@@ -1,9 +1,17 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { evaluate } = vi.hoisted(() => ({ evaluate: vi.fn() }));
-vi.mock("@vercel/flags-core", () => ({ flagsClient: { evaluate } }));
+const { bulkEvaluate, evaluate } = vi.hoisted(() => ({
+  bulkEvaluate: vi.fn(),
+  evaluate: vi.fn(),
+}));
+vi.mock("@vercel/flags-core", () => ({ flagsClient: { bulkEvaluate, evaluate } }));
 
-import { FEATURE_FLAGS, isFeatureEnabled } from "../../server/feature-flags";
+import { FEATURE_FLAGS, getFeatureFlags, isFeatureEnabled } from "../../server/feature-flags";
+
+beforeEach(() => {
+  bulkEvaluate.mockReset();
+  evaluate.mockReset();
+});
 
 describe("isFeatureEnabled", () => {
   afterEach(() => {
@@ -22,5 +30,41 @@ describe("isFeatureEnabled", () => {
     evaluate.mockRejectedValue(new Error("unavailable"));
 
     await expect(isFeatureEnabled(FEATURE_FLAGS.freeTextConfigBuilder)).resolves.toBe(false);
+  });
+});
+
+describe("getFeatureFlags", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("evaluates and maps all defined flags", async () => {
+    bulkEvaluate.mockResolvedValue({
+      "free-text-config-builder": { value: true },
+      "waves-forecast": { value: false },
+      "windguru-forecast-models": { value: true },
+    });
+
+    await expect(getFeatureFlags()).resolves.toEqual({
+      freeTextConfigBuilder: true,
+      wavesForecast: false,
+      windguruForecastModels: true,
+    });
+    expect(bulkEvaluate).toHaveBeenCalledWith([
+      { key: "free-text-config-builder", defaultValue: false },
+      { key: "waves-forecast", defaultValue: false },
+      { key: "windguru-forecast-models", defaultValue: false },
+    ]);
+  });
+
+  it("fails all flags closed when bulk evaluation throws", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    bulkEvaluate.mockRejectedValue(new Error("unavailable"));
+
+    await expect(getFeatureFlags()).resolves.toEqual({
+      freeTextConfigBuilder: false,
+      wavesForecast: false,
+      windguruForecastModels: false,
+    });
   });
 });

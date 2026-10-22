@@ -5,7 +5,8 @@ import type { HeroProps } from "../../../src/components/Hero";
 import i18n from "../../../src/i18n";
 
 vi.mock("../../../src/components/canvasui/VHS", () => ({
-  default: ({ children }: { children: React.ReactNode }) => children,
+  default: ({ children, speed }: { children: React.ReactNode; speed: number }) =>
+    createElement("div", { "data-vhs-speed": speed }, children),
 }));
 vi.mock("../../../src/components/ConfigForm", () => ({ ConfigForm: () => null }));
 vi.mock("../../../src/components/FreeTextConfigBuilder", () => ({
@@ -32,16 +33,17 @@ const props = {
   onLocationsChange: vi.fn(),
   onModelChange: vi.fn(),
   onWindEnabledChange: vi.fn(),
-  onWindMinChange: vi.fn(),
-  onWindMaxChange: vi.fn(),
+  onWindRangeChange: vi.fn(),
   onWaveEnabledChange: vi.fn(),
   onWaveSourceChange: vi.fn(),
-  onWaveHeightMinChange: vi.fn(),
-  onWaveHeightMaxChange: vi.fn(),
+  onWaveHeightRangeChange: vi.fn(),
   onWavePeriodMinChange: vi.fn(),
   onMinSessionHoursChange: vi.fn(),
   onFreeTextConfig: vi.fn(),
-} satisfies Omit<HeroProps, "freeTextConfigBuilderEnabled">;
+  freeTextConfigBuilderEnabled: true,
+  wavesForecastEnabled: true,
+  windguruForecastModelsEnabled: true,
+} satisfies HeroProps;
 
 describe("Hero feature flags", () => {
   let container: HTMLDivElement;
@@ -80,5 +82,15 @@ describe("Hero feature flags", () => {
 
     expect(container.querySelector("h2")?.textContent).toBe(heading);
     expect(container.querySelector("h1")?.dir).toBe("ltr");
+  });
+
+  it("uses the slower hero animation and concise tagline", async () => {
+    await act(async () =>
+      root.render(createElement(Hero, { ...props, freeTextConfigBuilderEnabled: false })),
+    );
+
+    expect(container.querySelector("[data-vhs-speed]")?.getAttribute("data-vhs-speed")).toBe("0.3");
+    expect(container.textContent).toContain("Only the days worth surfing.");
+    expect(container.textContent).not.toContain("No doom-scrolling the forecast.");
   });
 });
