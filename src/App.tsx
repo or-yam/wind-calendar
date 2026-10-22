@@ -90,10 +90,10 @@ function App() {
   );
   const [confirmationPending, setConfirmationPending] = useState(false);
   const { data: features } = useQuery(featuresQueryOptions);
+  const wavesForecastEnabled = features?.wavesForecast ?? false;
   const config = useMemo(
-    () =>
-      features?.wavesForecast === false ? { ...storedConfig, windEnabled: true } : storedConfig,
-    [storedConfig, features?.wavesForecast],
+    () => (wavesForecastEnabled ? storedConfig : { ...storedConfig, windEnabled: true }),
+    [storedConfig, wavesForecastEnabled],
   );
 
   const updateConfig = (update: (current: CalendarConfig) => CalendarConfig) => {
@@ -191,14 +191,12 @@ function App() {
           setConfirmationPending(true);
         }}
         confirmedConfig={
-          features?.wavesForecast === false
-            ? { ...confirmedConfig, windEnabled: true }
-            : confirmedConfig
+          wavesForecastEnabled ? confirmedConfig : { ...confirmedConfig, windEnabled: true }
         }
         confirmationPending={confirmationPending}
         onConfirmConfig={confirmConfig}
         freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
-        wavesForecastEnabled={features?.wavesForecast ?? false}
+        wavesForecastEnabled={wavesForecastEnabled}
         windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
       />
       <main>

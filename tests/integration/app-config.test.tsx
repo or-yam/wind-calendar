@@ -29,6 +29,7 @@ describe("App wave height configuration", () => {
   let queryClient: QueryClient;
   let forecastCalls: ForecastCall[];
   let features: typeof WAVES_ON;
+  let featuresStatus: number;
   let interpretConfig: unknown;
 
   const waveHeightRange = () => {
@@ -45,6 +46,7 @@ describe("App wave height configuration", () => {
     HTMLElement.prototype.scrollTo = vi.fn();
     forecastCalls = [];
     features = WAVES_ON;
+    featuresStatus = 200;
     interpretConfig = null;
     window.history.replaceState(null, "", WAVE_URL);
     vi.stubGlobal(
@@ -53,6 +55,7 @@ describe("App wave height configuration", () => {
         const url = new URL(String(input), window.location.origin);
         if (url.pathname === "/api/features") {
           return new Response(JSON.stringify(features), {
+            status: featuresStatus,
             headers: { "Content-Type": "application/json" },
           });
         }
@@ -318,8 +321,12 @@ describe("App wave height configuration", () => {
     expect(container.querySelector('[aria-label="Wave height range in meters"]')).toBeNull();
   });
 
-  it("enables wind from a wave-only URL when the waves flag is disabled", async () => {
+  it.each([
+    ["disabled", 200],
+    ["unavailable", 503],
+  ])("keeps wind editable from a wave-only URL when waves are %s", async (_, status) => {
     features = { ...WAVES_ON, wavesForecast: false };
+    featuresStatus = status;
     window.history.replaceState(
       null,
       "",
@@ -335,5 +342,14 @@ describe("App wave height configuration", () => {
     const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
     const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
     expect(linkParams.get("windEnabled")).toBe("true");
+
+    await pressArrowOn(container.querySelector<HTMLInputElement>("#wind-min")!, "ArrowUp");
+
+    expect(params().get("windMin")).toBe("15");
+    expect(forecastCalls.at(-1)!.params.get("windMin")).toBe("15");
+    const editedSubscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    expect(
+      new URL(editedSubscription.href.replace("webcal:", "https:")).searchParams.get("windMin"),
+    ).toBe("15");
   });
 });
