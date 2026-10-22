@@ -4,17 +4,22 @@ import type { Plugin } from "vite";
  * Dev: Relaxed CSP with 'unsafe-inline' for Vite HMR.
  * Prod: Strict CSP without 'unsafe-inline' for scripts.
  */
-export const injectCSP = (): Plugin => {
+export const injectCSP = (errorReportingOrigin?: string): Plugin => {
   return {
     name: "inject-csp",
     transformIndexHtml(html, ctx) {
       const isDev = ctx.server !== undefined; // Vite dev server is running
 
+      const connectSources = [
+        "'self'",
+        "https://va.vercel-scripts.com",
+        ...(errorReportingOrigin ? [errorReportingOrigin] : []),
+      ].join(" ");
       const csp = isDev
         ? // Development: Allow inline scripts for Vite HMR
-          "default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com http://localhost:* ws://localhost:*; img-src 'self' data:; frame-ancestors 'none'"
+          `default-src 'self'; script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src ${connectSources} http://localhost:* ws://localhost:*; img-src 'self' data:; frame-ancestors 'none'`
         : // Production: Strict CSP, no 'unsafe-inline' for scripts
-          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'";
+          `default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src ${connectSources}; img-src 'self' data:; frame-ancestors 'none'`;
 
       return [
         {
