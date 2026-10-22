@@ -40,4 +40,25 @@ describe("LocationMultiSelect", () => {
 
     expect(picker.open).toBe(false);
   });
+
+  it("limits selection to three spots while allowing a selected spot to be removed", () => {
+    const onLocationsChange = vi.fn();
+    act(() => {
+      root.render(
+        createElement(LocationMultiSelect, {
+          locations: ["beit-yanai", "atlit", "eilat"],
+          onLocationsChange,
+        }),
+      );
+    });
+
+    const options = [...container.querySelectorAll<HTMLButtonElement>('[role="checkbox"]')];
+    expect(options.filter((option) => option.disabled)).toHaveLength(options.length - 3);
+    expect(container.textContent).toContain("3/3 selected");
+
+    const selected = options.find((option) => option.getAttribute("aria-checked") === "true")!;
+    act(() => selected.click());
+    expect(selected.textContent).toContain("Atlit");
+    expect(onLocationsChange).toHaveBeenCalledWith(["beit-yanai", "eilat"]);
+  });
 });

@@ -7,14 +7,12 @@ import {
   buildWebcalUrl,
 } from "../lib/subscribe-urls";
 import { cn } from "../lib/utils";
+import { buttonVariants } from "./ui/button";
 import type { CalendarConfig } from "@shared/types";
 
 interface SubscribeActionsProps {
   config: CalendarConfig;
 }
-
-const actionClass =
-  "grid size-[44px] shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-[#04090b] hover:text-[#ff3d8d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff3d8d]";
 
 const providers = (config: CalendarConfig) => [
   {
@@ -78,43 +76,56 @@ export function SubscribeActions({ config }: SubscribeActionsProps) {
   }[copyState];
 
   return (
-    <div className="flex min-w-0 flex-col items-center gap-1">
+    <div className="flex w-full min-w-0 flex-col items-center gap-2">
       <div
-        className="flex flex-wrap items-center justify-center gap-1 min-[380px]:gap-2"
+        className="flex w-full flex-col items-center gap-3"
         role="group"
         aria-label="Calendar actions"
       >
-        {providers(config).map(({ label, url, icon, external }) => (
-          <a
-            key={label}
-            href={url}
-            aria-label={label}
-            title={label}
-            className={actionClass}
-            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        <div className="grid w-full grid-cols-3 gap-2">
+          {providers(config).map(({ label, url, icon, external }) => (
+            <a
+              key={label}
+              href={url}
+              aria-label={label}
+              title={label}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "lg" }),
+                "h-auto min-h-12 w-full min-w-0 rounded-sm border-2 border-foreground px-2 py-2 text-sm font-bold shadow-[2px_2px_0_var(--foreground)] max-[420px]:flex-col max-[420px]:gap-1 max-[420px]:whitespace-normal",
+              )}
+              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            >
+              <img src={icon} alt="" className="size-[24px] shrink-0 object-contain" />
+              <span className="truncate">{label.replace(" Calendar", "")}</span>
+            </a>
+          ))}
+        </div>
+        <div className="flex items-center justify-center gap-4 text-xs">
+          <button
+            type="button"
+            aria-label="Copy subscription URL"
+            title="Copy subscription URL"
+            onClick={handleCopyUrl}
+            className="min-h-9 text-foreground underline underline-offset-2 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <img src={icon} alt="" className="size-[24px] object-contain" />
-          </a>
-        ))}
-
-        <button
-          type="button"
-          aria-label="Copy subscription URL"
-          title="Copy subscription URL"
-          onClick={handleCopyUrl}
-          className={actionClass}
-        >
-          <Copy size={24} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          aria-label="Download .ics"
-          title="Download .ics"
-          onClick={handleDownloadIcs}
-          className={actionClass}
-        >
-          <Download size={24} aria-hidden="true" />
-        </button>
+            <span className="inline-flex items-center gap-1">
+              <Copy size={14} aria-hidden="true" />
+              Copy link
+            </span>
+          </button>
+          <button
+            type="button"
+            aria-label="Download .ics"
+            title="Download .ics"
+            onClick={handleDownloadIcs}
+            className="min-h-9 text-foreground underline underline-offset-2 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <span className="inline-flex items-center gap-1">
+              <Download size={14} aria-hidden="true" />
+              Download .ics
+            </span>
+          </button>
+        </div>
       </div>
       <p
         role="status"

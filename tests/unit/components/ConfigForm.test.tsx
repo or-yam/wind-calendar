@@ -46,7 +46,7 @@ describe("ConfigForm", () => {
     container.remove();
   });
 
-  it("keeps model selection under Advanced and explains the main filters", async () => {
+  it("keeps model selection under Advanced and uses concise field labels", async () => {
     await act(async () => root.render(createElement(ConfigForm, props)));
 
     const advanced = [...container.querySelectorAll("details")].find((details) =>
@@ -55,9 +55,12 @@ describe("ConfigForm", () => {
     expect(advanced).toBeDefined();
     expect(advanced?.querySelector("label")?.textContent).toContain("Forecast Model");
     expect(advanced?.hasAttribute("open")).toBe(false);
-    expect(container.textContent).toContain("wind stays within your preferred speed range");
-    expect(container.textContent).toContain("wave height and period match");
-    expect(container.textContent).toContain("Ignore short weather windows");
+    expect(container.textContent).not.toContain("wind stays within your preferred speed range");
+    expect(container.textContent).not.toContain("wave height and period match");
+    expect(container.textContent).not.toContain("Ignore short weather windows");
+    expect(container.textContent).toContain("Spots");
+    expect(container.textContent).toContain("Wind");
+    expect(container.textContent).toContain("Min Session");
   });
 
   it("updates wave ranges while they move and caps waves at 3 meters", async () => {
@@ -117,6 +120,11 @@ describe("ConfigForm", () => {
       root.render(createElement(ConfigForm, { ...props, onMinSessionHoursChange })),
     );
 
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
     const input = container.querySelector<HTMLInputElement>("#min-session")!;
     await act(async () => {
       input.focus();
@@ -135,8 +143,48 @@ describe("ConfigForm", () => {
         createElement(ConfigForm, { ...props, minSessionHours: 3, onMinSessionHoursChange }),
       ),
     );
-    expect(input.value).toBe("3");
+    expect(container.querySelector("#min-session")).toBeNull();
+    expect(
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "3 hours")
+        ?.getAttribute("aria-pressed"),
+    ).toBe("true");
     expect(container.textContent).not.toContain("Enter a session duration.");
+  });
+
+  it("offers quick duration presets and keeps Custom open across preset values", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, onMinSessionHoursChange })),
+    );
+
+    const preset = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent === "3 hours",
+    )!;
+    await act(async () => preset.click());
+    expect(onMinSessionHoursChange).toHaveBeenCalledWith(3);
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, {
+          ...props,
+          minSessionHours: 1.5,
+          onMinSessionHoursChange,
+        }),
+      ),
+    );
+    const customInput = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () =>
+      customInput.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true })),
+    );
+
+    expect(customInput.value).toBe("2");
+    expect(container.querySelector("#min-session")).not.toBeNull();
   });
 
   it("commits wind range changes as an atomic pair", async () => {

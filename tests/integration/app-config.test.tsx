@@ -109,6 +109,11 @@ describe("App wave height configuration", () => {
     window.history.replaceState(null, "", "/");
     await renderApp();
 
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Custom")!
+        .click();
+    });
     const input = container.querySelector<HTMLInputElement>("#min-session")!;
     expect(input.value).toBe("1");
     expect(params().get("model")).toBe("om_icon");
@@ -124,6 +129,52 @@ describe("App wave height configuration", () => {
     const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
     expect(linkParams.get("model")).toBe("om_icon");
     expect(linkParams.get("minSessionHours")).toBe("1.5");
+  });
+
+  it("keeps spot and wind edits together in the URL, forecast, and calendar link", async () => {
+    await renderApp();
+
+    const picker = container.querySelector("details")!;
+    await act(async () =>
+      picker.querySelector("summary")!.dispatchEvent(new MouseEvent("click", { bubbles: true })),
+    );
+    const atlit = [...picker.querySelectorAll<HTMLButtonElement>('[role="checkbox"]')].find(
+      (option) => option.textContent?.includes("Atlit"),
+    )!;
+    await act(async () => atlit.click());
+    await pressArrowOn(container.querySelector<HTMLInputElement>("#wind-min")!, "ArrowUp");
+
+    expect(params().get("locations")).toBe("beit-yanai,atlit");
+    expect(params().get("windMin")).toBe("15");
+    expect(forecastCalls.at(-1)!.params.get("locations")).toBe("beit-yanai,atlit");
+    expect(forecastCalls.at(-1)!.params.get("windMin")).toBe("15");
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
+    expect(linkParams.get("locations")).toBe("beit-yanai,atlit");
+    expect(linkParams.get("windMin")).toBe("15");
+  });
+
+  it("does not publish an invalid typed wind range to the URL, forecast, or calendar link", async () => {
+    await renderApp();
+
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const originalSubscription = subscription.href;
+    const minimum = container.querySelector<HTMLInputElement>("#wind-min")!;
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(minimum, "4");
+      minimum.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => minimum.blur());
+    await act(async () => vi.advanceTimersByTime(600));
+
+    expect(params().get("windMin")).toBe("14");
+    expect(forecastCalls.at(-1)!.params.get("windMin")).toBe("14");
+    expect(minimum.getAttribute("aria-invalid")).toBe("true");
+    expect(container.textContent).toContain("Wind speed must be between 5 and 50 knots.");
+    expect(container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!.href).toBe(
+      originalSubscription,
+    );
   });
 
   it("keeps an edited wave minimum in the URL, subscription link and forecast request", async () => {

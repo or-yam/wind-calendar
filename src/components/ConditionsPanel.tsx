@@ -21,8 +21,11 @@ export function ConditionsPanel({
   ...formProps
 }: ConditionsPanelProps) {
   return (
-    <section className="content-wrap pb-10" aria-labelledby="conditions-heading">
-      <h2 id="conditions-heading" className="sticker-heading text-[clamp(1.6rem,4vw,2.4rem)]">
+    <section
+      className="content-wrap mx-auto max-w-[640px] pb-10"
+      aria-labelledby="conditions-heading"
+    >
+      <h2 id="conditions-heading" className="sticker-heading mb-4 text-[clamp(1.6rem,4vw,2.4rem)]">
         Choose your conditions
       </h2>
       <div className="config-panel p-5 md:p-7">
@@ -44,8 +47,8 @@ export function ConditionsPanel({
           </div>
         )}
 
-        <div className="mt-6 flex flex-col items-center gap-4 border-t-2 border-[#04090b]/20 pt-7 text-center">
-          <h3 className="flex items-center justify-center gap-2 text-2xl font-bold">
+        <div className="mt-6 flex flex-col items-stretch gap-3 border-t-2 border-foreground/20 pt-5">
+          <h3 className="flex items-center gap-2 text-2xl font-bold">
             <CalendarPlus aria-hidden="true" size={26} />
             Add to your calendar
           </h3>
