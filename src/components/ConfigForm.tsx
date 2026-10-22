@@ -17,8 +17,10 @@ import { MODELS, isValidModelId, type ModelId } from "@shared/models";
 import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
 import { WindRangeField } from "./WindRangeField";
+import { MinSessionField } from "./MinSessionField";
+import { ConditionRow } from "./ConditionRow";
 
-interface ConfigFormProps {
+export interface ConfigFormProps {
   locations: string[];
   model: ModelId;
   availableModels: number[];
@@ -69,13 +71,9 @@ export function ConfigForm({
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
-  const [localSession, setLocalSession] = useState(minSessionHours);
   const [localWaveHeight, setLocalWaveHeight] = useState([waveHeightMin, waveHeightMax]);
   const [localWavePeriod, setLocalWavePeriod] = useState(wavePeriodMin);
 
-  useEffect(() => {
-    setLocalSession(minSessionHours);
-  }, [minSessionHours]);
   useEffect(() => {
     setLocalWaveHeight([waveHeightMin, waveHeightMax]);
   }, [waveHeightMin, waveHeightMax]);
@@ -89,49 +87,51 @@ export function ConfigForm({
     (which === "wave" && waveEnabled && !windEnabled);
 
   return (
-    <form className="config-panel grid grid-cols-1 gap-x-10 gap-y-7 p-6 md:grid-cols-2 md:p-8">
-      <div className="flex flex-col gap-3">
-        <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
-          Spots
-        </Label>
-        <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
-        <p className="text-xs text-muted-foreground">Select up to 3 spots.</p>
-      </div>
+    <form className="flex flex-col">
+      <ConditionRow>
+        <div>
+          <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
+            Spots
+          </Label>
+        </div>
+        <div className="min-w-0">
+          <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
+          <p className="mt-1 text-xs text-muted-foreground">Select up to 3 spots.</p>
+        </div>
+      </ConditionRow>
 
       {/* Wind Section */}
-      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
-        <div className="flex items-center justify-between">
+      <ConditionRow>
+        <div>
           <div className="flex items-center gap-2">
-            <Switch
-              id="wind-toggle"
-              aria-label="Toggle wind forecast"
-              checked={windEnabled}
-              onCheckedChange={onWindEnabledChange}
-              disabled={isOnlyActive("wind")}
-            />
+            {wavesForecastEnabled && (
+              <Switch
+                id="wind-toggle"
+                aria-label="Toggle wind forecast"
+                checked={windEnabled}
+                onCheckedChange={onWindEnabledChange}
+                disabled={isOnlyActive("wind")}
+              />
+            )}
             <Label
-              htmlFor="wind-toggle"
+              htmlFor={wavesForecastEnabled ? "wind-toggle" : undefined}
               className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
               Wind
             </Label>
           </div>
+        </div>
+        <div className="min-w-0">
           {windEnabled && (
-            <span className="text-foreground text-base font-bold tabular-nums">
-              {windMin} – {windMax} kn
-            </span>
+            <WindRangeField min={windMin} max={windMax} onChange={onWindRangeChange} />
           )}
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Show times when wind stays within your preferred speed range.
-        </p>
-        {windEnabled && <WindRangeField min={windMin} max={windMax} onChange={onWindRangeChange} />}
-      </div>
+      </ConditionRow>
 
       {/* Wave Section */}
       {wavesForecastEnabled && (
-        <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:border-t-0 md:pt-0">
-          <div className="flex items-center justify-between">
+        <ConditionRow>
+          <div>
             <div className="flex items-center gap-2">
               <Switch
                 id="wave-toggle"
@@ -153,94 +153,65 @@ export function ConfigForm({
               </span>
             )}
           </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Show times when wave height and period match the conditions you want.
-          </p>
-          {waveEnabled && (
-            <div className="flex flex-col gap-3 pl-1">
-              <RadioGroup
-                value={waveSource}
-                onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
-                className="flex gap-4"
-              >
-                <div className="flex items-center gap-1.5">
-                  <RadioGroupItem value="total" id="wave-total" />
-                  <Label htmlFor="wave-total" className="text-sm text-foreground/80">
-                    Total
-                  </Label>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <RadioGroupItem value="swell" id="wave-swell" />
-                  <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
-                    Swell
-                  </Label>
-                </div>
-              </RadioGroup>
+          <div className="min-w-0">
+            {waveEnabled && (
+              <div className="flex flex-col gap-3 pl-1">
+                <RadioGroup
+                  value={waveSource}
+                  onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <RadioGroupItem value="total" id="wave-total" />
+                    <Label htmlFor="wave-total" className="text-sm text-foreground/80">
+                      Total
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <RadioGroupItem value="swell" id="wave-swell" />
+                    <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
+                      Swell
+                    </Label>
+                  </div>
+                </RadioGroup>
 
-              <div aria-label="Wave height range in meters">
-                <Slider
-                  value={localWaveHeight}
-                  onValueChange={setLocalWaveHeight}
-                  onValueCommitted={([min, max]) => onWaveHeightRangeChange([min, max])}
-                  min={0}
-                  max={3}
-                  step={0.1}
-                />
-              </div>
+                <div aria-label="Wave height range in meters">
+                  <Slider
+                    value={localWaveHeight}
+                    onValueChange={setLocalWaveHeight}
+                    onValueCommitted={([min, max]) => onWaveHeightRangeChange([min, max])}
+                    min={0}
+                    max={3}
+                    step={0.1}
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="min-period" className="text-foreground/80 text-sm">
-                  Min Period
-                </Label>
-                <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="min-period" className="text-foreground/80 text-sm">
+                    Min Period
+                  </Label>
+                  <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
+                </div>
+                <div aria-label="Minimum wave period in seconds">
+                  <Slider
+                    id="min-period"
+                    value={localWavePeriod}
+                    onValueChange={(v) => {
+                      setLocalWavePeriod(v);
+                      onWavePeriodMinChange(v);
+                    }}
+                    min={0}
+                    max={20}
+                    step={1}
+                  />
+                </div>
               </div>
-              <div aria-label="Minimum wave period in seconds">
-                <Slider
-                  id="min-period"
-                  value={localWavePeriod}
-                  onValueChange={(v) => {
-                    setLocalWavePeriod(v);
-                    onWavePeriodMinChange(v);
-                  }}
-                  min={0}
-                  max={20}
-                  step={1}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </ConditionRow>
       )}
 
-      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:col-span-2">
-        <div className="flex items-center justify-between">
-          <Label
-            id="min-session-label"
-            htmlFor="min-session"
-            className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
-          >
-            Min Session
-          </Label>
-          <span className="text-foreground text-base font-bold tabular-nums">
-            {localSession} hrs
-          </span>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Ignore short weather windows that do not leave enough time for a session.
-        </p>
-        <Slider
-          id="min-session"
-          aria-labelledby="min-session-label"
-          value={localSession}
-          onValueChange={(v) => {
-            setLocalSession(v);
-            onMinSessionHoursChange(v);
-          }}
-          min={0.5}
-          max={8}
-          step={0.5}
-        />
-      </div>
+      <MinSessionField value={minSessionHours} onChange={onMinSessionHoursChange} />
 
       <details className="border-t-2 border-foreground/20 pt-6 md:col-span-2">
         <summary className="cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
@@ -255,7 +226,7 @@ export function ConfigForm({
               Forecast Model
             </Label>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Open-Meteo GFS is recommended and works for every spot.
+              Open-Meteo ICON is the default and works for every spot.
             </p>
           </div>
           <Select

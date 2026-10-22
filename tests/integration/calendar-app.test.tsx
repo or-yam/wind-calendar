@@ -10,7 +10,6 @@ let container: HTMLDivElement;
 let client: QueryClient;
 
 beforeEach(() => {
-  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 6, 29, 12));
   window.history.replaceState(null, "", "/?locations=beit-yanai&model=om_gfs");
@@ -62,9 +61,9 @@ it("integrates forecast responses, week navigation, Today and filter reset", asy
   expect(button("Prev").disabled).toBe(true);
   await act(async () => button("Next").click());
   expect(container.textContent).toContain("Aug 2 – 8, 2026");
-  expect(container.querySelector('[role="status"]')?.textContent).toBe(
-    "No sessions match this week",
-  );
+  expect(
+    container.querySelector('[aria-label="Upcoming sessions"] [role="status"]')?.textContent,
+  ).toBe("No sessions match this week");
   await act(async () => button("Prev").click());
   expect(container.textContent).toContain("Jul 26 – Aug 1, 2026");
   await act(async () => button("Next").click());

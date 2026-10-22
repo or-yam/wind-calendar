@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { WindNumberField } from "./WindNumberField";
+import { NumberStepper } from "./NumberStepper";
 
 interface WindRangeFieldProps {
   min: number;
@@ -46,24 +46,30 @@ export function WindRangeField({ min, max, onChange }: WindRangeFieldProps) {
   return (
     <fieldset aria-describedby={error ? "wind-range-error" : undefined}>
       <legend className="sr-only">Wind speed range in knots</legend>
-      <div className="grid grid-cols-2 gap-3">
-        <WindNumberField
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+        <NumberStepper
           id="wind-min"
-          label="Minimum"
+          label="Minimum (kn)"
+          stepperLabel="minimum wind speed"
           value={draft[0]}
           min={WIND_MIN}
           max={Math.max(WIND_MIN, Math.min((draft[1] ?? WIND_MAX) - 1, WIND_MAX - 1))}
           invalid={error !== null}
+          errorId="wind-range-error"
+          allowOutOfRange
           onValueChange={(value) => setDraft((current) => [value, current[1]])}
           onValueCommitted={(value) => commit(0, value)}
         />
-        <WindNumberField
+        <NumberStepper
           id="wind-max"
-          label="Maximum"
+          label="Maximum (kn)"
+          stepperLabel="maximum wind speed"
           value={draft[1]}
           min={Math.min(WIND_MAX, Math.max((draft[0] ?? WIND_MIN) + 1, WIND_MIN + 1))}
           max={WIND_MAX}
           invalid={error !== null}
+          errorId="wind-range-error"
+          allowOutOfRange
           onValueChange={(value) => setDraft((current) => [current[0], value])}
           onValueCommitted={(value) => commit(1, value)}
         />

@@ -37,8 +37,8 @@ export function LocationMultiSelect({ locations, onLocationsChange }: LocationMu
 
   return (
     <details ref={pickerRef} className="group relative">
-      <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-sm border-2 border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-        <span className="truncate">{labels.join(", ")}</span>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-sm border-2 border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        <span className="min-w-0 break-words whitespace-normal">{labels.join(", ")}</span>
         <ChevronDown className="h-4 w-4 shrink-0 opacity-50 transition-transform group-open:rotate-180" />
       </summary>
       <div className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-sm border-2 bg-popover p-1 text-popover-foreground shadow-[5px_5px_0_#ff3d8d]">
