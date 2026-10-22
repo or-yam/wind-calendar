@@ -105,6 +105,27 @@ describe("App wave height configuration", () => {
     await act(async () => vi.advanceTimersByTime(600));
   }
 
+  it("starts with ICON and one hour, and keeps session edits in the URL, feed and forecast", async () => {
+    window.history.replaceState(null, "", "/");
+    await renderApp();
+
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    expect(input.value).toBe("1");
+    expect(params().get("model")).toBe("om_icon");
+    expect(params().get("minSessionHours")).toBe("1");
+    expect(forecastCalls.at(-1)!.params.get("model")).toBe("om_icon");
+
+    await pressArrowOn(input, "ArrowUp");
+
+    expect(input.value).toBe("1.5");
+    expect(params().get("minSessionHours")).toBe("1.5");
+    expect(forecastCalls.at(-1)!.params.get("minSessionHours")).toBe("1.5");
+    const subscription = container.querySelector<HTMLAnchorElement>('a[href^="webcal:"]')!;
+    const linkParams = new URL(subscription.href.replace("webcal:", "https:")).searchParams;
+    expect(linkParams.get("model")).toBe("om_icon");
+    expect(linkParams.get("minSessionHours")).toBe("1.5");
+  });
+
   it("keeps an edited wave minimum in the URL, subscription link and forecast request", async () => {
     await renderApp();
 

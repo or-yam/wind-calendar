@@ -78,8 +78,12 @@ export function SubscribeActions({ config }: SubscribeActionsProps) {
   }[copyState];
 
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Calendar actions">
+    <div className="flex min-w-0 flex-col items-center gap-1">
+      <div
+        className="flex flex-wrap items-center justify-center gap-1 min-[380px]:gap-2"
+        role="group"
+        aria-label="Calendar actions"
+      >
         {providers(config).map(({ label, url, icon, external }) => (
           <a
             key={label}

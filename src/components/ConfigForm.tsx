@@ -17,6 +17,7 @@ import { MODELS, isValidModelId, type ModelId } from "@shared/models";
 import type { WaveSource } from "@shared/types";
 import { LocationMultiSelect } from "./LocationMultiSelect";
 import { WindRangeField } from "./WindRangeField";
+import { MinSessionField } from "./MinSessionField";
 
 export interface ConfigFormProps {
   locations: string[];
@@ -69,13 +70,9 @@ export function ConfigForm({
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
-  const [localSession, setLocalSession] = useState(minSessionHours);
   const [localWaveHeight, setLocalWaveHeight] = useState([waveHeightMin, waveHeightMax]);
   const [localWavePeriod, setLocalWavePeriod] = useState(wavePeriodMin);
 
-  useEffect(() => {
-    setLocalSession(minSessionHours);
-  }, [minSessionHours]);
   useEffect(() => {
     setLocalWaveHeight([waveHeightMin, waveHeightMax]);
   }, [waveHeightMin, waveHeightMax]);
@@ -214,35 +211,7 @@ export function ConfigForm({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 border-t-2 border-foreground/20 pt-6 md:col-span-2">
-        <div className="flex items-center justify-between">
-          <Label
-            id="min-session-label"
-            htmlFor="min-session"
-            className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
-          >
-            Min Session
-          </Label>
-          <span className="text-foreground text-base font-bold tabular-nums">
-            {localSession} hrs
-          </span>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Ignore short weather windows that do not leave enough time for a session.
-        </p>
-        <Slider
-          id="min-session"
-          aria-labelledby="min-session-label"
-          value={localSession}
-          onValueChange={(v) => {
-            setLocalSession(v);
-            onMinSessionHoursChange(v);
-          }}
-          min={0.5}
-          max={8}
-          step={0.5}
-        />
-      </div>
+      <MinSessionField value={minSessionHours} onChange={onMinSessionHoursChange} />
 
       <details className="border-t-2 border-foreground/20 pt-6 md:col-span-2">
         <summary className="cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
@@ -257,7 +226,7 @@ export function ConfigForm({
               Forecast Model
             </Label>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Open-Meteo GFS is recommended and works for every spot.
+              Open-Meteo ICON is the default and works for every spot.
             </p>
           </div>
           <Select

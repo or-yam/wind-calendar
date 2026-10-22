@@ -23,7 +23,7 @@ const locations = Object.entries(LOCATIONS)
   .join(", ");
 
 const instructions = `Convert requests into a wind forecast calendar configuration.
-- Supported location IDs and labels: ${locations}. Use only those location IDs. Use om_gfs unless the user explicitly requests another supported model.
+- Supported location IDs and labels: ${locations}. Use only those location IDs. Use ${DEFAULTS.model} unless the user explicitly requests another supported model.
 - Defaults: ${defaults}.
 - The configuration filters deterministic forecast data; do not claim to forecast weather.
 - If the request is unrelated to wind, waves, or water sports, return outcome unsupported and defaults.

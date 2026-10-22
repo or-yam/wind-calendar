@@ -60,9 +60,8 @@ describe("ConfigForm", () => {
     expect(container.textContent).toContain("Ignore short weather windows");
   });
 
-  it("updates single-value ranges while they move and caps waves at 3 meters", async () => {
+  it("updates wave ranges while they move and caps waves at 3 meters", async () => {
     const onWavePeriodMinChange = vi.fn();
-    const onMinSessionHoursChange = vi.fn();
     const onWaveHeightRangeChange = vi.fn();
     await act(async () =>
       root.render(
@@ -70,7 +69,6 @@ describe("ConfigForm", () => {
           ...props,
           waveEnabled: true,
           onWavePeriodMinChange,
-          onMinSessionHoursChange,
           onWaveHeightRangeChange,
         }),
       ),
@@ -81,16 +79,64 @@ describe("ConfigForm", () => {
       (range) => range.max === "3" && range.getAttribute("aria-valuetext")?.includes("end"),
     );
     const minPeriod = ranges.find((range) => range.max === "20");
-    const minSession = ranges.find((range) => range.getAttribute("aria-labelledby"));
 
     expect(waveMax?.max).toBe("3");
     await act(async () => {
       minPeriod?.dispatchEvent(new InputEvent("input", { bubbles: true }));
       minPeriod?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
-      minSession?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
     expect(onWavePeriodMinChange).toHaveBeenCalledWith(1);
-    expect(onMinSessionHoursChange).toHaveBeenCalledWith(2.5);
+  });
+
+  it.each([
+    [0.5, "ArrowDown", 0.5],
+    [0.5, "ArrowUp", 1],
+    [8, "ArrowUp", 8],
+    [8, "ArrowDown", 7.5],
+  ])("steps session duration from %s with %s to %s hours", async (initial, key, expected) => {
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, { ...props, minSessionHours: initial, onMinSessionHoursChange }),
+      ),
+    );
+
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () =>
+      input.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })),
+    );
+
+    expect(Number(input.value)).toBe(expected);
+    if (initial !== expected) expect(onMinSessionHoursChange).toHaveBeenCalledWith(expected);
+    else expect(onMinSessionHoursChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps the committed session when cleared and restores external duration changes", async () => {
+    const onMinSessionHoursChange = vi.fn();
+    await act(async () =>
+      root.render(createElement(ConfigForm, { ...props, onMinSessionHoursChange })),
+    );
+
+    const input = container.querySelector<HTMLInputElement>("#min-session")!;
+    await act(async () => {
+      input.focus();
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(input, "");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => input.blur());
+
+    expect(onMinSessionHoursChange).not.toHaveBeenCalled();
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(container.textContent).toContain("Enter a session duration.");
+
+    await act(async () =>
+      root.render(
+        createElement(ConfigForm, { ...props, minSessionHours: 3, onMinSessionHoursChange }),
+      ),
+    );
+    expect(input.value).toBe("3");
+    expect(container.textContent).not.toContain("Enter a session duration.");
   });
 
   it("commits wind range changes as an atomic pair", async () => {

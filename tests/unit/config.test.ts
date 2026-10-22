@@ -12,8 +12,8 @@ describe("normalizeQueryParams", () => {
   it("supplies defaults without parsing or validating numbers and enums", () => {
     expect(normalizeQueryParams(new URLSearchParams())).toEqual({
       ...DEFAULTS,
-      minSessionHours: "2",
-      model: "om_gfs",
+      minSessionHours: "1",
+      model: "om_icon",
       windMin: "14",
       windMax: "35",
       waveHeightMin: "0.5",

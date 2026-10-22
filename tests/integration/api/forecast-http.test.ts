@@ -8,7 +8,7 @@ import { mockExternalFetch, providerResponse } from "../../helpers/provider-http
 import { utcTime } from "../../helpers/provider-hours";
 
 const providers = [
-  { provider: "openmeteo", query: "", model: "om_gfs" },
+  { provider: "openmeteo", query: "", model: "om_icon" },
   { provider: "windguru", query: "model=45", model: 45 },
 ] as const;
 
@@ -48,7 +48,7 @@ describe("forecast HTTP happy flows (real Effect pipeline)", () => {
       expect(Date.parse(body.meta.generatedAt)).toBeGreaterThanOrEqual(before);
       expect(Date.parse(body.meta.generatedAt)).toBeLessThanOrEqual(Date.now());
       const marine = provider === "openmeteo";
-      expect(body.sessions).toHaveLength(2);
+      expect(body.sessions).toHaveLength(3);
       expect(body.sessions[0]).toEqual({
         location: { id: "beit-yanai", label: "Beit Yanai" },
         start: utcTime(3),
@@ -107,6 +107,7 @@ describe("forecast HTTP happy flows (real Effect pipeline)", () => {
         [utcTime(10), 16],
         [utcTime(11), 17],
       ]);
+      expect(body.sessions[2]).toMatchObject({ start: utcTime(15), end: utcTime(16) });
     },
   );
 
@@ -131,6 +132,7 @@ describe("forecast HTTP happy flows (real Effect pipeline)", () => {
       expect(body.sessions.map((s) => [s.start, s.end])).toEqual([
         [utcTime(3), utcTime(6)],
         [utcTime(10), utcTime(12)],
+        [utcTime(15), utcTime(16)],
       ]);
       if (provider === "windguru") {
         expect(http.requests.every((url) => url.hostname === "www.windguru.cz")).toBe(true);
@@ -166,7 +168,13 @@ describe("forecast HTTP happy flows (real Effect pipeline)", () => {
 
   describe.each(providers)("$provider URL filters", ({ query }) => {
     it.each([
-      ["windMin=18&windMax=21", [[4, 6]]],
+      [
+        "windMin=18&windMax=21",
+        [
+          [4, 6],
+          [15, 16],
+        ],
+      ],
       [
         "windMin=14&windMax=18",
         [
@@ -208,7 +216,9 @@ describe("forecast HTTP happy flows (real Effect pipeline)", () => {
       const body = JSON.parse(res.body) as ForecastResponse;
       expect(body.sessions.map((s) => [s.start, s.end, s.matchType])).toEqual([
         [utcTime(3), utcTime(5), "both"],
+        [utcTime(5), utcTime(6), "wind"],
         [utcTime(10), utcTime(12), "wind"],
+        [utcTime(15), utcTime(16), "wind"],
       ]);
     });
   });

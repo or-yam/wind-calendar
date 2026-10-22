@@ -44,14 +44,11 @@ export function ConditionsPanel({
           </div>
         )}
 
-        <div className="mt-6 flex flex-col gap-4 border-t-2 border-[#04090b]/20 pt-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-bold">
-              <CalendarPlus aria-hidden="true" size={20} />
-              Add to your calendar
-            </h3>
-            <p className="mt-1 text-sm text-[#314c4b]">Your conditions, on your schedule.</p>
-          </div>
+        <div className="mt-6 flex flex-col items-center gap-4 border-t-2 border-[#04090b]/20 pt-7 text-center">
+          <h3 className="flex items-center justify-center gap-2 text-2xl font-bold">
+            <CalendarPlus aria-hidden="true" size={26} />
+            Add to your calendar
+          </h3>
           <SubscribeActions config={confirmedConfig} />
         </div>
       </div>

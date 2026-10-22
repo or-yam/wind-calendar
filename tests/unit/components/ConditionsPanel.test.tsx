@@ -57,7 +57,7 @@ describe("ConditionsPanel", () => {
     expect(heading.closest("section")?.getAttribute("aria-labelledby")).toBe(heading.id);
     expect(container.textContent).toContain("Free-text config builder");
     expect(container.textContent).toContain("Add to your calendar");
-    expect(container.textContent).toContain("Your conditions, on your schedule.");
+    expect(container.textContent).not.toContain("Your conditions, on your schedule.");
   });
 
   it("hides the free-text builder when its feature flag is off", async () => {
