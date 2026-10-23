@@ -22,12 +22,14 @@ it("switches an open session to Hebrew without losing details or changing weathe
 
   expect(calendar.container.querySelector("h2")?.textContent).toBe("חלונות גלישה קרובים");
   expect(calendar.container.querySelector(".week-range")?.textContent).toContain("אוק׳");
-  expect(event.getAttribute("aria-label")).toContain("בבית ינאי: 11:00 – 15:00, רוח 18–24 kn W");
+  expect(event.getAttribute("aria-label")).toContain("בבית ינאי: 11:00 – 15:00, רוח 18–24 קשר W");
+  expect(event.querySelector(".session-event__wind")?.textContent).toBe("18–24 קשר");
   expect(event.querySelector(".session-event__time")?.getAttribute("dir")).toBe("ltr");
   expect(windArrow.style.transform).toBe(rotation);
   const details = calendar.container.querySelector<HTMLElement>('[aria-label="פרטי חלון גלישה"]')!;
   expect(details).not.toBeNull();
-  expect(details.textContent).toContain("משבים 30 kn");
+  expect(details.textContent).toContain("רוח 18–24 קשר");
+  expect(details.textContent).toContain("משבים 30 קשר");
   expect(details.textContent).toContain("סוואל 0.8m 7s");
   expect(details.querySelector('bdi[dir="ltr"]')?.textContent).toBe("11:00 – 15:00");
   await act(async () => details.querySelector<HTMLButtonElement>("button")!.click());

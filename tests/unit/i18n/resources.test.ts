@@ -13,7 +13,7 @@ describe("translation resources", () => {
   });
 
   it("uses Hebrew plural forms", () => {
-    expect(i18n.t("locationsSelected", { lng: "he", count: 1 })).toContain("מיקום 1");
-    expect(i18n.t("locationsSelected", { lng: "he", count: 2 })).toContain("2 מיקומים");
+    expect(i18n.t("locationsSelected", { lng: "he", count: 1 })).toContain("ספוט 1");
+    expect(i18n.t("locationsSelected", { lng: "he", count: 2 })).toContain("2 ספוטים");
   });
 });
