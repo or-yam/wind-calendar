@@ -191,6 +191,7 @@ describe("App location selection", () => {
     expect(container.querySelector('label[for="language-picker"]')?.textContent).toBe("Language");
     expect(container.querySelector("select, button")).toBe(picker);
     expect(picker.value).toBe("en");
+    expect([...picker.options].map((option) => option.textContent)).toEqual(["English", "עברית"]);
   });
 
   it("switches to Hebrew, updates document direction, and preserves locale on config changes", async () => {
@@ -205,6 +206,7 @@ describe("App location selection", () => {
     expect(document.documentElement.lang).toBe("he");
     expect(document.documentElement.dir).toBe("rtl");
     expect(new URLSearchParams(window.location.search).get("lang")).toBe("he");
+    expect([...picker.options].map((option) => option.textContent)).toEqual(["English", "עברית"]);
 
     const addTelAviv = [...container.querySelectorAll("button")].find((button) =>
       button.textContent?.startsWith("Add Tel Aviv"),
