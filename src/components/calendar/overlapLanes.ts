@@ -6,7 +6,7 @@ export function sessionKey(session: ForecastSession) {
 
 export function laneBox(lane: number, lanes: number) {
   return {
-    left: `calc(${(lane * 100) / lanes}% + 2px)`,
+    insetInlineStart: `calc(${(lane * 100) / lanes}% + 2px)`,
     width: `calc(${100 / lanes}% - 4px)`,
   };
 }

@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import { WIND_ICON, WAVE_ICON } from "@shared/constants";
 
 const DIRECTION_ROTATION: Record<string, number> = {
@@ -13,17 +14,17 @@ const DIRECTION_ROTATION: Record<string, number> = {
 
 export function DirectionIndicator({
   direction,
-  label,
   wave = false,
 }: {
   direction: string;
-  label: "Wind" | "Wave";
   wave?: boolean;
 }) {
+  const { t } = useLocale();
   return (
     <span
+      dir="ltr"
       role="img"
-      aria-label={`${label} direction ${direction}`}
+      aria-label={t(wave ? "waveDirection" : "windDirection", { direction })}
       className="inline-flex items-center gap-0.5 text-sm leading-none text-card-foreground"
     >
       {wave ? <span aria-hidden="true">{WAVE_ICON}</span> : null}

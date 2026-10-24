@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import { NumberField } from "@base-ui/react/number-field";
 import { Minus, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -31,11 +32,13 @@ export function NumberStepper({
   onValueChange,
   onValueCommitted,
 }: NumberStepperProps) {
+  const { t, intl } = useLocale();
   const stepperClass =
     "grid size-11 shrink-0 place-items-center border-2 border-input bg-background text-foreground outline-none hover:bg-accent focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
 
   return (
     <NumberField.Root
+      locale={intl}
       id={id}
       value={value}
       min={min}
@@ -50,13 +53,14 @@ export function NumberStepper({
       </Label>
       <NumberField.Group className="flex">
         <NumberField.Decrement
-          aria-label={`Decrease ${stepperLabel}`}
-          className={`${stepperClass} rounded-l-sm border-r-0`}
+          aria-label={t("stepperDecrease", { value: stepperLabel })}
+          className={`${stepperClass} rounded-s-sm border-e-0`}
         >
           <Minus className="size-4" />
         </NumberField.Decrement>
         <div className="min-w-0 flex-1">
           <NumberField.Input
+            dir="ltr"
             aria-describedby={invalid ? errorId : undefined}
             aria-invalid={invalid}
             inputMode={Number.isInteger(step) ? "numeric" : "decimal"}
@@ -64,8 +68,8 @@ export function NumberStepper({
           />
         </div>
         <NumberField.Increment
-          aria-label={`Increase ${stepperLabel}`}
-          className={`${stepperClass} rounded-r-sm border-l-0`}
+          aria-label={t("stepperIncrease", { value: stepperLabel })}
+          className={`${stepperClass} rounded-e-sm border-s-0`}
         >
           <Plus className="size-4" />
         </NumberField.Increment>

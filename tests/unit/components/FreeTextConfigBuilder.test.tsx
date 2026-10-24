@@ -91,6 +91,9 @@ describe("FreeTextConfigBuilder", () => {
     });
 
     expect(container.querySelector('[role="status"] svg')).not.toBeNull();
+    expect(container.querySelector('[role="status"] [dir="auto"]')?.textContent).toBe(
+      "Review this.",
+    );
   });
 
   it("shows a destructive error outcome", async () => {
@@ -109,7 +112,11 @@ describe("FreeTextConfigBuilder", () => {
       setter.call(input, "Beginner session in Tel Aviv");
       input.dispatchEvent(new Event("input", { bubbles: true }));
       container.querySelector("form")!.requestSubmit();
-      await vi.waitFor(() => expect(container.textContent).toContain("Service unavailable"));
+      await vi.waitFor(() =>
+        expect(container.textContent).toContain(
+          "The request could not be completed. Please try again.",
+        ),
+      );
     });
 
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(

@@ -5,9 +5,17 @@ import { cn } from "@/lib/utils";
 
 type SliderProps<Value extends number | number[]> = SliderPrimitive.Root.Props<Value> & {
   ref?: React.Ref<HTMLDivElement>;
+  getAriaLabel?: (index: number) => string;
+  getAriaValueText?: (formattedValue: string, value: number, index: number) => string;
 };
 
-function Slider<Value extends number | number[]>({ className, ref, ...props }: SliderProps<Value>) {
+function Slider<Value extends number | number[]>({
+  className,
+  ref,
+  getAriaLabel,
+  getAriaValueText,
+  ...props
+}: SliderProps<Value>) {
   const thumbCount = Array.isArray(props.value)
     ? props.value.length
     : Array.isArray(props.defaultValue)
@@ -27,6 +35,8 @@ function Slider<Value extends number | number[]>({ className, ref, ...props }: S
             <SliderPrimitive.Thumb
               key={i}
               index={i}
+              getAriaLabel={getAriaLabel}
+              getAriaValueText={getAriaValueText}
               className="h-5 w-5 rounded-full border-[3px] border-range bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-disabled:pointer-events-none data-disabled:opacity-50"
             />
           ))}
