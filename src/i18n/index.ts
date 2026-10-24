@@ -2,13 +2,13 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { en } from "./resources/en";
 import { he } from "./resources/he";
-import { localeMetadata, resolveLocale, type Locale } from "./locale";
+import { localeMetadata, readStoredLocale, type Locale } from "./locale";
 
 export const resources = { en: { translation: en }, he: { translation: he } } as const;
 
 void i18n.use(initReactI18next).init({
   resources,
-  lng: resolveLocale(window.location.search),
+  lng: readStoredLocale(),
   fallbackLng: "en",
   supportedLngs: ["en", "he"],
   interpolation: { escapeValue: false },

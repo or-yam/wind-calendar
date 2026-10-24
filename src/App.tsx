@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { forecastQueryOptions } from "./lib/forecast-query";
 
@@ -23,7 +23,7 @@ import { useDebouncedValue } from "./hooks/useDebouncedValue";
 import { Trans, useTranslation } from "react-i18next";
 import { DirectionProvider } from "./components/ui/direction";
 import { LanguagePicker } from "./components/LanguagePicker";
-import { addLocaleParam, localeMetadata, resolveLocale, type Locale } from "./i18n/locale";
+import { localeMetadata, readStoredLocale, storeLocale, type Locale } from "./i18n/locale";
 import { applyDocumentLocale } from "./i18n";
 
 const FORECAST_DEBOUNCE_MS = 500;
@@ -90,7 +90,7 @@ function parseValidatedUrlParams(): CalendarConfig {
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [locale, setLocale] = useState<Locale>(() => resolveLocale(window.location.search));
+  const [locale, setLocale] = useState<Locale>(readStoredLocale);
   const [storedConfig, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
@@ -109,20 +109,21 @@ function App() {
     if (!confirmationPending) setConfirmedConfig(nextConfig);
   };
 
-  const changeLocale = useCallback(
-    (nextLocale: Locale) => {
-      setLocale(nextLocale);
-      void i18n.changeLanguage(nextLocale);
-      applyDocumentLocale(nextLocale);
-    },
-    [i18n],
-  );
+  const changeLocale = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    storeLocale(nextLocale);
+  };
 
   useEffect(() => {
-    const params = addLocaleParam(buildConfigParams(config), locale);
+    void i18n.changeLanguage(locale);
+    applyDocumentLocale(locale);
+  }, [i18n, locale]);
+
+  useEffect(() => {
+    const params = buildConfigParams(config);
     const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
     window.history.replaceState(null, "", newUrl);
-  }, [config, locale]);
+  }, [config]);
 
   useEffect(() => {
     const handler = () => {
@@ -130,11 +131,10 @@ function App() {
       setConfig(nextConfig);
       setConfirmedConfig(nextConfig);
       setConfirmationPending(false);
-      changeLocale(resolveLocale(window.location.search));
     };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, [i18n, changeLocale]);
+  }, []);
 
   const forecastConfig = useDebouncedValue(config, FORECAST_DEBOUNCE_MS);
   const { data, isPending, error } = useQuery(forecastQueryOptions(forecastConfig));

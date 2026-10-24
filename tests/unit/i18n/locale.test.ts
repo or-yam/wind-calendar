@@ -1,24 +1,43 @@
-import { describe, expect, it } from "vitest";
-import { addLocaleParam, resolveLocale } from "../../../src/i18n/locale";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { readStoredLocale, storeLocale } from "../../../src/i18n/locale";
 
-describe("locale URL state", () => {
+describe("locale preference", () => {
+  const getItem = vi.fn();
+  const setItem = vi.fn();
+
+  beforeEach(() => {
+    getItem.mockReset();
+    setItem.mockReset();
+    vi.stubGlobal("localStorage", { getItem, setItem });
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
   it.each([
-    ["", "en"],
-    ["?lang=en", "en"],
-    ["?lang=he", "he"],
-    ["?lang=fr", "en"],
-  ] as const)("resolves %s to %s", (search, expected) => {
-    expect(resolveLocale(search)).toBe(expected);
+    [null, "en"],
+    ["en", "en"],
+    ["he", "he"],
+    ["fr", "en"],
+  ] as const)("resolves stored %s to %s", (stored, expected) => {
+    getItem.mockReturnValue(stored);
+    expect(readStoredLocale()).toBe(expected);
   });
 
-  it("adds Hebrew without changing configuration params", () => {
-    const params = new URLSearchParams("locations=tel-aviv&model=om_gfs");
-    expect(addLocaleParam(params, "he").toString()).toBe("locations=tel-aviv&model=om_gfs&lang=he");
-    expect(params.has("lang")).toBe(false);
+  it("persists both language choices", () => {
+    storeLocale("he");
+    expect(setItem).toHaveBeenLastCalledWith("wind-calendar:locale", "he");
+    storeLocale("en");
+    expect(setItem).toHaveBeenLastCalledWith("wind-calendar:locale", "en");
   });
 
-  it("omits English and removes unsupported locale state", () => {
-    const params = new URLSearchParams("locations=tel-aviv&lang=fr");
-    expect(addLocaleParam(params, "en").toString()).toBe("locations=tel-aviv");
+  it("defaults to English when storage is unavailable and allows changes", () => {
+    getItem.mockImplementation(() => {
+      throw new Error("Storage blocked");
+    });
+    setItem.mockImplementation(() => {
+      throw new Error("Storage blocked");
+    });
+    expect(readStoredLocale()).toBe("en");
+    expect(() => storeLocale("he")).not.toThrow();
   });
 });

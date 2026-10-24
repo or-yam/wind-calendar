@@ -6,13 +6,20 @@ export const localeMetadata = {
   he: { intl: "he-IL", direction: "rtl" },
 } as const satisfies Record<Locale, { intl: string; direction: "ltr" | "rtl" }>;
 
-export function resolveLocale(search: string): Locale {
-  return new URLSearchParams(search).get("lang") === "he" ? "he" : "en";
+const STORAGE_KEY = "wind-calendar:locale";
+
+export function readStoredLocale(): Locale {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === "he" ? "he" : "en";
+  } catch {
+    return "en";
+  }
 }
 
-export function addLocaleParam(params: URLSearchParams, locale: Locale): URLSearchParams {
-  const next = new URLSearchParams(params);
-  if (locale === "he") next.set("lang", "he");
-  else next.delete("lang");
-  return next;
+export function storeLocale(locale: Locale): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, locale);
+  } catch {
+    return;
+  }
 }
