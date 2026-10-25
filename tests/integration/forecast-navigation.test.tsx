@@ -48,6 +48,7 @@ function session(day: number, hour: number): ForecastSession {
 describe("forecast navigation with rendered calendar", () => {
   let container: HTMLDivElement;
   let root: Root;
+  let originalScrollTo: PropertyDescriptor | undefined;
 
   const todayButton = () =>
     [...container.querySelectorAll("button")].find((b) => b.textContent === "Today")!;
@@ -58,20 +59,61 @@ describe("forecast navigation with rendered calendar", () => {
     container.querySelector('nav[aria-label="Week navigation"] .week-range')?.textContent;
 
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
     vi.setSystemTime(new Date(2026, 6, 29, 12));
     localStorage.clear();
-    HTMLElement.prototype.scrollTo = vi.fn();
+    originalScrollTo = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollTo");
+    Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
   });
 
   afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
+    try {
+      act(() => root.unmount());
+    } finally {
+      container.remove();
+      if (originalScrollTo)
+        Object.defineProperty(HTMLElement.prototype, "scrollTo", originalScrollTo);
+      else Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
+      vi.unstubAllGlobals();
+      vi.useRealTimers();
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it.each([
+    {
+      change: "spring forward",
+      midnight: "2026-03-27T00:00:00+02:00",
+      hours: 23,
+      current: "FRI Mar 27: No sessions",
+      next: "SAT Mar 28: No sessions",
+    },
+    {
+      change: "autumn rollback",
+      midnight: "2026-10-25T00:00:00+03:00",
+      hours: 25,
+      current: "SUN Oct 25: No sessions",
+      next: "MON Oct 26: No sessions",
+    },
+  ])("refreshes at local midnight after a $hours hour $change day", async (fixture) => {
+    vi.stubEnv("TZ", "Asia/Jerusalem");
+    vi.setSystemTime(new Date(fixture.midnight));
+    await act(async () => root.render(createElement(Harness)));
+    expect(todayCard()?.getAttribute("aria-label")).toBe(fixture.current);
+
+    await act(async () => vi.advanceTimersByTimeAsync(fixture.hours * 3_600_000 - 1));
+    expect(todayCard()?.getAttribute("aria-label")).toBe(fixture.current);
+    await act(async () => vi.advanceTimersByTimeAsync(1));
+    expect(todayCard()?.getAttribute("aria-label")).toBe(fixture.next);
+    await act(async () => root.render(null));
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it.each([

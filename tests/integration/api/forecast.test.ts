@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import type { ForecastResponse } from "../../../shared/forecast-types";
 import { callHandler } from "../../helpers/nitro-mocks";
@@ -68,11 +68,13 @@ vi.mock("../../../server/utils/api-handler", async () => {
   };
 });
 
+afterEach(() => vi.useRealTimers());
+
 import handler from "../../../server/api/forecast";
 
 describe("forecast API handler", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
   });
 
   it("full pipeline: returns JSON forecast with sessions", async () => {

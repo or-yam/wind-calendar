@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import handler from "../../../server/api/calendar";
 import { __resetForTesting } from "../../../server/utils/rate-limit";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { readIcsEvents } from "../../helpers/ics-events";
+import { PROVIDER_NOW } from "../../helpers/provider-hours";
 import { mockExternalFetch, providerResponse } from "../../helpers/provider-http";
 
 describe.each([
@@ -12,11 +13,13 @@ describe.each([
 ])("calendar HTTP happy flows: $provider", ({ provider, query }) => {
   let http: ReturnType<typeof mockExternalFetch>;
   beforeEach(() => {
+    vi.setSystemTime(new Date(PROVIDER_NOW));
     __resetForTesting();
     http = mockExternalFetch((url) => providerResponse(url));
   });
   afterEach(() => {
     http.spy.mockRestore();
+    vi.useRealTimers();
     __resetForTesting();
   });
 
@@ -36,8 +39,8 @@ describe.each([
     const events = readIcsEvents(res.body);
     expect(events).toHaveLength(3);
     expect(events[0]).toMatchObject({
-      DTSTART: "20990615T030000Z",
-      DTEND: "20990615T060000Z",
+      DTSTART: "20260615T030000Z",
+      DTEND: "20260615T060000Z",
       SUMMARY: "► Wind 14-20kn W — Beit Yanai",
       DESCRIPTION: [
         "Location: Beit Yanai",
@@ -47,8 +50,8 @@ describe.each([
       ].join("\n"),
     });
     expect(events[1]).toMatchObject({
-      DTSTART: "20990615T100000Z",
-      DTEND: "20990615T120000Z",
+      DTSTART: "20260615T100000Z",
+      DTEND: "20260615T120000Z",
       SUMMARY: "► Wind 16-17kn W — Beit Yanai",
       DESCRIPTION: [
         "Location: Beit Yanai",
@@ -57,8 +60,8 @@ describe.each([
       ].join("\n"),
     });
     expect(events[2]).toMatchObject({
-      DTSTART: "20990615T150000Z",
-      DTEND: "20990615T160000Z",
+      DTSTART: "20260615T150000Z",
+      DTEND: "20260615T160000Z",
     });
     for (const event of events) {
       expect(event.UID).toBeTruthy();

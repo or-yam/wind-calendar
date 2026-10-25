@@ -11,6 +11,30 @@ const metadata = {
   timezone_abbreviation: "IDT",
 };
 
+// Open-Meteo uses one response offset across DST: https://open-meteo.com/en/docs#api_documentation
+export function daylightForecast(
+  hours: string[],
+  days: { day: string; sunrise: string; sunset: string }[],
+  offset = 7200,
+) {
+  return {
+    ...openMeteoForecast(32.38, 34.87, []),
+    utc_offset_seconds: offset,
+    timezone_abbreviation: offset === 7200 ? "IST" : "IDT",
+    hourly: {
+      time: hours,
+      wind_speed_10m: hours.map(() => 18),
+      wind_direction_10m: hours.map(() => 270),
+      wind_gusts_10m: hours.map(() => 24),
+    },
+    daily: {
+      time: days.map(({ day }) => day),
+      sunrise: days.map(({ day, sunrise }) => `${day}T${sunrise}`),
+      sunset: days.map(({ day, sunset }) => `${day}T${sunset}`),
+    },
+  } satisfies OpenMeteoForecastResponse;
+}
+
 export function openMeteoForecast(latitude: number, longitude: number, hours: ProviderHour[]) {
   return {
     ...metadata,

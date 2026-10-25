@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockSpotInfo, mockAPIRoot, mockWindData } from "../../helpers/windguru-mocks";
@@ -67,11 +67,13 @@ vi.mock("../../../server/utils/api-handler", async () => {
   };
 });
 
+afterEach(() => vi.useRealTimers());
+
 import handler from "../../../server/api/calendar";
 
 describe("calendar API handler", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
   });
 
   it("full pipeline: returns ICS with events", async () => {
