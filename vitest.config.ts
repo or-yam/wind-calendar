@@ -11,7 +11,6 @@ const domTests = [
   "tests/unit/hooks/**/*.test.{ts,tsx}",
   "tests/unit/App.test.ts",
   "tests/unit/i18n/resources.test.ts",
-  "tests/unit/utils/fetch-forecast.test.ts",
   "tests/integration/*.test.tsx",
 ];
 

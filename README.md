@@ -154,6 +154,16 @@ pnpm check
 
 `pnpm dev` serves the frontend and the API routes from one server (Vite plus the Nitro plugin). It prints its URL on startup, which `portless` may set per task.
 
+Check switch thumb positioning in English and Hebrew at mobile and desktop widths using the
+`agent-browser` CLI against a Vercel preview:
+
+```bash
+PREVIEW_URL=https://your-preview.vercel.app pnpm test:rtl
+```
+
+For protected previews, pass an authenticated `AGENT_BROWSER_SESSION`. The test overrides features
+and forecast responses inside that browser to expose the wave switch without changing deployment flags.
+
 To run the built output instead:
 
 ```bash

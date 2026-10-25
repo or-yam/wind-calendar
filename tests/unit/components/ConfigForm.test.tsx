@@ -235,9 +235,6 @@ describe("ConfigForm", () => {
       waveMinimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })),
     );
     expect(onWaveHeightRangeChange).toHaveBeenCalledWith([0.4, 3]);
-    expect(container.querySelector("[data-checked] > span")?.className).toContain(
-      "rtl:data-checked:-translate-x-5",
-    );
   });
 
   it("opens and operates the portaled model select in RTL", async () => {

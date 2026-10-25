@@ -14,6 +14,7 @@
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
     "test": "vitest run",
+    "test:rtl": "node --test tests/browser/switch-direction.test.mjs",
     "test:production-logs": "pnpm build && node --test tests/production/observability.test.mjs",
     "test:coverage": "vitest run --coverage",
     "check": "pnpm run fmt:check && pnpm run lint && tsc -b && vitest run",
