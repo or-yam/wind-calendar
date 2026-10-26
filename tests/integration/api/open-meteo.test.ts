@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockSpotInfo, mockAPIRoot, mockWindData } from "../../helpers/windguru-mocks";
@@ -114,11 +114,13 @@ vi.mock("../../../server/utils/api-handler", async () => {
   };
 });
 
+afterEach(() => vi.useRealTimers());
+
 import handler from "../../../server/api/calendar";
 
 describe("Open-Meteo provider integration", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
   });
 
   it("successfully fetches Open-Meteo data and returns ICS calendar", async () => {

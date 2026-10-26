@@ -13,7 +13,10 @@ export function openMeteoForecast(speeds = [18, 18, 18]) {
   };
 }
 
-export function stubCalendarProviders(forecast: (url: URL) => unknown) {
+export function stubCalendarProviders(
+  forecast: (url: URL) => unknown,
+  marine: unknown = { utc_offset_seconds: 10800, hourly: { time: [], wave_height: [] } },
+) {
   const realFetch = globalThis.fetch;
   vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -22,9 +25,7 @@ export function stubCalendarProviders(forecast: (url: URL) => unknown) {
       return Promise.resolve(Response.json(forecast(url)));
     }
     if (url.hostname === "marine-api.open-meteo.com") {
-      return Promise.resolve(
-        Response.json({ utc_offset_seconds: 10800, hourly: { time: [], wave_height: [] } }),
-      );
+      return Promise.resolve(Response.json(marine));
     }
     throw new Error(`Unexpected provider request: ${url}`);
   });

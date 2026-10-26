@@ -131,7 +131,7 @@ Legacy provider supported for backward compatibility:
 
 ### Prerequisites:
 
-- Node.js, pnpm
+- Node.js version from `.node-version`, pnpm version from `package.json`
 
 ### Setup:
 
@@ -178,6 +178,13 @@ pnpm lint:fix
 # Run tests
 pnpm test
 ```
+
+`pnpm test` runs `vitest run` directly in your machine's timezone. CI sets `TZ` to UTC,
+Jerusalem, and New York in separate matrix jobs. Pass file paths or Vitest options through
+the command, for example `pnpm test tests/unit/utils/date-utils.test.ts`.
+Time-dependent tests freeze their own clocks; HTTP tests keep native scheduling, while rollover
+tests explicitly advance fake timers. See the [time-test specification](plans/018-time-testing.md)
+and [Vitest research](docs/research/vitest-time-testing.md).
 
 ## Production logs
 

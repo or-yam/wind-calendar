@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import forecast from "../../../server/api/forecast";
 import calendar from "../../../server/api/calendar";
 import { __resetForTesting } from "../../../server/utils/rate-limit";
@@ -8,7 +8,12 @@ import { LOCATIONS } from "../../../shared/locations";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { readIcsEvents } from "../../helpers/ics-events";
 import { mockExternalFetch, providerResponse } from "../../helpers/provider-http";
-import { providerHour, utcTime, type ProviderFixtures } from "../../helpers/provider-hours";
+import {
+  PROVIDER_NOW,
+  providerHour,
+  utcTime,
+  type ProviderFixtures,
+} from "../../helpers/provider-hours";
 
 const fixtures: ProviderFixtures = {
   "beit-yanai": [3, 4, 5, 10, 11].map((hour) => providerHour(hour, hour < 10 ? 18 : 22)),
@@ -22,11 +27,13 @@ describe.each([
 ])("multi-location HTTP happy flows: $provider", ({ provider, model }) => {
   let http: ReturnType<typeof mockExternalFetch>;
   beforeEach(() => {
+    vi.setSystemTime(new Date(PROVIDER_NOW));
     __resetForTesting();
     http = mockExternalFetch((url) => providerResponse(url, fixtures));
   });
   afterEach(() => {
     http.spy.mockRestore();
+    vi.useRealTimers();
     __resetForTesting();
   });
 
@@ -74,9 +81,9 @@ describe.each([
       expect(ics.headers["x-fallback-used"]).toBeUndefined();
       const events = readIcsEvents(ics.body);
       expect(events.map((event) => [event.DTSTART, event.DTEND, event.SUMMARY])).toEqual([
-        ["20990615T030000Z", "20990615T080000Z", "► Wind 21-24kn W — Tel Aviv"],
-        ["20990615T100000Z", "20990615T120000Z", "► Wind 22kn W — Beit Yanai"],
-        ["20990615T140000Z", "20990615T160000Z", "► Wind 20kn W — Herzliya"],
+        ["20260615T030000Z", "20260615T080000Z", "► Wind 21-24kn W — Tel Aviv"],
+        ["20260615T100000Z", "20260615T120000Z", "► Wind 22kn W — Beit Yanai"],
+        ["20260615T140000Z", "20260615T160000Z", "► Wind 20kn W — Herzliya"],
       ]);
       expect(events.map((event) => event.DESCRIPTION.split("\n")[0])).toEqual([
         "Location: Tel Aviv",
@@ -139,6 +146,6 @@ describe.each([
     expect(ics.statusCode).toBe(200);
     expect(
       readIcsEvents(ics.body).map((event) => [event.DTSTART, event.DTEND, event.SUMMARY]),
-    ).toEqual([["20990615T030000Z", "20990615T080000Z", "► Wind 21-24kn W — Tel Aviv"]]);
+    ).toEqual([["20260615T030000Z", "20260615T080000Z", "► Wind 21-24kn W — Tel Aviv"]]);
   });
 });
