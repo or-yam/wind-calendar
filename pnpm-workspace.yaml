@@ -1,4 +1,5 @@
 allowBuilds:
+  "@sentry/cli": true
   esbuild: true
 # Targeted security patches for vulnerable resolved dependency versions.
 overrides:

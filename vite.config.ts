@@ -1,4 +1,5 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
@@ -7,23 +8,61 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { injectCSP } from "./vite-plugins/csp.ts";
 import { portless } from "./vite-plugins/portless.ts";
+import { getErrorReportingOrigin } from "./shared/error-observability-config.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig({
-  plugins: [
-    nitro(),
-    react(),
-    babel({ presets: [reactCompilerPreset({ compilationMode: "annotation" })] }),
-    tailwindcss(),
-    injectCSP(),
-    portless(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@shared": path.resolve(__dirname, "./shared"),
+export default defineConfig(({ command, mode }) => {
+  const env = {
+    ...loadEnv(mode, process.cwd(), ["VITE_SENTRY_", "SENTRY_", "VERCEL_"]),
+    ...process.env,
+  };
+  const errorReportingOrigin = getErrorReportingOrigin(env.VITE_SENTRY_DSN);
+  const canUploadSourceMaps = Boolean(
+    command === "build" && env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT,
+  );
+  const release = env.SENTRY_RELEASE || env.VERCEL_GIT_COMMIT_SHA;
+
+  return {
+    plugins: [
+      nitro(),
+      react(),
+      babel({ presets: [reactCompilerPreset({ compilationMode: "annotation" })] }),
+      tailwindcss(),
+      injectCSP(errorReportingOrigin),
+      portless(),
+      ...(canUploadSourceMaps
+        ? [
+            sentryVitePlugin({
+              org: env.SENTRY_ORG,
+              project: env.SENTRY_PROJECT,
+              authToken: env.SENTRY_AUTH_TOKEN,
+              release: release ? { name: release } : undefined,
+              telemetry: false,
+              errorHandler: (error) => {
+                throw error;
+              },
+              sourcemaps: {
+                filesToDeleteAfterUpload: ["./.vercel/output/static/**/*.map"],
+              },
+            }),
+          ]
+        : []),
+    ],
+    build: { sourcemap: canUploadSourceMaps ? "hidden" : false },
+    define: {
+      "import.meta.env.VITE_SENTRY_RELEASE": JSON.stringify(release || ""),
+      "import.meta.env.VITE_SENTRY_ENVIRONMENT": JSON.stringify(
+        env.SENTRY_ENVIRONMENT || env.VERCEL_ENV || "",
+      ),
+      "import.meta.env.VITE_SENTRY_DEPLOYMENT_ENVIRONMENT": JSON.stringify(env.VERCEL_ENV || ""),
     },
-  },
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        "@shared": path.resolve(__dirname, "./shared"),
+      },
+    },
+  };
 });

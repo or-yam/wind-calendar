@@ -1,6 +1,8 @@
-import { routes, deploymentEnv, type VercelConfig } from "@vercel/config/v1";
+import { routes, type VercelConfig } from "@vercel/config/v1";
+import { getErrorReportingOrigin } from "./shared/error-observability-config.ts";
 
-const isProd = deploymentEnv("VERCEL_ENV") === "production";
+const isProd = process.env.VERCEL_ENV === "production";
+const errorReportingOrigin = getErrorReportingOrigin(process.env.VITE_SENTRY_DSN);
 
 const headers = [
   routes.header("/(.*)", [
@@ -22,8 +24,7 @@ if (isProd) {
     routes.header("/(.*)", [
       {
         key: "Content-Security-Policy",
-        value:
-          "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com; img-src 'self' data:; frame-ancestors 'none'",
+        value: `default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https://va.vercel-scripts.com${errorReportingOrigin ? ` ${errorReportingOrigin}` : ""}; img-src 'self' data:; frame-ancestors 'none'`,
       },
     ]),
   );
