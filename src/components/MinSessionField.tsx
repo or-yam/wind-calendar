@@ -3,6 +3,7 @@ import { NumberStepper } from "./NumberStepper";
 import { ConditionRow } from "./ConditionRow";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface MinSessionFieldProps {
   value: number;
@@ -10,6 +11,7 @@ interface MinSessionFieldProps {
 }
 
 export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<number | null>(value);
   const [custom, setCustom] = useState(![1, 2, 3].includes(value));
   const pendingCustomValue = useRef<number | null>(null);
@@ -32,10 +34,12 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
   return (
     <ConditionRow>
       <div>
-        <p className="text-sm font-bold tracking-[0.09em] uppercase">Min Session</p>
+        <p className="localized-label text-sm font-bold tracking-[0.09em] uppercase">
+          {t("minSession")}
+        </p>
       </div>
       <div className="min-w-0">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Minimum session length">
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t("minSessionA11y")}>
           {[1, 2, 3].map((hours) => (
             <Button
               key={hours}
@@ -48,7 +52,7 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
                 !custom && draft === hours ? "border-primary" : "border-input",
               )}
             >
-              {hours} hour{hours > 1 ? "s" : ""}
+              {t(hours === 1 ? "presetHours_1" : hours === 2 ? "presetHours_2" : "presetHours_3")}
             </Button>
           ))}
           <Button
@@ -61,15 +65,15 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
               custom ? "border-primary" : "border-input",
             )}
           >
-            Custom
+            {t("custom")}
           </Button>
         </div>
         {custom && (
           <div className="mt-3 max-w-60">
             <NumberStepper
               id="min-session"
-              label="Minimum (hours)"
-              stepperLabel="minimum session duration"
+              label={t("minSessionNumberLabel")}
+              stepperLabel={t("minSession")}
               value={draft}
               min={0.5}
               max={8}
@@ -87,7 +91,7 @@ export function MinSessionField({ value, onChange }: MinSessionFieldProps) {
             />
             {draft === null && (
               <p id="min-session-error" className="mt-2 text-xs text-red-700" aria-live="polite">
-                Enter a session duration.
+                {t("minSessionRequired")}
               </p>
             )}
           </div>

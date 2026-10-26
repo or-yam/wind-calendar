@@ -19,6 +19,10 @@ import { LocationMultiSelect } from "./LocationMultiSelect";
 import { WindRangeField } from "./WindRangeField";
 import { MinSessionField } from "./MinSessionField";
 import { ConditionRow } from "./ConditionRow";
+import { useTranslation } from "react-i18next";
+import type { Locale } from "@/i18n/locale";
+import { localeMetadata } from "@/i18n/locale";
+import { formatNumber } from "@/lib/date-utils";
 
 export interface ConfigFormProps {
   locations: string[];
@@ -71,6 +75,10 @@ export function ConfigForm({
   onWavePeriodMinChange,
   onMinSessionHoursChange,
 }: ConfigFormProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language as Locale;
+  const intlLocale = localeMetadata[locale].intl;
+  const number = (value: number) => formatNumber(value, locale, { maximumFractionDigits: 1 });
   const [localWaveHeight, setLocalWaveHeight] = useState([waveHeightMin, waveHeightMax]);
   const [localWavePeriod, setLocalWavePeriod] = useState(wavePeriodMin);
 
@@ -90,13 +98,13 @@ export function ConfigForm({
     <form className="flex flex-col">
       <ConditionRow>
         <div>
-          <Label className="text-foreground text-sm font-bold tracking-[0.09em] uppercase">
-            Spots
+          <Label className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase">
+            {t("spots")}
           </Label>
         </div>
         <div className="min-w-0">
           <LocationMultiSelect locations={locations} onLocationsChange={onLocationsChange} />
-          <p className="mt-1 text-xs text-muted-foreground">Select up to 3 spots.</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("spotsHelp")}</p>
         </div>
       </ConditionRow>
 
@@ -107,7 +115,7 @@ export function ConfigForm({
             {wavesForecastEnabled && (
               <Switch
                 id="wind-toggle"
-                aria-label="Toggle wind forecast"
+                aria-label={t("toggleWind")}
                 checked={windEnabled}
                 onCheckedChange={onWindEnabledChange}
                 disabled={isOnlyActive("wind")}
@@ -115,9 +123,9 @@ export function ConfigForm({
             )}
             <Label
               htmlFor={wavesForecastEnabled ? "wind-toggle" : undefined}
-              className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+              className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
-              Wind
+              {t("wind")}
             </Label>
           </div>
         </div>
@@ -135,27 +143,27 @@ export function ConfigForm({
             <div className="flex items-center gap-2">
               <Switch
                 id="wave-toggle"
-                aria-label="Toggle wave forecast"
+                aria-label={t("toggleWaves")}
                 checked={waveEnabled}
                 onCheckedChange={onWaveEnabledChange}
                 disabled={isOnlyActive("wave")}
               />
               <Label
                 htmlFor="wave-toggle"
-                className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
+                className="localized-label text-foreground text-sm font-bold tracking-[0.09em] uppercase"
               >
-                Waves
+                {t("waves")}
               </Label>
             </div>
             {waveEnabled && (
-              <span className="text-foreground text-base font-bold tabular-nums">
-                {localWaveHeight[0]} – {localWaveHeight[1]} m
+              <span dir="ltr" className="text-foreground text-base font-bold tabular-nums">
+                {number(localWaveHeight[0])} – {number(localWaveHeight[1])} {t("unitMeters")}
               </span>
             )}
           </div>
           <div className="min-w-0">
             {waveEnabled && (
-              <div className="flex flex-col gap-3 pl-1">
+              <div className="flex flex-col gap-3 ps-1">
                 <RadioGroup
                   value={waveSource}
                   onValueChange={(v) => onWaveSourceChange(v as WaveSource)}
@@ -164,19 +172,22 @@ export function ConfigForm({
                   <div className="flex items-center gap-1.5">
                     <RadioGroupItem value="total" id="wave-total" />
                     <Label htmlFor="wave-total" className="text-sm text-foreground/80">
-                      Total
+                      {t("total")}
                     </Label>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <RadioGroupItem value="swell" id="wave-swell" />
                     <Label htmlFor="wave-swell" className="text-sm text-foreground/80">
-                      Swell
+                      {t("swell")}
                     </Label>
                   </div>
                 </RadioGroup>
 
-                <div aria-label="Wave height range in meters">
+                <div aria-label={t("waveRange")}>
                   <Slider
+                    locale={intlLocale}
+                    getAriaLabel={(index) => t(index === 0 ? "waveMinimum" : "waveMaximum")}
+                    getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitMeters")}`}
                     value={localWaveHeight}
                     onValueChange={setLocalWaveHeight}
                     onValueCommitted={([min, max]) => onWaveHeightRangeChange([min, max])}
@@ -188,12 +199,17 @@ export function ConfigForm({
 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="min-period" className="text-foreground/80 text-sm">
-                    Min Period
+                    {t("minPeriod")}
                   </Label>
-                  <span className="text-foreground text-sm tabular-nums">{localWavePeriod} s</span>
+                  <span dir="ltr" className="text-foreground text-sm tabular-nums">
+                    {number(localWavePeriod)} {t("unitSeconds")}
+                  </span>
                 </div>
-                <div aria-label="Minimum wave period in seconds">
+                <div aria-label={t("minPeriodA11y")}>
                   <Slider
+                    locale={intlLocale}
+                    getAriaLabel={() => t("minPeriod")}
+                    getAriaValueText={(_formatted, value) => `${number(value)} ${t("unitSeconds")}`}
                     id="min-period"
                     value={localWavePeriod}
                     onValueChange={(v) => {
@@ -214,8 +230,8 @@ export function ConfigForm({
       <MinSessionField value={minSessionHours} onChange={onMinSessionHoursChange} />
 
       <details className="border-t-2 border-foreground/20 pt-6 md:col-span-2">
-        <summary className="cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
-          Advanced
+        <summary className="localized-label cursor-pointer text-sm font-bold tracking-[0.09em] uppercase">
+          {t("advanced")}
         </summary>
         <div className="mt-4 flex max-w-md flex-col gap-3">
           <div>
@@ -223,11 +239,9 @@ export function ConfigForm({
               htmlFor="model"
               className="text-foreground text-sm font-bold tracking-[0.09em] uppercase"
             >
-              Forecast Model
+              {t("forecastModel")}
             </Label>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Open-Meteo ICON is the default and works for every spot.
-            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t("modelHelp")}</p>
           </div>
           <Select
             value={model.toString()}
@@ -243,7 +257,7 @@ export function ConfigForm({
             </SelectTrigger>
             <SelectContent className="border-2 border-[#04090b] bg-[#c9e4dd] text-[#04090b]">
               <SelectGroup>
-                <SelectLabel>Open-Meteo (Recommended)</SelectLabel>
+                <SelectLabel>{t("openMeteoRecommended")}</SelectLabel>
                 {Object.values(MODELS)
                   .filter((m) => m.provider === "openmeteo")
                   .map((m) => (
@@ -266,7 +280,7 @@ export function ConfigForm({
                           disabled={!availableModels.includes(m.id as number)}
                         >
                           {m.name}
-                          {!availableModels.includes(m.id as number) && " (unavailable)"}
+                          {!availableModels.includes(m.id as number) && ` (${t("unavailable")})`}
                         </SelectItem>
                       ))}
                   </SelectGroup>

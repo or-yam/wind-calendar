@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import { useEffect, useState } from "react";
 import { NumberStepper } from "./NumberStepper";
 
@@ -11,19 +12,20 @@ const WIND_MIN = 5;
 const WIND_MAX = 50;
 
 export function WindRangeField({ min, max, onChange }: WindRangeFieldProps) {
+  const { t } = useLocale();
   const [draft, setDraft] = useState<[number | null, number | null]>([min, max]);
 
   useEffect(() => setDraft([min, max]), [min, max]);
 
   const error =
     draft[0] === null || draft[1] === null
-      ? "Enter both wind speeds."
+      ? t("windBothRequired")
       : !Number.isInteger(draft[0]) || !Number.isInteger(draft[1])
-        ? "Wind speed must be a whole number."
+        ? t("windWholeNumber")
         : draft[0] < WIND_MIN || draft[0] > WIND_MAX || draft[1] < WIND_MIN || draft[1] > WIND_MAX
-          ? `Wind speed must be between ${WIND_MIN} and ${WIND_MAX} knots.`
+          ? t("windBounds", { min: WIND_MIN, max: WIND_MAX })
           : draft[0] >= draft[1]
-            ? "Minimum must be at least 1 knot below maximum."
+            ? t("windOrder")
             : null;
 
   const commit = (index: 0 | 1, value: number | null) => {
@@ -45,12 +47,12 @@ export function WindRangeField({ min, max, onChange }: WindRangeFieldProps) {
 
   return (
     <fieldset aria-describedby={error ? "wind-range-error" : undefined}>
-      <legend className="sr-only">Wind speed range in knots</legend>
+      <legend className="sr-only">{t("windRange")}</legend>
       <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
         <NumberStepper
           id="wind-min"
-          label="Minimum (kn)"
-          stepperLabel="minimum wind speed"
+          label={`${t("minimum")} (${t("unitKnots")})`}
+          stepperLabel={t("windMinimum")}
           value={draft[0]}
           min={WIND_MIN}
           max={Math.max(WIND_MIN, Math.min((draft[1] ?? WIND_MAX) - 1, WIND_MAX - 1))}
@@ -62,8 +64,8 @@ export function WindRangeField({ min, max, onChange }: WindRangeFieldProps) {
         />
         <NumberStepper
           id="wind-max"
-          label="Maximum (kn)"
-          stepperLabel="maximum wind speed"
+          label={`${t("maximum")} (${t("unitKnots")})`}
+          stepperLabel={t("windMaximum")}
           value={draft[1]}
           min={Math.min(WIND_MAX, Math.max((draft[0] ?? WIND_MIN) + 1, WIND_MIN + 1))}
           max={WIND_MAX}

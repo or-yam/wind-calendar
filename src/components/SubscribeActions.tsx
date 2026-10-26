@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Copy, Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   buildFullUrl,
   buildGoogleCalendarUrl,
@@ -14,21 +15,32 @@ interface SubscribeActionsProps {
   config: CalendarConfig;
 }
 
-const providers = (config: CalendarConfig) => [
+const providers = (
+  config: CalendarConfig,
+): Array<{
+  label: "appleCalendar" | "googleCalendar" | "outlook";
+  shortLabel: "appleShort" | "googleShort" | "outlook";
+  url: string;
+  icon: string;
+  external: boolean;
+}> => [
   {
-    label: "Apple Calendar",
+    label: "appleCalendar",
+    shortLabel: "appleShort",
     url: buildWebcalUrl(config),
     icon: "/macos-calendar_logo.png",
     external: false,
   },
   {
-    label: "Google Calendar",
+    label: "googleCalendar",
+    shortLabel: "googleShort",
     url: buildGoogleCalendarUrl(config),
     icon: "/google_calendar_logo.svg",
     external: true,
   },
   {
-    label: "Outlook",
+    label: "outlook",
+    shortLabel: "outlook",
     url: buildOutlookUrl(config),
     icon: "/outlook-calendar_logo.svg",
     external: true,
@@ -36,6 +48,7 @@ const providers = (config: CalendarConfig) => [
 ];
 
 export function SubscribeActions({ config }: SubscribeActionsProps) {
+  const { t } = useTranslation();
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
   const timeoutRef = useRef<number | undefined>(undefined);
   const httpUrl = buildFullUrl(config);
@@ -71,8 +84,8 @@ export function SubscribeActions({ config }: SubscribeActionsProps) {
 
   const copyMessage = {
     idle: "",
-    success: "Subscription URL copied",
-    error: "Could not copy the subscription URL",
+    success: t("subscriptionUrlCopied"),
+    error: t("copyFailed"),
   }[copyState];
 
   return (
@@ -80,15 +93,15 @@ export function SubscribeActions({ config }: SubscribeActionsProps) {
       <div
         className="flex w-full flex-col items-center gap-3"
         role="group"
-        aria-label="Calendar actions"
+        aria-label={t("calendarActions")}
       >
         <div className="grid w-full grid-cols-3 gap-2">
-          {providers(config).map(({ label, url, icon, external }) => (
+          {providers(config).map(({ label, shortLabel, url, icon, external }) => (
             <a
               key={label}
               href={url}
-              aria-label={label}
-              title={label}
+              aria-label={t(label)}
+              title={t(label)}
               className={cn(
                 buttonVariants({ variant: "secondary", size: "lg" }),
                 "h-auto min-h-12 w-full min-w-0 rounded-sm border-2 border-foreground px-2 py-2 text-sm font-bold shadow-[2px_2px_0_var(--foreground)] max-[420px]:flex-col max-[420px]:gap-1 max-[420px]:whitespace-normal",
@@ -96,33 +109,33 @@ export function SubscribeActions({ config }: SubscribeActionsProps) {
               {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
               <img src={icon} alt="" className="size-[24px] shrink-0 object-contain" />
-              <span className="truncate">{label.replace(" Calendar", "")}</span>
+              <span className="truncate">{t(shortLabel)}</span>
             </a>
           ))}
         </div>
         <div className="flex items-center justify-center gap-4 text-xs">
           <button
             type="button"
-            aria-label="Copy subscription URL"
-            title="Copy subscription URL"
+            aria-label={t("copySubscriptionUrl")}
+            title={t("copySubscriptionUrl")}
             onClick={handleCopyUrl}
             className="min-h-9 text-foreground underline underline-offset-2 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <span className="inline-flex items-center gap-1">
               <Copy size={14} aria-hidden="true" />
-              Copy link
+              {t("copyUrl")}
             </span>
           </button>
           <button
             type="button"
-            aria-label="Download .ics"
-            title="Download .ics"
+            aria-label={t("downloadIcs")}
+            title={t("downloadIcs")}
             onClick={handleDownloadIcs}
             className="min-h-9 text-foreground underline underline-offset-2 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <span className="inline-flex items-center gap-1">
               <Download size={14} aria-hidden="true" />
-              Download .ics
+              {t("downloadIcs")}
             </span>
           </button>
         </div>

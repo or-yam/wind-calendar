@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import { useId, useRef, useState } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays } from "@/lib/date-utils";
@@ -23,6 +24,7 @@ export function CalendarGrid({
   today: Date;
   weekStart: Date;
 }) {
+  const { t } = useLocale();
   const isMobile = useMobileView();
   const hourHeight = isMobile ? MOBILE_HOUR_HEIGHT : DESKTOP_HOUR_HEIGHT;
   const clockChangeWeek = isOffsetTransitionWeek(weekStart);
@@ -48,11 +50,11 @@ export function CalendarGrid({
   return (
     <>
       <p className={cn("mb-2 text-xs text-muted-foreground", !clockChangeWeek && "invisible")}>
-        Clock-change week · all times shown in local time.
+        {t("clockChangeWeek")}
       </p>
       <div
         role="region"
-        aria-label="Weekly forecast calendar"
+        aria-label={t("weeklyForecastCalendar")}
         className="grid overflow-hidden rounded border border-border bg-card"
         style={{ gridTemplateColumns: `40px repeat(${days.length}, minmax(0, 1fr))` }}
       >

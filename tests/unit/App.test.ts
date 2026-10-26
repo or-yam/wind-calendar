@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarConfig } from "../../shared/types";
+import i18n from "../../src/i18n";
 
 vi.mock("@tanstack/react-query", () => ({
   queryOptions: (options: unknown) => options,
@@ -107,6 +108,7 @@ describe("App location selection", () => {
   let root: Root;
 
   beforeEach(() => {
+    localStorage.removeItem("wind-calendar:locale");
     HTMLElement.prototype.scrollTo = vi.fn();
     window.history.replaceState(null, "", "/?locations=beit-yanai&model=om_gfs");
     container = document.createElement("div");
@@ -117,6 +119,7 @@ describe("App location selection", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    localStorage.removeItem("wind-calendar:locale");
   });
 
   it("keeps the selected Open-Meteo model when locations change", async () => {
@@ -181,5 +184,92 @@ describe("App location selection", () => {
     expect(actionHeading.compareDocumentPosition(forecastHeading)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it("renders an accessible language picker before the hero controls", async () => {
+    await act(async () => root.render(createElement(App)));
+
+    const picker = container.querySelector<HTMLSelectElement>("#language-picker")!;
+    expect(container.querySelector('label[for="language-picker"]')?.textContent).toBe("Language");
+    expect(container.querySelector("select, button")).toBe(picker);
+    expect(picker.value).toBe("en");
+    expect([...picker.options].map((option) => option.textContent)).toEqual(["English", "עברית"]);
+  });
+
+  it("switches to Hebrew, updates document direction, and preserves locale on config changes", async () => {
+    await act(async () => root.render(createElement(App)));
+    const picker = container.querySelector<HTMLSelectElement>("#language-picker")!;
+
+    await act(async () => {
+      picker.value = "he";
+      picker.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(document.documentElement.lang).toBe("he");
+    expect(document.documentElement.dir).toBe("rtl");
+    expect(localStorage.getItem("wind-calendar:locale")).toBe("he");
+    expect(new URLSearchParams(window.location.search).has("lang")).toBe(false);
+    expect([...picker.options].map((option) => option.textContent)).toEqual(["English", "עברית"]);
+
+    const addTelAviv = [...container.querySelectorAll("button")].find((button) =>
+      button.textContent?.startsWith("Add Tel Aviv"),
+    )!;
+    await act(async () => addTelAviv.click());
+    expect(new URLSearchParams(window.location.search).has("lang")).toBe(false);
+  });
+
+  it("ignores a shared Hebrew URL when English is preferred", async () => {
+    localStorage.setItem("wind-calendar:locale", "en");
+    window.history.replaceState(null, "", "/?lang=he&locations=beit-yanai");
+    await act(async () => root.render(createElement(App)));
+
+    expect(document.documentElement.lang).toBe("en");
+    expect(document.documentElement.dir).toBe("ltr");
+    expect(new URLSearchParams(window.location.search).has("lang")).toBe(false);
+  });
+
+  it("restores the saved language when remounted without a language URL parameter", async () => {
+    await act(async () => root.render(createElement(App)));
+    const picker = container.querySelector<HTMLSelectElement>("#language-picker")!;
+    await act(async () => {
+      picker.value = "he";
+      picker.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await act(async () => root.unmount());
+    await i18n.changeLanguage("en");
+    root = createRoot(container);
+    await act(async () => root.render(createElement(App)));
+
+    expect(container.querySelector<HTMLSelectElement>("#language-picker")!.value).toBe("he");
+    expect(i18n.language).toBe("he");
+    expect(document.documentElement.dir).toBe("rtl");
+    expect(new URLSearchParams(window.location.search).has("lang")).toBe(false);
+  });
+
+  it("keeps saved Hebrew when opening a shared English URL", async () => {
+    localStorage.setItem("wind-calendar:locale", "he");
+    window.history.replaceState(null, "", "/?lang=en&locations=tel-aviv");
+    await act(async () => root.render(createElement(App)));
+
+    expect(i18n.language).toBe("he");
+    expect(document.documentElement.dir).toBe("rtl");
+    expect(new URLSearchParams(window.location.search).has("lang")).toBe(false);
+    expect(new URLSearchParams(window.location.search).get("locations")).toBe("tel-aviv");
+  });
+
+  it("restores configuration on popstate without changing language", async () => {
+    await act(async () => root.render(createElement(App)));
+    window.history.pushState(
+      null,
+      "",
+      "/?locations=tel-aviv&model=om_gfs&windEnabled=true&waveEnabled=false&lang=he",
+    );
+
+    await act(async () => window.dispatchEvent(new PopStateEvent("popstate")));
+
+    expect(i18n.language).toBe("en");
+    expect(document.documentElement.dir).toBe("ltr");
+    expect(new URLSearchParams(window.location.search).get("locations")).toBe("tel-aviv");
+    expect(new URLSearchParams(window.location.search).has("lang")).toBe(false);
   });
 });

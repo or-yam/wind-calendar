@@ -1,16 +1,11 @@
+import { getLocationName } from "@/i18n/locations";
+import { formatNumber } from "@/lib/date-utils";
+import { useLocale } from "@/hooks/useLocale";
 import { useLayoutEffect, useRef } from "react";
 import type { ForecastSession } from "@shared/forecast-types";
-import { formatTimeFromDate } from "@/lib/date-utils";
+import { SessionTimeRange } from "./SessionTimeRange";
 import { DirectionIndicator } from "./DirectionIndicator";
 import { waveRangeLabel, windRangeLabel } from "./conditionLabels";
-
-const timestamp = (value: string) => {
-  const date = new Date(value);
-  return `${date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${formatTimeFromDate(date)}`;
-};
-
-const sameCalendarDay = (start: string, end: string) =>
-  new Date(start).toDateString() === new Date(end).toDateString();
 
 export function SessionDetails({
   session,
@@ -21,6 +16,7 @@ export function SessionDetails({
   id: string;
   onClose: () => void;
 }) {
+  const { t, locale } = useLocale();
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     ref.current?.focus();
@@ -31,7 +27,7 @@ export function SessionDetails({
       ref={ref}
       id={id}
       role="region"
-      aria-label="Session details"
+      aria-label={t("sessionDetails")}
       tabIndex={-1}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -39,37 +35,41 @@ export function SessionDetails({
           onClose();
         }
       }}
-      className="relative mt-3 rounded border border-border border-l-3 border-l-primary bg-card p-4 pr-14 text-sm text-card-foreground focus-visible:outline-2 focus-visible:outline-primary"
+      className="relative mt-3 rounded border border-border border-s-3 border-s-primary bg-card p-4 pe-14 text-sm text-card-foreground focus-visible:outline-2 focus-visible:outline-primary"
     >
-      <h3 className="text-lg font-bold">{session.location.label}</h3>
+      <h3 className="text-lg font-bold">
+        {getLocationName(session.location.id, locale, session.location.label)}
+      </h3>
       <p className="text-muted-foreground">
-        {timestamp(session.start)} –{" "}
-        {sameCalendarDay(session.start, session.end)
-          ? formatTimeFromDate(new Date(session.end))
-          : timestamp(session.end)}
+        <SessionTimeRange start={session.start} end={session.end} />
       </p>
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
         {session.matchType !== "wave" && (
           <p>
-            Wind {windRangeLabel(wind)} · Gusts {wind.gustMax} kn{" "}
-            <DirectionIndicator direction={wind.direction} label="Wind" />
+            {t("wind")} <bdi dir="ltr">{windRangeLabel(wind, locale)}</bdi> · {t("gusts")}{" "}
+            <bdi dir="ltr">
+              {formatNumber(wind.gustMax, locale)} {t("unitKnots")}
+            </bdi>{" "}
+            <DirectionIndicator direction={wind.direction} />
           </p>
         )}
         {session.matchType !== "wind" && (
           <>
             <p>
-              Wave {waveRangeLabel(wave)}{" "}
-              <DirectionIndicator direction={wave.direction} label="Wave" wave />
+              {t("wave")} <bdi dir="ltr">{waveRangeLabel(wave, locale)}</bdi>{" "}
+              <DirectionIndicator direction={wave.direction} wave />
             </p>
-            <p>Swell {waveRangeLabel(swell)}</p>
+            <p>
+              {t("swell")} <bdi dir="ltr">{waveRangeLabel(swell, locale)}</bdi>
+            </p>
           </>
         )}
       </div>
       <button
         type="button"
-        aria-label="Close session details"
+        aria-label={t("closeSessionDetails")}
         onClick={onClose}
-        className="absolute top-1 right-1 flex size-11 items-center justify-center rounded text-xl focus-visible:outline-2 focus-visible:outline-primary"
+        className="absolute top-1 end-1 flex size-11 items-center justify-center rounded text-xl focus-visible:outline-2 focus-visible:outline-primary"
       >
         ×
       </button>

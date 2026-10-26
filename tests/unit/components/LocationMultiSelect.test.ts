@@ -54,7 +54,7 @@ describe("LocationMultiSelect", () => {
 
     const options = [...container.querySelectorAll<HTMLButtonElement>('[role="checkbox"]')];
     expect(options.filter((option) => option.disabled)).toHaveLength(options.length - 3);
-    expect(container.textContent).toContain("3/3 selected");
+    expect(container.textContent).toContain("3 of 3 selected");
 
     const selected = options.find((option) => option.getAttribute("aria-checked") === "true")!;
     act(() => selected.click());

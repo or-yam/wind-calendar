@@ -2,6 +2,8 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConfigForm } from "../../../src/components/ConfigForm";
+import { DirectionProvider } from "../../../src/components/ui/direction";
+import i18n, { applyDocumentLocale } from "../../../src/i18n";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -79,7 +81,7 @@ describe("ConfigForm", () => {
 
     const ranges = [...container.querySelectorAll<HTMLInputElement>('input[type="range"]')];
     const waveMax = ranges.find(
-      (range) => range.max === "3" && range.getAttribute("aria-valuetext")?.includes("end"),
+      (range) => range.max === "3" && range.getAttribute("aria-label") === "Maximum wave height",
     );
     const minPeriod = ranges.find((range) => range.max === "20");
 
@@ -209,6 +211,63 @@ describe("ConfigForm", () => {
       ),
     );
     expect(container.querySelector<HTMLInputElement>("#min-session")?.value).toBe("1.5");
+  });
+
+  it("localizes Base UI controls and reverses horizontal slider keys in RTL", async () => {
+    const onWaveHeightRangeChange = vi.fn();
+    await i18n.changeLanguage("he");
+    applyDocumentLocale("he");
+    await act(async () =>
+      root.render(
+        createElement(
+          DirectionProvider,
+          { direction: "rtl" },
+          createElement(ConfigForm, { ...props, waveEnabled: true, onWaveHeightRangeChange }),
+        ),
+      ),
+    );
+
+    const waveMinimum = [
+      ...container.querySelectorAll<HTMLInputElement>('input[type="range"]'),
+    ].find((range) => range.getAttribute("aria-label") === "גובה גלים מינימלי")!;
+    expect(waveMinimum.getAttribute("aria-valuetext")).toContain("m");
+    await act(async () =>
+      waveMinimum.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })),
+    );
+    expect(onWaveHeightRangeChange).toHaveBeenCalledWith([0.4, 3]);
+  });
+
+  it("opens and operates the portaled model select in RTL", async () => {
+    const onModelChange = vi.fn();
+    await i18n.changeLanguage("he");
+    applyDocumentLocale("he");
+    await act(async () =>
+      root.render(
+        createElement(
+          DirectionProvider,
+          { direction: "rtl" },
+          createElement(ConfigForm, { ...props, onModelChange }),
+        ),
+      ),
+    );
+
+    container.querySelector("details")!.open = true;
+    await act(async () => container.querySelector<HTMLElement>("#model")!.click());
+    const listbox = document.body.querySelector<HTMLElement>('[role="listbox"]')!;
+    expect(listbox).not.toBeNull();
+    expect(getComputedStyle(listbox).direction).toBe("rtl");
+
+    await act(async () =>
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }),
+      ),
+    );
+    await act(async () => {
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      );
+    });
+    expect(onModelChange).toHaveBeenCalledWith("om_icon");
   });
 
   it("commits wind range changes as an atomic pair", async () => {

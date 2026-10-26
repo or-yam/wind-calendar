@@ -20,6 +20,11 @@ import { buildConfigParams } from "./lib/subscribe-urls";
 import { calendarConfigSchema } from "@shared/calendar-config-schema";
 import { featuresQueryOptions } from "./lib/features-query";
 import { useDebouncedValue } from "./hooks/useDebouncedValue";
+import { Trans, useTranslation } from "react-i18next";
+import { DirectionProvider } from "./components/ui/direction";
+import { LanguagePicker } from "./components/LanguagePicker";
+import { localeMetadata, readStoredLocale, storeLocale, type Locale } from "./i18n/locale";
+import { applyDocumentLocale } from "./i18n";
 
 const FORECAST_DEBOUNCE_MS = 500;
 
@@ -84,6 +89,8 @@ function parseValidatedUrlParams(): CalendarConfig {
 }
 
 function App() {
+  const { t, i18n } = useTranslation();
+  const [locale, setLocale] = useState<Locale>(readStoredLocale);
   const [storedConfig, setConfig] = useState<CalendarConfig>(() => parseValidatedUrlParams());
   const [confirmedConfig, setConfirmedConfig] = useState<CalendarConfig>(() =>
     parseValidatedUrlParams(),
@@ -101,6 +108,16 @@ function App() {
     setConfig(nextConfig);
     if (!confirmationPending) setConfirmedConfig(nextConfig);
   };
+
+  const changeLocale = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    storeLocale(nextLocale);
+  };
+
+  useEffect(() => {
+    void i18n.changeLanguage(locale);
+    applyDocumentLocale(locale);
+  }, [i18n, locale]);
 
   useEffect(() => {
     const params = buildConfigParams(config);
@@ -156,93 +173,91 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col text-foreground">
-      <Hero />
-      <ConditionsPanel
-        locations={config.locations}
-        model={config.model}
-        availableModels={availableModels}
-        windEnabled={config.windEnabled}
-        windMin={config.windMin}
-        windMax={config.windMax}
-        waveEnabled={config.waveEnabled}
-        waveSource={config.waveSource}
-        waveHeightMin={config.waveHeightMin}
-        waveHeightMax={config.waveHeightMax}
-        wavePeriodMin={config.wavePeriodMin}
-        minSessionHours={config.minSessionHours}
-        onLocationsChange={handleLocationsChange}
-        onModelChange={handleModelChange}
-        onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
-        onWindRangeChange={([windMin, windMax]) =>
-          updateConfig((c) => ({ ...c, windMin, windMax }))
-        }
-        onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
-        onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
-        onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
-          updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
-        }
-        onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
-        onMinSessionHoursChange={(minSessionHours) =>
-          updateConfig((c) => ({ ...c, minSessionHours }))
-        }
-        onFreeTextConfig={(nextConfig) => {
-          setConfig(calendarConfigSchema.parse(nextConfig));
-          setConfirmationPending(true);
-        }}
-        confirmedConfig={
-          wavesForecastEnabled ? confirmedConfig : { ...confirmedConfig, windEnabled: true }
-        }
-        confirmationPending={confirmationPending}
-        onConfirmConfig={confirmConfig}
-        freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
-        wavesForecastEnabled={wavesForecastEnabled}
-        windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
-      />
-      <main>
-        <div id="upcoming-preview" className="scroll-mt-6">
-          <ErrorBoundary
-            fallback={
-              <div className="night-section px-5 text-center">
-                <p className="text-red-400 text-sm">
-                  Something went wrong. Please try refreshing the page.
-                </p>
-              </div>
-            }
-          >
-            <ForecastCalendar
-              sessions={sessions}
-              isPending={isPending}
-              error={error}
-              weekStart={weekStart}
-              today={today}
-              canGoPrev={canGoPrev}
-              canGoNext={canGoNext}
-              onPrev={goToPrev}
-              onNext={goToNext}
-              onToday={goToToday}
-              resetKey={forecastConfigKey}
-            />
-          </ErrorBoundary>
-        </div>
-        <section className="night-section">
-          <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
-            <h2 className="sticker-heading mb-0">About</h2>
-            <p className="max-w-2xl text-lg leading-relaxed text-foreground/80">
-              Wind Calendar exists to give surfers a rough sense of when conditions might be worth
-              checking, not to replace a proper forecast. The idea is simple: sync a wind-filtered
-              view into your regular calendar so promising days are visible alongside everything
-              else in your life.
-            </p>
+    <DirectionProvider direction={localeMetadata[locale].direction}>
+      <div className="flex min-h-screen flex-col text-foreground">
+        <LanguagePicker locale={locale} onChange={changeLocale} />
+        <Hero />
+        <ConditionsPanel
+          locations={config.locations}
+          model={config.model}
+          availableModels={availableModels}
+          windEnabled={config.windEnabled}
+          windMin={config.windMin}
+          windMax={config.windMax}
+          waveEnabled={config.waveEnabled}
+          waveSource={config.waveSource}
+          waveHeightMin={config.waveHeightMin}
+          waveHeightMax={config.waveHeightMax}
+          wavePeriodMin={config.wavePeriodMin}
+          minSessionHours={config.minSessionHours}
+          onLocationsChange={handleLocationsChange}
+          onModelChange={handleModelChange}
+          onWindEnabledChange={(windEnabled) => updateConfig((c) => ({ ...c, windEnabled }))}
+          onWindRangeChange={([windMin, windMax]) =>
+            updateConfig((c) => ({ ...c, windMin, windMax }))
+          }
+          onWaveEnabledChange={(waveEnabled) => updateConfig((c) => ({ ...c, waveEnabled }))}
+          onWaveSourceChange={(waveSource) => updateConfig((c) => ({ ...c, waveSource }))}
+          onWaveHeightRangeChange={([waveHeightMin, waveHeightMax]) =>
+            updateConfig((c) => ({ ...c, waveHeightMin, waveHeightMax }))
+          }
+          onWavePeriodMinChange={(wavePeriodMin) => updateConfig((c) => ({ ...c, wavePeriodMin }))}
+          onMinSessionHoursChange={(minSessionHours) =>
+            updateConfig((c) => ({ ...c, minSessionHours }))
+          }
+          onFreeTextConfig={(nextConfig) => {
+            setConfig(calendarConfigSchema.parse(nextConfig));
+            setConfirmationPending(true);
+          }}
+          confirmedConfig={
+            wavesForecastEnabled ? confirmedConfig : { ...confirmedConfig, windEnabled: true }
+          }
+          confirmationPending={confirmationPending}
+          onConfirmConfig={confirmConfig}
+          freeTextConfigBuilderEnabled={features?.freeTextConfigBuilder ?? false}
+          wavesForecastEnabled={wavesForecastEnabled}
+          windguruForecastModelsEnabled={features?.windguruForecastModels ?? false}
+        />
+        <main>
+          <div id="upcoming-preview" className="scroll-mt-6">
+            <ErrorBoundary
+              fallback={
+                <div className="night-section px-5 text-center">
+                  <p className="text-red-400 text-sm">{t("genericError")}</p>
+                </div>
+              }
+            >
+              <ForecastCalendar
+                sessions={sessions}
+                isPending={isPending}
+                error={error}
+                weekStart={weekStart}
+                today={today}
+                canGoPrev={canGoPrev}
+                canGoNext={canGoNext}
+                onPrev={goToPrev}
+                onNext={goToNext}
+                onToday={goToToday}
+                resetKey={forecastConfigKey}
+              />
+            </ErrorBoundary>
           </div>
-        </section>
-        <Caveats />
-      </main>
-      <Footer />
-      <Suspense fallback={null}>
-        <Analytics />
-      </Suspense>
-    </div>
+          <section className="night-section">
+            <div className="content-wrap grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr] md:items-start">
+              <h2 className="sticker-heading mb-0">{t("about")}</h2>
+              <p className="max-w-2xl text-lg leading-relaxed text-foreground/80">
+                <Trans i18nKey="aboutBody" components={{ brand: <bdi dir="ltr" /> }} />
+              </p>
+            </div>
+          </section>
+          <Caveats />
+        </main>
+        <Footer />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
+      </div>
+    </DirectionProvider>
   );
 }
 

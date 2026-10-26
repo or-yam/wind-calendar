@@ -1,3 +1,4 @@
+import { useLocale } from "@/hooks/useLocale";
 import { useRef } from "react";
 import type { ForecastCalendarProps } from "./forecastCalendarTypes";
 import { addDays } from "@/lib/date-utils";
@@ -24,6 +25,7 @@ export function ForecastCalendar({
   onToday,
   resetKey = "",
 }: ForecastCalendarProps) {
+  const { t } = useLocale();
   const isMobile = useMobileView();
   const { mode, changeMode } = useCalendarMode();
   const {
@@ -55,9 +57,9 @@ export function ForecastCalendar({
     calendarDays.some((day) => intersects(session, day, addDays(day, 1))),
   );
   return (
-    <section className="night-section" aria-label="Upcoming sessions">
+    <section className="night-section" aria-label={t("upcomingSessions")}>
       <div className="content-wrap" ref={calendarRef}>
-        <h2 className="sticker-heading">Upcoming sessions</h2>
+        <h2 className="sticker-heading">{t("upcomingSessions")}</h2>
         <CalendarNavigationControls
           weekStart={weekStart}
           isMobile={isMobile}

@@ -1,10 +1,18 @@
+import { localeMetadata, type Locale } from "@/i18n/locale";
+import { useLocale } from "@/hooks/useLocale";
 import type { ForecastSession } from "@shared/forecast-types";
 import { addDays, sameDay } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { intersects } from "./sessionSegments";
 import { DayEvents } from "./DayEvents";
 
-export function dayLabel(day: Date) {
+export function dayLabel(day: Date, locale: Locale = "en") {
+  if (locale !== "en")
+    return day.toLocaleDateString(localeMetadata[locale].intl, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
   return `${day.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} ${day.toLocaleDateString("en-US", { month: "short" })} ${day.getDate()}`;
 }
 
@@ -29,21 +37,24 @@ export function DayColumn({
   detailsId: string;
   onActivate: (session: ForecastSession, button: HTMLButtonElement) => void;
 }) {
+  const { t, locale, intl } = useLocale();
   const matches = sessions.filter((s) => intersects(s, day, addDays(day, 1)));
   const isToday = sameDay(day, today);
   return (
     <div
       role="group"
-      aria-label={`${dayLabel(day)}${matches.length ? "" : ": No sessions"}`}
+      aria-label={
+        matches.length ? dayLabel(day, locale) : t("emptyDayLabel", { date: dayLabel(day, locale) })
+      }
       data-today={isToday}
       tabIndex={-1}
       className={cn(
-        "min-w-0 border-l border-border outline-offset-[-2px]",
+        "min-w-0 border-s border-border outline-offset-[-2px]",
         isToday && "bg-primary/5",
       )}
     >
       <div className="flex h-16 flex-col items-center justify-center border-b border-border text-xs uppercase text-muted-foreground">
-        {day.toLocaleDateString("en-US", { weekday: "short" })}
+        {day.toLocaleDateString(intl, { weekday: "short" })}
         <span
           className={cn(
             "flex h-8 w-8 items-center justify-center rounded-full text-xl font-bold text-foreground",
@@ -62,12 +73,12 @@ export function DayColumn({
       >
         {!matches.length && (
           <p className="absolute top-1/2 w-full text-center text-xs text-muted-foreground">
-            No match
+            {t("noMatch")}
           </p>
         )}
         <DayEvents
           day={day}
-          dayName={dayLabel(day)}
+          dayName={dayLabel(day, locale)}
           sessions={matches}
           startHour={startHour}
           hourHeight={hourHeight}
