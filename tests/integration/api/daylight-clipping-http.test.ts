@@ -51,3 +51,34 @@ describe.each([
     expect(bounds).toEqual(keep ? expected : []);
   });
 });
+
+it("uses each day's different sunset for admitted samples and both public formats", async () => {
+  stubCalendarProviders(() =>
+    daylightForecast(
+      ["2026-01-02T17:00", "2026-01-02T18:00", "2026-01-03T17:00", "2026-01-03T18:00"],
+      [
+        { day: "2026-01-02", sunrise: "06:00", sunset: "18:30" },
+        { day: "2026-01-03", sunrise: "06:00", sunset: "17:30" },
+      ],
+    ),
+  );
+  const json = await callHandler(forecast, "/api/forecast?model=om_gfs&minSessionHours=0");
+  const ics = await callHandler(calendar, "/api/calendar?model=om_gfs&minSessionHours=0");
+  expect(json.statusCode).toBe(200);
+  expect(ics.statusCode).toBe(200);
+  const body = JSON.parse(json.body) as ForecastResponse;
+  expect(body.sessions.flatMap((session) => session.hourly.map((hour) => hour.time))).toEqual([
+    "2026-01-02T15:00:00.000Z",
+    "2026-01-02T16:00:00.000Z",
+    "2026-01-03T15:00:00.000Z",
+  ]);
+  expect(body.sessions.map(({ start, end }) => [start, end])).toEqual([
+    ["2026-01-02T15:00:00.000Z", "2026-01-02T16:30:00.000Z"],
+    ["2026-01-03T15:00:00.000Z", "2026-01-03T15:30:00.000Z"],
+  ]);
+  expect(readIcsEvents(ics.body).map(({ DTSTART, DTEND }) => [DTSTART, DTEND])).toEqual([
+    ["20260102T150000Z", "20260102T163000Z"],
+    ["20260103T150000Z", "20260103T153000Z"],
+  ]);
+  expect(JSON.stringify(body)).not.toContain("daylight");
+});

@@ -264,3 +264,30 @@ describe("filterEvents", () => {
     expect(conditions.length).toBe(0);
   });
 });
+
+it.each([
+  ["2026-01-02T04:14:59Z", false],
+  ["2026-01-02T04:15:00Z", true],
+  ["2026-01-02T16:29:59Z", true],
+  ["2026-01-02T16:30:00Z", false],
+] as const)(
+  "uses normalized absolute boundaries at %s even with different legacy times",
+  (instant, admitted) => {
+    const sample = makeEvent({ date: new Date(instant) });
+    const result = filterEvents([sample], {
+      ...baseConfig,
+      sunrise: "10:00",
+      sunset: "11:00",
+      daylight: [{ sunrise: new Date("2026-01-02T04:15Z"), sunset: new Date("2026-01-02T16:30Z") }],
+    });
+    expect(result.conditions).toEqual(admitted ? [sample] : []);
+    if (admitted) {
+      expect(result.conditions[0]).toBe(sample);
+      expect(result.matchReasons.get(sample)).toBe("wind");
+    }
+  },
+);
+
+it("does not substitute legacy daylight when normalized intervals are empty", () => {
+  expect(filterEvents([makeEvent()], { ...baseConfig, daylight: [] }).conditions).toEqual([]);
+});

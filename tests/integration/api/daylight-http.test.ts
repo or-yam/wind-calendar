@@ -71,3 +71,20 @@ it("rejects post-sunset samples on both sides of autumn DST with the provider's 
   expect(response.statusCode).toBe(200);
   expect((JSON.parse(response.body) as ForecastResponse).sessions).toEqual([]);
 });
+
+it("uses absolute daylight membership when provider and spot dates disagree near midnight", async () => {
+  stubCalendarProviders(() =>
+    daylightForecast(
+      ["2026-03-27T23:15", "2026-03-27T23:45"],
+      [{ day: "2026-03-27", sunrise: "23:00", sunset: "23:30" }],
+      7200,
+    ),
+  );
+  const response = await callHandler(handler, query);
+  expect(response.statusCode).toBe(200);
+  const body = JSON.parse(response.body) as ForecastResponse;
+  expect(body.sessions.flatMap((session) => session.hourly.map((hour) => hour.time))).toEqual([
+    "2026-03-27T21:15:00.000Z",
+  ]);
+  expect(body.sessions[0].end).toBe("2026-03-27T21:30:00.000Z");
+});

@@ -1,7 +1,7 @@
 # Portable time tests before production fixes
 
-Status: test boundaries and sunset clipping approved on 2026-10-24. Tests/settings updated;
-production fixes await test review. This draft PR deliberately leaves genuine regressions red.
+Status: daylight fixes implemented and locally verified on 2026-11-10 under [Plan 019](019-daylight-fixes.md).
+Implementation reviewed against the spec and repo standards; no remote CI result is claimed.
 
 ## Agreed public boundaries
 
@@ -13,7 +13,8 @@ production fixes await test review. This draft PR deliberately leaves genuine re
    and clock changes. Test the current calendar UI; do not resurrect elapsed-axis/offset labels
    removed by the calendar clock PR already on `main`.
 
-No production changes or new production interfaces. Keep `pnpm test` as `vitest run`.
+The original test-only phase added no production changes or interfaces; Plan 019 now supplies the fixes.
+Keep `pnpm test` as `vitest run`.
 No custom runner, blanket fake timers, redundant config defaults, skips or expected-failure masks.
 
 ## Expected behavior
@@ -59,7 +60,7 @@ The branch was rebased onto current `main` (`dd1f686`) to include already-merged
 React Compiler and calendar UI changes without adding them to this PR. Final results below
 must be read against that baseline, not the older dirty checkout.
 
-Final verification on macOS, Node 24.22.1, ICU 78.3, tzdata 2026e, Vitest 5.0.5:
+Pre-implementation baseline verification on macOS, Node 24.22.1, ICU 78.3, tzdata 2026e, Vitest 5.0.5:
 
 - Each timezone: 659 passing / 9 failing / 668 total tests, with the same nine failures.
 - Two minute-boundary failures, three per-day/DST daylight failures, four clipping/duration
@@ -80,5 +81,20 @@ pnpm fmt:check
 pnpm test:production-logs
 ```
 
+Implementation verification on 2026-11-10, from isolated PR head `9ecfd9e`, on macOS arm64,
+Node 24.22.1 / pnpm 11.21.0 / ICU 78.3 / tzdata 2026e / Vitest 5.0.5:
+
+- Reproduced the full UTC baseline: 659 passed / 9 failed / 668 total, before production edits.
+- Final separate full runs in UTC, Asia/Jerusalem and America/New_York: **704 passed / 0 failed**
+  across 68 files in each zone. All original nine regressions pass; 36 additional cases pass.
+- `pnpm typecheck`, `pnpm lint`, `pnpm fmt:check` and `pnpm test:production-logs` pass
+  (production build plus 4 logging tests). Commands ran via `mise exec node@24.22.1 --`;
+  dependency installation used `pnpm install --frozen-lockfile`.
+- Daylight intervals reach final winner regrouping; JSON/ICS share clipped bounds before the
+  elapsed-duration check. Fixed response-offset decoding and timestamp marine alignment remain.
+- The shared identity-test provider fixture now includes its actual `daily.time` array; original
+  assertions and identity behavior are preserved. No frontend, dependencies, lockfile or CI edits.
+- Implementation review found no correctness or spec blockers. Remote CI success is not claimed.
+
 See [primary-source guidance](../docs/research/vitest-time-testing.md).
-Unresolved questions: none for test scope or interval policy. Review tests before production fixes.
+Unresolved questions: none on behavior; remote checks must confirm the pushed revision.

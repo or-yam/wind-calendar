@@ -3,7 +3,7 @@ import { vi } from "vitest";
 export function openMeteoForecast(speeds = [18, 18, 18]) {
   return {
     utc_offset_seconds: 10800,
-    daily: { sunrise: ["2026-06-15T05:30"], sunset: ["2026-06-15T20:00"] },
+    daily: { time: ["2026-06-15"], sunrise: ["2026-06-15T05:30"], sunset: ["2026-06-15T20:00"] },
     hourly: {
       time: speeds.map((_, i) => `2026-06-15T${String(8 + i).padStart(2, "0")}:00`),
       wind_speed_10m: speeds,

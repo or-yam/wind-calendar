@@ -338,3 +338,48 @@ describe("degreesToCardinal", () => {
     });
   }
 });
+
+it.each([1.5, 1.5001])(
+  "clips the extrapolated end before checking a %s hour minimum",
+  (minimum) => {
+    const conditions = [makeCondition(0, 15, 20, 180), makeCondition(1, 15, 20, 180)];
+    const window = {
+      sunrise: new Date("2024-06-15T05:00Z"),
+      sunset: new Date("2024-06-15T07:30Z"),
+    };
+    const daylight = new Map(conditions.map((condition) => [condition, { ...window }]));
+    const sessions = groupSessions(conditions, makeReasons(conditions), minimum, daylight);
+    expect(sessions.map(({ start, end }) => [start.toISOString(), end.toISOString()])).toEqual(
+      minimum === 1.5 ? [["2024-06-15T06:00:00.000Z", "2024-06-15T07:30:00.000Z"]] : [],
+    );
+  },
+);
+
+it("keeps different daylight windows separate even when samples are only two hours apart", () => {
+  const conditions = [makeCondition(0, 15, 20, 180), makeCondition(2, 15, 20, 180)];
+  const daylight = new Map([
+    [
+      conditions[0],
+      { sunrise: new Date("2024-06-15T05:00Z"), sunset: new Date("2024-06-15T06:30Z") },
+    ],
+    [
+      conditions[1],
+      { sunrise: new Date("2024-06-15T08:00Z"), sunset: new Date("2024-06-15T08:30Z") },
+    ],
+  ]);
+  expect(
+    groupSessions(conditions, makeReasons(conditions), 0, daylight).map(({ start, end }) => [
+      start.toISOString(),
+      end.toISOString(),
+    ]),
+  ).toEqual([
+    ["2024-06-15T06:00:00.000Z", "2024-06-15T06:30:00.000Z"],
+    ["2024-06-15T08:00:00.000Z", "2024-06-15T08:30:00.000Z"],
+  ]);
+});
+
+it("rejects a nonpositive clipped interval even with a zero minimum", () => {
+  const condition = makeCondition(0, 15, 20, 180);
+  const daylight = new Map([[condition, { sunrise: new Date("2024-06-15T05:00Z"), sunset: BASE }]]);
+  expect(groupSessions([condition], makeReasons([condition]), 0, daylight)).toEqual([]);
+});
