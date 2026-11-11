@@ -29,7 +29,7 @@ describe("useWeekNavigation", () => {
   let root: Root;
 
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
     vi.setSystemTime(new Date(2026, 6, 29, 12));
     localStorage.setItem("weekStartsOnSunday", "0");
     container = document.createElement("div");

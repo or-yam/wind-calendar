@@ -187,3 +187,48 @@ describe("selectBestLocationSessions", () => {
     ]);
   });
 });
+
+it.each([1.5, 1.5001])(
+  "retains the winning remainder's sunset cap before a %s hour minimum",
+  (minimum) => {
+    const telAviv = hourlySession("tel-aviv", 16, [25]);
+    const herzliya = hourlySession("herzliya", 16, [20, 20, 20]);
+    telAviv.daylight = {
+      sunrise: new Date("2030-06-15T06:00Z"),
+      sunset: new Date("2030-06-15T19:00Z"),
+    };
+    herzliya.daylight = {
+      sunrise: new Date("2030-06-15T06:00Z"),
+      sunset: new Date("2030-06-15T18:30Z"),
+    };
+    herzliya.end = herzliya.daylight.sunset;
+    const result = selectBestLocationSessions([telAviv, herzliya], {
+      ...config,
+      minSessionHours: minimum,
+    });
+    expect(
+      result.map(({ location, start, end }) => [
+        location.id,
+        start.toISOString(),
+        end.toISOString(),
+      ]),
+    ).toEqual(
+      minimum === 1.5 ? [["herzliya", "2030-06-15T17:00:00.000Z", "2030-06-15T18:30:00.000Z"]] : [],
+    );
+  },
+);
+
+it("preserves separate daylight windows while rebuilding winners from the same location", () => {
+  const early = hourlySession("tel-aviv", 10, [20]);
+  const late = hourlySession("tel-aviv", 12, [20]);
+  early.daylight = {
+    sunrise: new Date("2030-06-15T09:00Z"),
+    sunset: new Date("2030-06-15T10:30Z"),
+  };
+  late.daylight = { sunrise: new Date("2030-06-15T12:00Z"), sunset: new Date("2030-06-15T12:30Z") };
+  const result = selectBestLocationSessions([early, late], { ...config, minSessionHours: 0 });
+  expect(result.map(({ start, end }) => [start.toISOString(), end.toISOString()])).toEqual([
+    ["2030-06-15T10:00:00.000Z", "2030-06-15T10:30:00.000Z"],
+    ["2030-06-15T12:00:00.000Z", "2030-06-15T12:30:00.000Z"],
+  ]);
+});

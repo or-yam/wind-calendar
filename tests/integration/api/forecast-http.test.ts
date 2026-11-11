@@ -1,11 +1,11 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import handler from "../../../server/api/forecast";
 import { __resetForTesting } from "../../../server/utils/rate-limit";
 import type { ForecastResponse } from "../../../shared/forecast-types";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockExternalFetch, providerResponse } from "../../helpers/provider-http";
-import { utcTime } from "../../helpers/provider-hours";
+import { PROVIDER_NOW, utcTime } from "../../helpers/provider-hours";
 
 const providers = [
   { provider: "openmeteo", query: "", model: "om_icon" },
@@ -15,18 +15,19 @@ const providers = [
 describe("forecast HTTP happy flows (real Effect pipeline)", () => {
   let http: ReturnType<typeof mockExternalFetch>;
   beforeEach(() => {
+    vi.setSystemTime(new Date(PROVIDER_NOW));
     __resetForTesting();
     http = mockExternalFetch((url) => providerResponse(url));
   });
   afterEach(() => {
     http.spy.mockRestore();
+    vi.useRealTimers();
     __resetForTesting();
   });
 
   it.each(providers)(
     "$provider returns exact sessions, merged hourly data and metadata",
     async ({ provider, query, model }) => {
-      const before = Date.now();
       const res = await callHandler(handler, `/api/forecast?${query}`);
       expect(res.statusCode).toBe(200);
       expect(res.headers).toMatchObject({
@@ -43,10 +44,8 @@ describe("forecast HTTP happy flows (real Effect pipeline)", () => {
         model,
         dataSource: provider,
         dataSources: { "beit-yanai": provider },
-        generatedAt: expect.any(String),
+        generatedAt: PROVIDER_NOW,
       });
-      expect(Date.parse(body.meta.generatedAt)).toBeGreaterThanOrEqual(before);
-      expect(Date.parse(body.meta.generatedAt)).toBeLessThanOrEqual(Date.now());
       const marine = provider === "openmeteo";
       expect(body.sessions).toHaveLength(3);
       expect(body.sessions[0]).toEqual({

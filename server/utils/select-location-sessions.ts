@@ -1,11 +1,14 @@
 import type { CalendarConfig } from "../../shared/types.js";
-import type { WindConditionRaw } from "../types/wind-conditions.js";
+import type { DaylightInterval, WindConditionRaw } from "../types/wind-conditions.js";
 import type { MatchReason } from "./filterEvents.js";
 import { groupSessions, type Session } from "./groupSessions.js";
+
+import { sameDaylight } from "./daylight.js";
 
 export type LocationSession = Session & { location: { id: string; label: string; tz: string } };
 
 type Candidate = {
+  daylight?: DaylightInterval;
   condition: WindConditionRaw;
   matchType: MatchReason;
   location: LocationSession["location"];
@@ -50,7 +53,12 @@ function selectIntervalWinners(sessions: LocationSession[], config: CalendarConf
     for (const condition of session.conditions) {
       const timestamp = condition.date.getTime();
       const candidates = intervals.get(timestamp) ?? [];
-      candidates.push({ condition, matchType: session.matchType, location: session.location });
+      candidates.push({
+        condition,
+        matchType: session.matchType,
+        location: session.location,
+        daylight: session.daylight,
+      });
       intervals.set(timestamp, candidates);
     }
   }
@@ -76,7 +84,8 @@ export function selectBestLocationSessions(
     if (
       !current ||
       previous?.location.id !== winner.location.id ||
-      previous.matchType !== winner.matchType
+      previous.matchType !== winner.matchType ||
+      !sameDaylight(previous.daylight, winner.daylight)
     ) {
       runs.push([winner]);
     } else {
@@ -86,10 +95,15 @@ export function selectBestLocationSessions(
 
   return runs.flatMap((run) => {
     const reasons = new Map(run.map(({ condition, matchType }) => [condition, matchType]));
+    const daylight = new Map<WindConditionRaw, DaylightInterval>();
+    for (const candidate of run) {
+      if (candidate.daylight) daylight.set(candidate.condition, candidate.daylight);
+    }
     return groupSessions(
       run.map(({ condition }) => condition),
       reasons,
       config.minSessionHours,
+      daylight,
     ).map((session) => ({ ...session, location: run[0].location }));
   });
 }

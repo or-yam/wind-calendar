@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { filterEvents, type FilterConfig } from "../../../server/utils/filterEvents";
 import type { WindConditionRaw } from "../../../server/types/wind-conditions";
 
@@ -16,7 +16,7 @@ const baseConfig: FilterConfig = {
   tz: "Asia/Jerusalem",
 };
 
-const futureDate = new Date("2099-06-15T10:00:00Z");
+const futureDate = new Date("2026-06-15T10:00:00Z");
 
 const makeEvent = (overrides: Partial<WindConditionRaw> = {}): WindConditionRaw => ({
   date: futureDate,
@@ -32,17 +32,45 @@ const makeEvent = (overrides: Partial<WindConditionRaw> = {}): WindConditionRaw 
   ...overrides,
 });
 
+beforeEach(() => vi.setSystemTime(new Date("2026-01-01T00:00:00Z")));
+afterEach(() => vi.useRealTimers());
+
 describe("filterEvents", () => {
+  it.each([
+    ["before sunrise", "2026-01-02T04:14:00Z", false],
+    ["at sunrise", "2026-01-02T04:15:00Z", true],
+    ["before sunset", "2026-01-02T16:29:00Z", true],
+    ["at sunset", "2026-01-02T16:30:00Z", false],
+  ] as const)("uses minute precision %s in the spot timezone", (_, instant, admitted) => {
+    const sample = makeEvent({ date: new Date(instant) });
+    const { conditions } = filterEvents([sample], {
+      ...baseConfig,
+      sunrise: "06:15",
+      sunset: "18:30",
+    });
+    expect(conditions).toEqual(admitted ? [sample] : []);
+  });
+
+  it("excludes samples at or before now and keeps the next qualifying instant", () => {
+    vi.setSystemTime(new Date("2026-01-02T10:00:00Z"));
+    const samples = ["09:59:59", "10:00:00", "10:00:01"].map((time) =>
+      makeEvent({ date: new Date(`2026-01-02T${time}Z`) }),
+    );
+    expect(
+      filterEvents(samples, baseConfig).conditions.map((sample) => sample.date.toISOString()),
+    ).toEqual(["2026-01-02T10:00:01.000Z"]);
+  });
+
   // --- Backward compat: wind-only mode (default) ---
 
   it("keeps event when local hour falls within daylight range", () => {
-    const events = [makeEvent({ date: new Date("2099-01-01T05:00:00Z") })];
+    const events = [makeEvent({ date: new Date("2026-01-01T05:00:00Z") })];
     const { conditions } = filterEvents(events, baseConfig);
     expect(conditions.length).toBe(1);
   });
 
   it("filters out event when local hour is before daylight range", () => {
-    const events = [makeEvent({ date: new Date("2099-01-01T03:00:00Z") })];
+    const events = [makeEvent({ date: new Date("2026-01-01T03:00:00Z") })];
     const { conditions } = filterEvents(events, baseConfig);
     expect(conditions.length).toBe(0);
   });
@@ -72,7 +100,7 @@ describe("filterEvents", () => {
   });
 
   it("keeps future events", () => {
-    const events = [makeEvent({ date: new Date("2099-06-15T10:00:00Z") })];
+    const events = [makeEvent({ date: new Date("2026-06-15T10:00:00Z") })];
     const { conditions } = filterEvents(events, baseConfig);
     expect(conditions.length).toBe(1);
   });
@@ -90,11 +118,11 @@ describe("filterEvents", () => {
   });
 
   it("hours boundary: start inclusive, end exclusive", () => {
-    const keptEvent = makeEvent({ date: new Date("2099-01-01T05:00:00Z") });
-    const filteredEvent = makeEvent({ date: new Date("2099-01-01T16:00:00Z") });
+    const keptEvent = makeEvent({ date: new Date("2026-01-01T05:00:00Z") });
+    const filteredEvent = makeEvent({ date: new Date("2026-01-01T16:00:00Z") });
     const { conditions } = filterEvents([keptEvent, filteredEvent], baseConfig);
     expect(conditions.length).toBe(1);
-    expect(conditions[0].date.toISOString()).toBe("2099-01-01T05:00:00.000Z");
+    expect(conditions[0].date.toISOString()).toBe("2026-01-01T05:00:00.000Z");
   });
 
   // --- Match reasons ---
@@ -235,4 +263,31 @@ describe("filterEvents", () => {
     const { conditions } = filterEvents(events, config);
     expect(conditions.length).toBe(0);
   });
+});
+
+it.each([
+  ["2026-01-02T04:14:59Z", false],
+  ["2026-01-02T04:15:00Z", true],
+  ["2026-01-02T16:29:59Z", true],
+  ["2026-01-02T16:30:00Z", false],
+] as const)(
+  "uses normalized absolute boundaries at %s even with different legacy times",
+  (instant, admitted) => {
+    const sample = makeEvent({ date: new Date(instant) });
+    const result = filterEvents([sample], {
+      ...baseConfig,
+      sunrise: "10:00",
+      sunset: "11:00",
+      daylight: [{ sunrise: new Date("2026-01-02T04:15Z"), sunset: new Date("2026-01-02T16:30Z") }],
+    });
+    expect(result.conditions).toEqual(admitted ? [sample] : []);
+    if (admitted) {
+      expect(result.conditions[0]).toBe(sample);
+      expect(result.matchReasons.get(sample)).toBe("wind");
+    }
+  },
+);
+
+it("does not substitute legacy daylight when normalized intervals are empty", () => {
+  expect(filterEvents([makeEvent()], { ...baseConfig, daylight: [] }).conditions).toEqual([]);
 });

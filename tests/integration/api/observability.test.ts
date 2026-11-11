@@ -1,16 +1,20 @@
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { inspect } from "node:util";
 import forecast from "../../../server/api/forecast";
 import calendar from "../../../server/api/calendar";
 import { callHandler } from "../../helpers/nitro-mocks";
 import { mockExternalFetch, providerResponse } from "../../helpers/provider-http";
-import { PROVIDER_HOURS } from "../../helpers/provider-hours";
+import { PROVIDER_HOURS, PROVIDER_NOW } from "../../helpers/provider-hours";
 
 vi.mock("../../../server/utils/rate-limit", () => ({
   checkRateLimit: () => ({ limited: false }),
 }));
 
-afterEach(() => vi.restoreAllMocks());
+beforeEach(() => vi.setSystemTime(new Date(PROVIDER_NOW)));
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 it("keeps concurrent requests and parallel locations correlated", async () => {
   const calls: unknown[][] = [];

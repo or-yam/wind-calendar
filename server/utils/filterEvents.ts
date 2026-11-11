@@ -1,6 +1,6 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
-import type { WaveSource } from "../../shared/types";
-import { getLocalHour } from "./timezone";
+import type { DaylightInterval, WindConditionRaw } from "../types/wind-conditions.js";
+import type { WaveSource } from "../../shared/types.js";
+import { legacyDaylightResolver } from "./daylight.js";
 
 export type MatchReason = "wind" | "wave" | "both";
 
@@ -16,33 +16,34 @@ export interface FilterConfig {
   sunrise: string; // Format: "HH:MM"
   sunset: string; // Format: "HH:MM"
   tz: string;
+  daylight?: DaylightInterval[];
 }
 
 export interface FilterResult {
   conditions: WindConditionRaw[];
   matchReasons: Map<WindConditionRaw, MatchReason>;
-}
-
-function parseTimeString(timeStr: string): number {
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  return hours + minutes / 60;
+  daylightByCondition: Map<WindConditionRaw, DaylightInterval>;
 }
 
 export const filterEvents = (events: WindConditionRaw[], config: FilterConfig): FilterResult => {
-  const sunriseHour = parseTimeString(config.sunrise);
-  const sunsetHour = parseTimeString(config.sunset);
+  const legacyDaylight = config.daylight
+    ? undefined
+    : legacyDaylightResolver(config.tz, config.sunrise, config.sunset);
   const now = Date.now();
 
   const conditions: WindConditionRaw[] = [];
   const matchReasons = new Map<WindConditionRaw, MatchReason>();
+  const daylightByCondition = new Map<WindConditionRaw, DaylightInterval>();
 
   for (const c of events) {
     // Future only
     if (c.date.getTime() <= now) continue;
 
     // Daylight hours (tz-aware, exclusive end)
-    const hour = getLocalHour(c.date, config.tz);
-    if (hour < sunriseHour || hour >= sunsetHour) continue;
+    const daylight = config.daylight
+      ? config.daylight.find(({ sunrise, sunset }) => sunrise <= c.date && c.date < sunset)
+      : legacyDaylight?.(c.date);
+    if (!daylight || c.date < daylight.sunrise || c.date >= daylight.sunset) continue;
 
     // Wind qualification
     const passesWind =
@@ -68,7 +69,8 @@ export const filterEvents = (events: WindConditionRaw[], config: FilterConfig): 
 
     conditions.push(c);
     matchReasons.set(c, reason);
+    daylightByCondition.set(c, daylight);
   }
 
-  return { conditions, matchReasons };
+  return { conditions, matchReasons, daylightByCondition };
 };

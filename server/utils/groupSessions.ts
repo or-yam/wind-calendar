@@ -1,7 +1,10 @@
-import type { WindConditionRaw } from "../types/wind-conditions";
-import type { MatchReason } from "./filterEvents";
+import type { DaylightInterval, WindConditionRaw } from "../types/wind-conditions.js";
+import type { MatchReason } from "./filterEvents.js";
+
+import { sameDaylight } from "./daylight.js";
 
 export type Session = {
+  daylight?: DaylightInterval;
   start: Date;
   end: Date;
   windMin: number;
@@ -64,6 +67,7 @@ function getSessionMatchType(
 function finalizeGroup(
   group: WindConditionRaw[],
   matchReasons: Map<WindConditionRaw, MatchReason>,
+  daylight?: DaylightInterval,
 ): Session {
   const speeds = group.map((c) => c.windSpeed).filter((s): s is number => s != null);
   const gusts = group.map((c) => c.windGusts).filter((g): g is number => g != null);
@@ -78,9 +82,12 @@ function finalizeGroup(
       ? group[group.length - 1].date.getTime() - group[group.length - 2].date.getTime()
       : ONE_HOUR;
 
+  const end = group[group.length - 1].date.getTime() + lastStep;
+
   return {
+    ...(daylight ? { daylight } : {}),
     start: group[0].date,
-    end: new Date(group[group.length - 1].date.getTime() + lastStep),
+    end: new Date(daylight ? Math.min(end, daylight.sunset.getTime()) : end),
     windMin: speeds.length > 0 ? Math.min(...speeds) : 0,
     windMax: speeds.length > 0 ? Math.max(...speeds) : 0,
     gustMax: gusts.length > 0 ? Math.max(...gusts) : 0,
@@ -99,6 +106,7 @@ export function groupSessions(
   conditions: WindConditionRaw[],
   matchReasons: Map<WindConditionRaw, MatchReason>,
   minSessionHours: number = 1,
+  daylightByCondition?: Map<WindConditionRaw, DaylightInterval>,
 ): Session[] {
   if (conditions.length === 0) return [];
 
@@ -112,8 +120,11 @@ export function groupSessions(
     const gap = sorted[i].date.getTime() - sorted[i - 1].date.getTime();
     const matchType = matchReasons.get(sorted[i]);
 
-    // Break session if matchType changes OR gap exceeds 3 hours
-    if (matchType !== currentMatchType || gap <= 0 || gap > THREE_HOURS) {
+    const sameWindow = sameDaylight(
+      daylightByCondition?.get(sorted[i - 1]),
+      daylightByCondition?.get(sorted[i]),
+    );
+    if (!sameWindow || matchType !== currentMatchType || gap <= 0 || gap > THREE_HOURS) {
       groups.push(current);
       current = [sorted[i]];
       currentMatchType = matchType;
@@ -124,6 +135,8 @@ export function groupSessions(
   groups.push(current);
 
   return groups
-    .map((g) => finalizeGroup(g, matchReasons))
-    .filter((s) => (s.end.getTime() - s.start.getTime()) / ONE_HOUR >= minSessionHours);
+    .map((g) => finalizeGroup(g, matchReasons, daylightByCondition?.get(g[0])))
+    .filter(
+      (s) => s.end > s.start && (s.end.getTime() - s.start.getTime()) / ONE_HOUR >= minSessionHours,
+    );
 }

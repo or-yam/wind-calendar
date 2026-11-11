@@ -1,4 +1,5 @@
-export const FORECAST_DAY = "2099-06-15";
+export const PROVIDER_NOW = "2026-06-14T00:00:00.000Z";
+export const FORECAST_DAY = "2026-06-15";
 
 export interface ProviderHour {
   hour: number; // UTC; Jerusalem is UTC+3 on the fixture date.
@@ -43,7 +44,7 @@ export const PROVIDER_HOURS: ProviderHour[] = [
   { ...providerHour(6, 8), waveHeight: 2.4, wavePeriod: 12, swellHeight: 1.6, swellPeriod: 16 },
   providerHour(10, 16),
   providerHour(11, 17),
-  providerHour(15, 19), // One hour: excluded by the default minimum duration.
+  providerHour(15, 19), // One-hour session exercises the minimum-duration filter.
   providerHour(16, 30), // Exactly sunset: excluded.
 ];
 

@@ -13,8 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    name: CI
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: lts/*
+          node-version-file: .node-version
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -37,8 +37,38 @@ jobs:
       - name: Type Check
         run: pnpm run typecheck
 
-      - name: Test
-        run: pnpm run test
-
       - name: Production logging regression tests
         run: pnpm run test:production-logs
+
+  test:
+    name: Tests (${{ matrix.timezone }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        timezone: [UTC, Asia/Jerusalem, America/New_York]
+    env:
+      TZ: ${{ matrix.timezone }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    needs: [checks, test]
+    if: ${{ always() }}
+    steps:
+      - name: Require checks and all timezone tests
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          TESTS_RESULT: ${{ needs.test.result }}
+        run: |
+          test "$CHECKS_RESULT" = success
+          test "$TESTS_RESULT" = success

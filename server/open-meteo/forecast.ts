@@ -1,44 +1,11 @@
 import { Effect, Option } from "effect";
 import { errorDetails } from "../utils/error-details.js";
-import type { ProviderWindData, WindConditionRaw } from "../types/wind-conditions";
-import { ProviderDataError, type ProviderError } from "../errors";
-import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types";
-import { fetchForecast, fetchMarine } from "./fetch";
-
-/**
- * Parse ISO 8601 timestamp to "HH:MM" string.
- * Example: "2026-03-03T06:15" → "06:15"
- */
-function extractTime(isoTimestamp: string): Effect.Effect<string, ProviderDataError> {
-  const match = isoTimestamp.match(/T(\d{2}:\d{2})/);
-  if (!match) {
-    return Effect.fail(
-      new ProviderDataError({ message: `Invalid ISO timestamp format: ${isoTimestamp}` }),
-    );
-  }
-  return Effect.succeed(match[1]);
-}
-
-/**
- * Convert Open-Meteo ISO timestamp (without TZ suffix) to Date in UTC.
- * Open-Meteo returns timestamps in the requested timezone but without suffix.
- * We need to interpret them correctly by applying the UTC offset.
- *
- * Example: "2026-03-03T00:00" with utc_offset_seconds=7200 (Asia/Jerusalem)
- *   → Represents 2026-03-03 00:00 in Asia/Jerusalem timezone
- *   → Equivalent to 2026-03-02 22:00 UTC
- */
-function parseOpenMeteoTimestamp(isoString: string, utcOffsetSeconds: number): Date {
-  // Append "Z" to force UTC interpretation, then subtract offset
-  // This ensures consistent parsing regardless of server timezone
-  const utcDate = new Date(isoString + "Z");
-
-  // Subtract the UTC offset to convert from "local time" to actual UTC
-  // If timezone is UTC+2 (7200s), a timestamp "00:00" in that zone is "22:00" UTC the previous day
-  const utcTimestamp = utcDate.getTime() - utcOffsetSeconds * 1000;
-
-  return new Date(utcTimestamp);
-}
+import type { ProviderWindData, WindConditionRaw } from "../types/wind-conditions.js";
+import { ProviderDataError, type ProviderError } from "../errors.js";
+import type { OpenMeteoForecastResponse, OpenMeteoMarineResponse } from "./types.js";
+import { fetchForecast, fetchMarine } from "./fetch.js";
+import { parseOpenMeteoTimestamp } from "./timestamp.js";
+import { extractDaylight } from "./daylight.js";
 
 /**
  * Convert Open-Meteo forecast response to WindConditionRaw[].
@@ -167,21 +134,15 @@ export function fetchOpenMeteoData(
   return Effect.gen(function* () {
     const [forecast, waveResult] = yield* Effect.all([wind, wave], { concurrency: "unbounded" });
 
-    // Extract sunrise/sunset from daily data
-    if (!forecast.daily?.sunrise?.[0] || !forecast.daily?.sunset?.[0]) {
-      return yield* new ProviderDataError({
-        message: "Missing sunrise/sunset data in forecast response",
-      });
-    }
-
-    const sunrise = yield* extractTime(forecast.daily.sunrise[0]);
-    const sunset = yield* extractTime(forecast.daily.sunset[0]);
+    const daylight = yield* extractDaylight(forecast);
+    const sunrise = forecast.daily!.sunrise[0].slice(11, 16);
+    const sunset = forecast.daily!.sunset[0].slice(11, 16);
     const windData = yield* extractWindData(forecast);
 
     if (Option.isSome(waveResult)) {
       mergeWaveData(windData, waveResult.value);
     }
 
-    return { windData, sunrise, sunset };
+    return { windData, sunrise, sunset, daylight };
   });
 }

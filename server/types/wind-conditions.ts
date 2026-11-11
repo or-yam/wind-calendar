@@ -1,7 +1,10 @@
+export type DaylightInterval = { sunrise: Date; sunset: Date };
+
 export interface ProviderWindData {
   windData: WindConditionRaw[];
   sunrise: string;
   sunset: string;
+  daylight?: DaylightInterval[];
 }
 
 export type WindConditionRaw = {
