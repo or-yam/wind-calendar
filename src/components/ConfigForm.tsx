@@ -257,7 +257,9 @@ export function ConfigForm({
             </SelectTrigger>
             <SelectContent className="border-2 border-[#04090b] bg-[#c9e4dd] text-[#04090b]">
               <SelectGroup>
-                <SelectLabel>{t("openMeteoRecommended")}</SelectLabel>
+                <SelectLabel>
+                  {t(windguruForecastModelsEnabled ? "openMeteoRecommended" : "openMeteo")}
+                </SelectLabel>
                 {Object.values(MODELS)
                   .filter((m) => m.provider === "openmeteo")
                   .map((m) => (

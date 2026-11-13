@@ -325,16 +325,30 @@ describe("ConfigForm", () => {
     expect(container.querySelector("#wind-max")).not.toBeNull();
   });
 
-  it("hides Windguru models when their feature flag is disabled", async () => {
-    await act(async () =>
-      root.render(createElement(ConfigForm, { ...props, windguruForecastModelsEnabled: false })),
-    );
+  it.each([
+    ["en", false, "Open-Meteo"],
+    ["en", true, "Open-Meteo (Recommended)"],
+    ["he", false, "⁦Open-Meteo⁩"],
+    ["he", true, "⁦Open-Meteo⁩ (מומלץ)"],
+  ] as const)(
+    "shows the %s model recommendation only when Windguru models are enabled (%s)",
+    async (language, windguruForecastModelsEnabled, expectedLabel) => {
+      await i18n.changeLanguage(language);
+      await act(async () =>
+        root.render(createElement(ConfigForm, { ...props, windguruForecastModelsEnabled })),
+      );
 
-    const advanced = container.querySelector("details")!;
-    advanced.open = true;
-    const trigger = advanced.querySelector<HTMLButtonElement>("button")!;
-    await act(async () => trigger.click());
+      const trigger = container.querySelector<HTMLButtonElement>("#model")!;
+      trigger.closest("details")!.open = true;
+      await act(async () => trigger.click());
 
-    expect(document.body.textContent).not.toContain("Windguru");
-  });
+      const listbox = document.body.querySelector('[role="listbox"]');
+      expect(listbox).not.toBeNull();
+      expect(listbox?.textContent).toContain(expectedLabel);
+      expect(listbox?.textContent?.includes("Windguru")).toBe(windguruForecastModelsEnabled);
+      expect(/recommend|מומלץ/i.test(document.body.textContent ?? "")).toBe(
+        windguruForecastModelsEnabled,
+      );
+    },
+  );
 });

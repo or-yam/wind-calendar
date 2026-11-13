@@ -69,6 +69,7 @@ export const he = {
   advanced: "מתקדם",
   forecastModel: "מודל תחזית",
   modelHelp: "⁦Open-Meteo ICON⁩ הוא ברירת המחדל וזמין בכל ספוט.",
+  openMeteo: "⁦Open-Meteo⁩",
   openMeteoRecommended: "⁦Open-Meteo⁩ (מומלץ)",
   unavailable: "לא זמין",
   describeConditions: "תיאור התנאים",
