@@ -67,6 +67,7 @@ export const en = {
   advanced: "Advanced",
   forecastModel: "Forecast Model",
   modelHelp: "Open-Meteo ICON is the default and works for every spot.",
+  openMeteo: "Open-Meteo",
   openMeteoRecommended: "Open-Meteo (Recommended)",
   unavailable: "unavailable",
   describeConditions: "Describe conditions",
